@@ -1,0 +1,634 @@
+{{template "base" .}}
+
+{{define "content" }}
+
+{{/* offcanvas */}}
+<div class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel" style="width: 41.66666667%;">
+    {{/* offcanvas header */}}
+    <div class="offcanvas-header" style="height:8vh;">
+        <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Advance Search</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    {{/* Search Panel and List search information Panel */}}
+    <div class="offcanvas-body" style="height:92vh;">
+        {{/* Advance Search */}}
+        <ul class="list-group">
+            <li class="list-group-item">
+                <div id="advance-search" class="flex mt-2" style="display:;">
+                    <div class="form-floating mb-3">
+                        {{/* Search text */}}
+                        <div class="form-floating mb-3">
+                            <input id="textQuery-input" class="form-control" placeholder="Search area">
+                            <label for="textQuery-input">Search area</label>
+                        </div>
+                        {{/* switches: operating, distance */}}
+                        <div class="row mb-1">
+                            <div class="input-group col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="openNow-bool" checked>
+                                    <label class="form-check-label" for="openNow-bool" style="font-size:12px;">Operating</label>
+                                </div>
+                            </div>
+                            <div class="input-group col">
+                                <div class="form-check form-switch">
+                                {{/* if rankPreference is selected, choose distance instead of relevence */}}
+                                    <input class="form-check-input" type="checkbox" role="switch" id="rankPreference-bool" checked>
+                                    <label class="form-check-label" for="rankPreference-bool" style="font-size:12px;">Distance first</label>
+                                </div>
+                            </div>
+                        </div>
+                        {{/* rating range and search button */}}
+                        <div class="row mb-1 align-items-center">
+                            {{/* rating ranges */}}
+                            <div class="input-group mb-3 col" style="display:block">
+                                <label for="minRating-range" style="font-size:12px;">Min Rating</label>
+                                <br>
+                                <input type="range" id="minRating-range" name="minRating-range" min="0" max="4" value="3" step="1" list="tickmarks" style="width:200px;"/>
+                                <datalist id="tickmarks" style="display: flex; justify-content: space-between;  width: 200px; font-size:12px;">
+                                <option value="0" label="0"></option>
+                                <option value="1" label="1"></option>
+                                <option value="2" label="2"></option>
+                                <option value="3" label="3"></option>
+                                <option value="4" label="4"></option>
+                                </datalist>
+                            </div>
+                            {{/* Advance Search Button */}}
+                            <div class="col text-center align-middle" style="vertical-align: middle;">
+                                <div id="AdvanceSearchBtn" class="btn btn-outline-secondary">Search</div>
+                            </div>
+                        </div>     
+                    </div>
+                    
+                </div>
+            </li>
+            {{/* list information of serach results */}}
+            <li id="list-search-results" class="list-group-item">
+                
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-5 col-10">
+        <div class="row" id="userpanel">
+            <div class="mt-2 ms-3 pe-5 ps-3">
+                <ul class="list-group">
+                    {{/* Quick Locate */}}
+                    <li class="list-group-item pt-3 pb-2">
+                        <div id="auto-complete-search" class="form-floating mb-3" >
+                            <input id="quick-search-input" class="form-control" placeholder="Quick Locate">
+                            <label for="quick-search-input" class="" >Quick Locate</label>
+                        </div>
+                        <button class="btn mb-1 btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Advance Search</button>
+                    </li>
+                    <li class="list-group-item pt-2 pb-1">
+                        {{/* info */}}
+                        <div id="search-place-close-save" class="d-flex justify-content-end">
+                            
+                        </div>
+                        
+                        <div id="search-place-information" class="row" style="overflow: auto; max-height:330px;">
+                            
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{/* Google Map */}}
+    <div class="col-sm-7 col-12" style="padding-right:0; height:92vh;">
+        <a id="MapInitBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Init Google Map</a>
+        <div id="map" class="row" style="height:100%; width:100%;">
+             
+        </div>
+    </div>
+</div>
+{{/* api test button */}}
+<div class="row mt-3">
+    <div class="col">
+        <a id="CurrentPositionBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Direct to current position</a>
+        <a id="BrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Broker!</a>
+        <a id="GetTabelogInfoBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Get Tabelog</a>
+    </div>
+</div>
+{{/* api test result */}}
+<div class="row mt-3">
+    <div class="col">
+        <h4 class="mt-5">Sent</h4>
+        <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
+            <pre id="payload"><span class="text-muted">Nothing sent yet...</span></pre>
+        </div>
+    </div>
+    <div class="col">
+        <h4 class="mt-5">Received</h4>
+        <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
+            <pre id="received"><span class="text-muted">Nothing received yet...</span></pre>
+        </div>
+    </div>
+</div>
+        
+{{end}}
+
+{{define "js"}}
+    {{/* google map api */}}
+    {{/* Language could set, ref: https://developers.google.com/maps/documentation/javascript/load-maps-js-api?hl=zh-tw s */}}
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5QYEfq3FpE4ET1zbLlRI9Sh_3jLECJMA&libraries=places&callback=initMap&region=JP&language=ja">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    <script>
+
+    const APIKEY = "AIzaSyA5QYEfq3FpE4ET1zbLlRI9Sh_3jLECJMA"
+    const textAPIReturnAmount = 10
+
+    // btn 
+    const MapInitBtn = document.getElementById('MapInitBtn');
+    const CurentPositionBtn = document.getElementById('CurrentPositionBtn');
+    const BrokerBtn = document.getElementById('BrokerBtn');
+    const GetTabelogInfoBtn = document.getElementById('GetTabelogInfoBtn');
+    const AdvanceSearchBtn = document.getElementById('AdvanceSearchBtn');
+    const CloseInfoBtn = document.getElementById('close-info-btn');
+
+    // Input
+    const AutoSearchBar = document.getElementById('quick-search-input');
+
+    // Info
+    const searchPlaceInformation = document.getElementById("search-place-information");
+    const searchPlaceCloseSave = document.getElementById("search-place-close-save");
+    const listSearchResults = document.getElementById("list-search-results");
+
+    // api
+    const sent = document.getElementById('payload');
+    const recevied = document.getElementById('received');
+
+    let map;
+    let marker;
+    let autocompleteOptions;
+    let currentPosition;
+    let place; // for the detail of API return data
+    let advanceSearchResults;
+
+    // store for each time select place on
+    const selectedPlace = {
+        "JP": null,
+        "TW": null,
+        "USAddress": null,
+    }
+    const searchResults = {
+        "JP": null,
+        "TW": null,
+    }
+    const QuickLocateInfo = {
+        "id": null,
+        "TWdisplayName": null,
+        "JPdisplayName": null,
+        "primaryType": null,
+        "rating": null,
+        "userRatingCount": null,
+        "JPformattedAddress": null,
+        "internationalPhoneNumber": null,
+        "TWweekdayDescriptions": null,
+        "accessibilityOptions": null,
+        "googleMapsUri": null,
+        "websiteUri": null,
+        "photos": null, //jp
+        "types": null, //tw
+    }
+    const detailsAPIMask = ["id","international_phone_number","formatted_address","address_components","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
+    const detailsAPIMaskNoAdvance = ["id","formatted_address","address_components","googleMapsUri","displayName","photos","accessibilityOptions"];
+    const detailsAPIMaskForAddress = ["id","formatted_address","address_components","location","displayName"];
+    const textAPIMask = ["id","internationalPhoneNumber","formattedAddress","addressComponents","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
+    const textAPIMaskNoAdvance = ["id","formattedAddress","addressComponents","googleMapsUri","displayName","photos","accessibilityOptions"];
+
+    MapInitBtn.addEventListener("click", function(){
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat:23.553118, lng: 121.0211024}, // Taiwan for init
+            zoom: 8,
+        });
+        goToCurrentPosition();
+        // After init map, hide the init btn
+        MapInitBtn.style.display = "none";
+    });
+
+    // Locate to current position
+    CurrentPositionBtn.addEventListener("click", goToCurrentPosition);
+
+    AdvanceSearchBtn.addEventListener("click", async function(){
+        // clear searchResults
+        searchResults.JP = null
+        searchResults.TW = null
+        listSearchResults.innerHTML = ""
+        // get locationBias
+        let locationBias = {
+            "rectangle": {
+                "low": {
+                    "latitude": map.getBounds().eb.lo,
+                    "longitude": map.getBounds().La.lo,
+                },
+                "high": {
+                    "latitude": map.getBounds().eb.hi,
+                    "longitude": map.getBounds().La.hi,
+                }
+            }
+        };
+        let minRating = document.getElementById("minRating-range").value;
+        let rankPreference = document.getElementById("rankPreference-bool").checked;
+        let payload = {
+            textQuery: document.getElementById("textQuery-input").value,
+            locationBias: locationBias,
+            maxResultCount: textAPIReturnAmount,
+            minRating: parseInt(minRating),
+            openNow: document.getElementById("openNow-bool").checked,
+            rankPreference: rankPreference?"DISTANCE":"RELEVANCE",
+        }
+        let payloadTW = {
+            ...payload,
+            languageCode: "zh-TW",
+        }
+        let payloadJP = {
+            ...payload,
+            languageCode: "ja",
+        }
+        Promise.allSettled([
+            advancSearch(searchResults, "TW", textAPIMask, payloadTW),
+            advancSearch(searchResults, "JP", textAPIMaskNoAdvance, payloadJP),
+        ])
+        .then((value)=>{
+           // mark by searchResults
+           // list searchResults
+           generateListInfoHTML(searchResults)
+        })
+    });
+
+    // goToCurrentPostion()
+    // step1: get current position and store in "currentPosition"
+    // step2: set map center to current position
+    // step3: init autocomplete for search bar
+    // step4: if user search a place, initSelectedPlace
+    // step5: store QuickLocateInfo (for render)
+    async function goToCurrentPosition(){
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // store currentposition
+            currentPosition = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+            };
+            map.setCenter(currentPosition);
+            map.setZoom(16)
+            autocompleteOptions = {};
+            const autocomplete = new google.maps.places.Autocomplete(AutoSearchBar, autocompleteOptions);
+            autocomplete.addListener("place_changed", async function() {
+                ClearQuickInfoAndSearchBar()
+                place = autocomplete.getPlace();
+                if (!place) {
+                    searchPlaceInformation.innerHTML = "Place Not Found, please try it later..."
+                } else {
+                    Promise.allSettled([
+                        initSelectedPlace(selectedPlace, "TW", place.place_id, detailsAPIMask, "JP", "zh-TW", true),
+                        initSelectedPlace(selectedPlace, "JP", place.place_id, detailsAPIMaskNoAdvance, "JP", "ja", false),
+                        initSelectedPlace(selectedPlace, "USAddress", place.place_id, detailsAPIMaskForAddress, "US", "en", false),
+                    ]).then((value)=>{
+                        // store QuickLocateInfo
+                        initQuickLocateInfo(selectedPlace.TW,selectedPlace.JP)
+                        searchPlaceInformation.appendChild(generateInfoNode(QuickLocateInfo))
+                        let [save, close] = generateCloseSave()
+                        searchPlaceCloseSave.appendChild(save)
+                        searchPlaceCloseSave.appendChild(close)
+                    })                    
+                    
+                }
+            })
+        })
+    }
+
+
+    
+    // search place by text search map api
+    // store response in obj["objParam"]
+    // response:
+    //     "places": Array[textAPIReturnAmoun]
+    async function advancSearch(obj, objParam, maskArray, payload){
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("X-Goog-Api-Key", APIKEY);
+        let tmp = ""
+        maskArray.forEach((i) => {tmp += "places."+ i + ","})
+        tmp = tmp.slice(0, -1)
+        headers.append("X-Goog-FieldMask", tmp);
+        const body = {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: headers,
+        }
+        await fetch("https://places.googleapis.com/v1/places:searchText", body)
+        .then((response)=>response.json())
+        .then((data)=>{
+            obj[objParam] = data
+        })
+        .catch((error)=>{
+            console.log(error)
+        })
+    }
+
+    // initSelectedPlace()
+    // 1. get place detail by place_id; store response in obj["objParam"]
+    // 2. mark place on map (only if needMark is true)
+    async function initSelectedPlace(obj, objParam, place_id, details, regionCode, languageCode, needMark) {
+        let fields = details.join(",")
+        await fetch(`https://places.googleapis.com/v1/places/${place_id}?fields=${fields}&key=${APIKEY}&regionCode=${regionCode}&languageCode=${languageCode}`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (!data.hasOwnProperty("error") && needMark) {
+                markPlace(map, data.location.latitude, data.location.longitude)
+            }
+            obj[objParam] = data
+        })
+        .catch((error) => {
+            console.log(error)
+        });
+    }
+
+    // initQuickLocateInfo()
+    // store QuickLocateInfo using 2 obj
+    function initQuickLocateInfo(TWObj,JPObj) {
+        if (TWObj!=null){
+            if (TWObj.hasOwnProperty("id")) {
+                QuickLocateInfo.id = TWObj.id
+            }
+            if (TWObj.hasOwnProperty("displayName")) {
+                QuickLocateInfo.TWdisplayName = TWObj.displayName.text
+            }
+            if (TWObj.hasOwnProperty("primaryType")) {
+                QuickLocateInfo.primaryType = TWObj.primaryType
+            }
+            if (TWObj.hasOwnProperty("rating")) {
+                QuickLocateInfo.rating = TWObj.rating
+            }
+            if (TWObj.hasOwnProperty("userRatingCount")) {
+                QuickLocateInfo.userRatingCount = TWObj.userRatingCount
+            }
+            if (TWObj.hasOwnProperty("internationalPhoneNumber")) {
+                QuickLocateInfo.internationalPhoneNumber = TWObj.internationalPhoneNumber
+            }
+            if (TWObj.hasOwnProperty("regularOpeningHours")) {
+                QuickLocateInfo.TWweekdayDescriptions = TWObj.regularOpeningHours.weekdayDescriptions
+            }
+            if (TWObj.hasOwnProperty("accessibilityOptions")) {
+                QuickLocateInfo.accessibilityOptions = TWObj.accessibilityOptions
+            }
+            if (TWObj.hasOwnProperty("googleMapsUri")) {
+                QuickLocateInfo.googleMapsUri = TWObj.googleMapsUri
+            }
+            if (TWObj.hasOwnProperty("websiteUri")) {
+                QuickLocateInfo.websiteUri = TWObj.websiteUri
+            }
+            if (TWObj.hasOwnProperty("photos")){
+                QuickLocateInfo.photos = TWObj.photos
+            }
+            if (TWObj.hasOwnProperty("types")){
+                QuickLocateInfo.types = TWObj.types
+            }
+        }
+        if (JPObj!=null){
+            if (JPObj.hasOwnProperty("displayName")) {
+                QuickLocateInfo.JPdisplayName = JPObj.displayName.text
+            }
+            if (JPObj.hasOwnProperty("formattedAddress")) {
+                QuickLocateInfo.JPformattedAddress = JPObj.formattedAddress
+            }
+        }
+    }
+
+    // mark place on map, if marker is null, init a new marker
+    function markPlace(map, lat, lng, marker) {
+        // map
+        map.setCenter({lat: lat, lng: lng});
+        // marker
+        if (!marker) {
+            marker = new google.maps.Marker({
+                map,
+            });
+        };
+        marker.setPosition({lat: lat,lng: lng});
+    }
+
+    // places:
+    function generateCloseSave(){
+        const save = document.createElement('div');
+        save.id = "save-place-btn";
+        save.className = "btn py-1";
+        save.innerHTML = "Save";
+        save.addEventListener("click", function(){
+            console.log("save")
+        })
+        const close = document.createElement('div');
+        close.id = "close-info-btn";
+        close.className = "btn py-1";
+        close.innerHTML = "Close";
+        close.addEventListener("click", ClearQuickInfoAndSearchBar)
+        return [save, close]
+    }
+
+    // return a flex with save and center button
+    {{/* `
+        <div class="d-flex justify-content-end">
+            <div id="save-list-place-btn" class="btn py-1">Save</div>
+            <div id="center-list-place-btn" class="btn py-1">Center</div>
+        </div>
+    ` */}}
+    function generateCenterSave(Info){
+        const flex = document.createElement('div');
+        flex.className = "d-flex justify-content-end";
+        const save = document.createElement('div');
+        save.id = `save-${Info.id}`;
+        save.className = "btn py-1";
+        save.innerHTML = "Save";
+        save.addEventListener("click", function(){
+            console.log("save")
+        })
+        const center = document.createElement('div');
+        center.id = `center-${Info.id}`;
+        center.className = "btn py-1";
+        center.innerHTML = "Center";
+        center.addEventListener("click", function(){
+            console.log("center")
+        })
+        flex.appendChild(save)
+        flex.appendChild(center)
+        return flex
+    }
+
+    function generateInfoNode(Info) {
+        const node = document.createElement('div');
+        let HTML = `
+                <div class="row pb-1">
+                    <h5 class="card-title">${Info.TWdisplayName}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${Info.JPdisplayName}</h7>
+                </div>
+                <div class="row pb-1" style="font-size: 14px; font-weight: 400;">
+                    <div class="col card-text">Rating: ${Info.rating} (${Info.userRatingCount})</div>               
+                </div>
+                <div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>
+                <div class="card-text " style="font-size: 14px;">${Info.JPformattedAddress}</div>
+                <div class="card-text" style="font-size: 14px;">${Info.internationalPhoneNumber}</div>
+                <div class="flex py-2" style="font-size: 12px;">
+                    <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
+                    <a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>
+                </div>`
+
+        if (Info.TWweekdayDescriptions != null) {
+            HTML += `<div style="font-size: 14px;">Open Time</div>`
+            for (let i = 0; i < Info.TWweekdayDescriptions.length; i++) {
+                HTML += `<div style="font-size: 14px;">${Info.TWweekdayDescriptions[i]}</div>`
+            }
+        }
+        node.innerHTML = HTML
+        return node
+    }
+
+    function generateListInfoHTML(JPTWdata) {
+        let JPdata = JPTWdata.JP
+        let TWdata = JPTWdata.TW
+        if (!JPdata || !JPdata.hasOwnProperty("places") || !TWdata || !TWdata.hasOwnProperty("places")) {
+            return "NO DATA, please try again later..."
+        }
+        for (let i=0; i<JPdata.places.length; i++) {
+            let listInfo = {
+                "id": null,
+                "TWdisplayName": null,
+                "JPdisplayName": null,
+                "primaryType": null,
+                "rating": null,
+                "userRatingCount": null,
+                "JPformattedAddress": null,
+                "internationalPhoneNumber": null,
+                "TWweekdayDescriptions": null,
+                "accessibilityOptions": null,
+                "googleMapsUri": null,
+                "websiteUri": null,
+                "photos": null, //jp
+                "types": null, //tw
+            }
+            let jo = JPdata.places[i]
+            let to = TWdata.places[i]
+            if (to.hasOwnProperty("id")) {
+                listInfo.id = to.id
+            }
+            if (to.hasOwnProperty("displayName")) {
+                listInfo.TWdisplayName = to.displayName.text
+            }
+            if (to.hasOwnProperty("primaryType")) {
+                listInfo.primaryType = to.primaryType
+            }
+            if (to.hasOwnProperty("rating")) {
+                listInfo.rating = to.rating
+            }
+            if (to.hasOwnProperty("userRatingCount")) {
+                listInfo.userRatingCount = to.userRatingCount
+            }
+            if (to.hasOwnProperty("internationalPhoneNumber")) {
+                listInfo.internationalPhoneNumber = to.internationalPhoneNumber
+            }
+            if (to.hasOwnProperty("regularOpeningHours")) {
+                listInfo.TWweekdayDescriptions = to.regularOpeningHours.weekdayDescriptions
+            }
+            if (to.hasOwnProperty("accessibilityOptions")) {
+                listInfo.accessibilityOptions = to.accessibilityOptions
+            }
+            if (to.hasOwnProperty("googleMapsUri")) {
+                listInfo.googleMapsUri = to.googleMapsUri
+            }
+            if (to.hasOwnProperty("websiteUri")) {
+                listInfo.websiteUri = to.websiteUri
+            }
+            if (to.hasOwnProperty("photos")){
+                listInfo.photos = to.photos
+            }
+            if (to.hasOwnProperty("types")){
+                listInfo.types = to.types
+            }
+            if (jo.hasOwnProperty("displayName")) {
+                listInfo.JPdisplayName = jo.displayName.text
+            }
+            if (jo.hasOwnProperty("formattedAddress")) {
+                listInfo.JPformattedAddress = jo.formattedAddress
+            }
+
+           // gcs
+            listSearchResults.appendChild(generateCenterSave(listInfo))
+            listnode = generateInfoNode(listInfo)
+            listnode.innerHTML += `<hr>`
+            listSearchResults.appendChild(listnode)
+        }
+    }
+
+    // clear info card, input's value and selectedPlace
+    function ClearQuickInfoAndSearchBar(){
+        searchPlaceInformation.innerHTML = ""
+        AutoSearchBar.value = ""
+        searchPlaceCloseSave.innerHTML = ""
+    }
+
+    // api
+    BrokerBtn.addEventListener("click", function(){
+        const body = {
+            method: "POST",
+        }
+
+        fetch("http:\/\/localhost:8080/", body)
+        .then((response) => response.json())
+        .then((data) => {
+            sent.innerHTML = "empty post request"
+            recevied.innerHTML = JSON.stringify(data, null, 4)
+            if (data.error) {
+                console.log(data)
+            } 
+        })
+        .catch((error) => {
+            console.log(error)
+        });
+    })
+    
+    GetTabelogInfoBtn.addEventListener("click", function(){
+        
+        let searchArea;
+
+        selectedPlaceJP.addressComponents.forEach((item) => {
+            item.types.forEach((type) => {
+                if (type === "locality") {
+                    searchArea = item.longText
+                }
+            })
+        })
+
+        const payload = {
+            searchName: selectedPlaceJP.displayName.text,
+            searchArea: searchArea,
+        }
+        
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+
+        const body = {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: headers,
+        }
+
+        fetch("http:\/\/localhost:8080/tabelog", body)
+        .then((response) => response.json())
+        .then((data) => {
+            sent.innerHTML = JSON.stringify(body, null, 4)
+            recevied.innerHTML = JSON.stringify(data, null, 4)
+            if (data.error) {
+                console.log(data)
+            } 
+        })
+        .catch((error) => {
+            console.log(error)
+        });
+    })
+
+    </script>
+{{end}}

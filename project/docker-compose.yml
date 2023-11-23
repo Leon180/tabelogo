@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+
+  broker:
+    build:
+      context: ./../broker
+      dockerfile: broker.dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  tabelog-spider-service:
+    build:
+      context: ./../tabelog-spider-service
+      dockerfile: tabelog-spider-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+  
+  postgres:
+    image: 'postgres:14.0'
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tabelogo
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
