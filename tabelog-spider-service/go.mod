@@ -3,7 +3,6 @@ module tabelog-spider
 go 1.21.0
 
 require (
-	github.com/Leon180/tabelogo v0.0.0-20231028185236-bb2a258f4d8e
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/cache/v9 v9.0.0
