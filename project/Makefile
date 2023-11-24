@@ -1,5 +1,6 @@
 BROKER_BINARY=brokerApp
 TABELOGSPIDER_BINARY=tabelogspiderApp
+AUTHENTICATE_BINARY=authenticateApp
 
 ## up: start docker compose
 up:
@@ -14,7 +15,7 @@ down:
 	@echo "Done!"
 
 ## up_build: start docker compose with build
-up_build: build_tabelogspider build_broker 
+up_build: build_authenticate build_broker 
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."
@@ -25,6 +26,12 @@ up_build: build_tabelogspider build_broker
 build_broker:
 	@echo "Building broker binary..."
 	cd ../broker && env GOOS=linux CGO_ENABLED=0 go build -o ${BROKER_BINARY} ./cmd/api
+	@echo "Done!"
+
+## build_authenticate: build authenticate binary
+build_authenticate:
+	@echo "Building authenticate binary..."
+	cd ../authenticate && env GOOS=linux CGO_ENABLED=0 go build -o ${AUTHENTICATE_BINARY} ./cmd/api
 	@echo "Done!"
 
 ## build_tabelogspider: build tabelogspider binary
@@ -46,14 +53,14 @@ push_dbml:
 	@echo "Done!"
 
 ## build sql from dbml
-build_sql:
-	@echo "Building sql from dbml..."
+create_sql:
+	@echo "Creating sql from dbml..."
 	cd ../db/dbml && dbml2sql --postgres -o schema.sql db.dbml
 	@echo "Done!"
 
-## build db
-build_db:
-	@echo "Building db..."
+## create db
+create_db:
+	@echo "Creating db..."
 	docker exec -it project-postgres-1 createdb --username=postgres tabelogo
 	@echo "Done!"
 

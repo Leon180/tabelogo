@@ -13,11 +13,13 @@ services:
       mode: replicated
       replicas: 1
 
-  tabelog-spider-service:
+  authenticate:
     build:
-      context: ./../tabelog-spider-service
-      dockerfile: tabelog-spider-service.dockerfile
+      context: ./../authenticate
+      dockerfile: authenticate.dockerfile
     restart: always
+    ports:
+      - "8081:8081"
     deploy:
       mode: replicated
       replicas: 1
@@ -36,3 +38,12 @@ services:
       POSTGRES_DB: tabelogo
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
+
+  # tabelog-spider-service:
+  #   build:
+  #     context: ./../tabelog-spider-service
+  #     dockerfile: tabelog-spider-service.dockerfile
+  #   restart: always
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
