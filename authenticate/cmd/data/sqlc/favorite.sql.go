@@ -57,7 +57,7 @@ func (q *Queries) ListFavorite(ctx context.Context, arg ListFavoriteParams) ([]F
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Favorite{}
+	var items []Favorite
 	for rows.Next() {
 		var i Favorite
 		if err := rows.Scan(

@@ -7,6 +7,8 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Favorite struct {
@@ -36,6 +38,17 @@ type Place struct {
 	Types                    []string       `json:"types"`
 	CreatedAt                time.Time      `json:"created_at"`
 	UpdatedAt                time.Time      `json:"updated_at"`
+}
+
+type Session struct {
+	SessionID    uuid.UUID `json:"session_id"`
+	Email        string    `json:"email"`
+	RefreshToken string    `json:"refresh_token"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type User struct {

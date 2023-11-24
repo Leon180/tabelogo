@@ -3,6 +3,7 @@ package main
 const (
 	webPort                 = "8080"
 	tabelogSpiderServiceURL = "http://tabelog-spider-service"
+	authenticateServiceURL  = "http://authenticate"
 )
 
 func main() {

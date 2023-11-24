@@ -31,22 +31,7 @@ INSERT INTO places (
     photos_name,
     types
 ) VALUES (
-    $1, 
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10,
-    $11,
-    $12,
-    $13,
-    $14,
-    $15,
-    $16
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 ) RETURNING place_id, google_id, tw_display_name, jp_display_name, primary_type, rating, user_rating_count, jp_formatted_address, en_city, jp_district, international_phone_number, tw_weekday_descriptions, accessibility_options, google_map_uri, website_uri, photos_name, types, created_at, updated_at
 `
 

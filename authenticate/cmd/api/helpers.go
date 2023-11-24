@@ -24,11 +24,11 @@ func ComparePassword(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func NewUserResponse(user db.User) gin.H {
-	return gin.H{
-		"user_id":    user.UserID,
-		"email":      user.Email,
-		"created_at": user.CreatedAt,
-		"updated_at": user.UpdatedAt,
+func NewUserResponse(user db.User) UserResponse {
+	return UserResponse{
+		UserID:    user.UserID,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.String(),
+		UpdatedAt: user.UpdatedAt.String(),
 	}
 }

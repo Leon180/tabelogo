@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-11-23T15:12:23.077Z
+-- Generated at: 2023-11-24T03:50:58.516Z
 
 CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
@@ -39,6 +39,19 @@ CREATE TABLE "favorites" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE TABLE "sessions" (
+  "session_id" uuid PRIMARY KEY,
+  "email" varchar NOT NULL,
+  "refresh_token" varchar NOT NULL,
+  "user_agent" varchar NOT NULL,
+  "client_ip" varchar NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false,
+  "expires_at" timestamptz NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
 ALTER TABLE "favorites" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
 
 ALTER TABLE "favorites" ADD FOREIGN KEY ("place_id") REFERENCES "places" ("place_id");
+
+ALTER TABLE "sessions" ADD FOREIGN KEY ("email") REFERENCES "users" ("email");

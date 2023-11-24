@@ -2,31 +2,44 @@ package main
 
 import (
 	db "authenticate/cmd/data/sqlc"
+	"authenticate/token"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	router *gin.Engine
-	store  *db.Store
+	config     Config
+	router     *gin.Engine
+	store      db.Store
+	tokenMaker token.Maker
 }
 
-func NewServer(store *db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(config Config, store db.Store) (*Server, error) {
+
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, err
+	}
+
+	server := &Server{
+		config:     config,
+		tokenMaker: tokenMaker,
+		store:      store,
+	}
 	router := gin.Default()
 	// CORS configuration
 	router.Use(cors.New(CORSConfig()))
 	// Logging and Recovery
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-
 	// Routes
+	router.POST("/", server.Message)
+	router.POST("/regist", server.Regist)
 	router.POST("/login", server.Login)
-	router.POST("/register", server.Regist)
-
+	router.POST("/renew_access", server.RenewAccessToken)
 	server.router = router
-	return server
+	return server, nil
 }
 
 func (s *Server) Run(addr string) error {

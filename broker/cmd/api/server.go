@@ -20,6 +20,7 @@ func NewServer() *Server {
 	// Routes
 	router.POST("/", server.Broker)
 	router.POST("/tabelog", server.TabelogSpider)
+	router.POST("/regist", server.Regist)
 	server.router = router
 	return server
 }

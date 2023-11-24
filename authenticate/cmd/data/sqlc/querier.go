@@ -7,15 +7,19 @@ package db
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateFavorite(ctx context.Context, arg CreateFavoriteParams) (Favorite, error)
 	CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePlace(ctx context.Context, placeID int64) error
 	GetPlaceByGoogleId(ctx context.Context, googleID sql.NullString) (Place, error)
 	GetPlaceById(ctx context.Context, placeID int64) (Place, error)
+	GetSession(ctx context.Context, sessionID uuid.UUID) (Session, error)
 	GetUser(ctx context.Context, email string) (User, error)
 	ListFavorite(ctx context.Context, arg ListFavoriteParams) ([]Favorite, error)
 	UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place, error)
