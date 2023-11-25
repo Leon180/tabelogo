@@ -146,7 +146,7 @@
     {{/* Ｓervice link  */}}
     const quickSearchLink = "http://localhost:8080/quick_search"
     const advanceSearchLink = "http://localhost:8080/advance_search"
-    const textAPIReturnAmount = 10
+    const textAPIReturnAmount = 20
 
     // btn 
     const MapInitBtn = document.getElementById('MapInitBtn');
@@ -194,7 +194,24 @@
             zoom: 8,
         });
         goToCurrentPosition();
+        marker = new google.maps.Marker({
+            map,
+        });
         MapInitBtn.style.display = "none";
+        map.addListener("click", async (e)=>{
+            console.log(e)
+            Promise.allSettled([
+                initSelectedPlace(selectedPlace, "TW", e.placeId, detailsAPIMask, "zh-TW", true)
+            ]).then((value)=>{
+                searchPlaceCloseSave.innerHTML = ""
+                searchPlaceInformation.innerHTML = ""
+                const listInfo = filterInfo(selectedPlace.TW)
+                searchPlaceInformation.appendChild(generateInfoNode(listInfo))
+                let [save, close] = generateCloseSave()
+                searchPlaceCloseSave.appendChild(save)
+                searchPlaceCloseSave.appendChild(close)
+            })
+        })
     });
     CurrentPositionBtn.addEventListener("click", goToCurrentPosition);
     AdvanceSearchBtn.addEventListener("click", async function(){
@@ -245,6 +262,8 @@
                     Promise.allSettled([
                         initSelectedPlace(selectedPlace, "TW", place.place_id, detailsAPIMask, "zh-TW", true)
                     ]).then((value)=>{
+                        searchPlaceCloseSave.innerHTML = ""
+                        searchPlaceInformation.innerHTML = ""
                         const listInfo = filterInfo(selectedPlace.TW)
                         searchPlaceInformation.appendChild(generateInfoNode(listInfo))
                         let [save, close] = generateCloseSave()
@@ -308,15 +327,10 @@
     }
 
     // mark place on map, if marker is null, init a new marker
-    function markPlace(map, lat, lng, marker) {
+    function markPlace(map, lat, lng) {
         // map
         map.setCenter({lat: lat, lng: lng});
         // marker
-        if (!marker) {
-            marker = new google.maps.Marker({
-                map,
-            });
-        };
         marker.setPosition({lat: lat,lng: lng});
     }
 
@@ -358,9 +372,15 @@
         center.id = `center-${Info.id}`;
         center.className = "btn py-1";
         center.innerHTML = "Center";
-        center.addEventListener("click", function(){
-            console.log("center")
-        })
+        var setMapCenterToLocate = function (map, lat, lng) {
+            var center = function () {
+                markPlace(map, lat, lng)
+                map.setZoom(16)
+            };
+            return center;
+        },
+        centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
+        center.addEventListener("click", centf)
         flex.appendChild(save)
         flex.appendChild(center)
         return flex
@@ -411,6 +431,7 @@
     function filterInfo(data, index) {
         const listInfo = {
             "id": null,
+            "location": null,
             "TWdisplayName": null,
             "primaryType": null,
             "rating": null,
@@ -431,6 +452,9 @@
         }
         if (to.hasOwnProperty("id")) {
             listInfo.id = to.id
+        }
+        if (to.hasOwnProperty("location")) {
+            listInfo.location = to.location
         }
         if (to.hasOwnProperty("displayName")) {
             listInfo.TWdisplayName = to.displayName.text
