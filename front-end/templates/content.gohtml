@@ -208,9 +208,7 @@
                 searchPlaceInformation.innerHTML = ""
                 const listInfo = filterInfo(selectedPlace.TW)
                 searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                let [save, close] = generateCloseSave()
-                searchPlaceCloseSave.appendChild(save)
-                searchPlaceCloseSave.appendChild(close)
+                generateCloseSave(searchPlaceCloseSave, listInfo)
             })
         })
     });
@@ -267,9 +265,7 @@
                         searchPlaceInformation.innerHTML = ""
                         const listInfo = filterInfo(selectedPlace.TW)
                         searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                        let [save, close] = generateCloseSave()
-                        searchPlaceCloseSave.appendChild(save)
-                        searchPlaceCloseSave.appendChild(close)
+                        generateCloseSave(searchPlaceCloseSave, listInfo)
                     })                    
                 }
             })
@@ -336,7 +332,7 @@
     }
 
     // places:
-    function generateCloseSave(){
+    function generateCloseSave(ele, Info){
         const save = document.createElement('div');
         save.id = "save-place-btn";
         save.className = "btn py-1";
@@ -349,7 +345,49 @@
         close.className = "btn py-1";
         close.innerHTML = "Close";
         close.addEventListener("click", ClearQuickInfoAndSearchBar)
-        return [save, close]
+        if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
+            const tabelogo = document.createElement('div');
+            tabelogo.id = `tabelogo-${Info.id}`;
+            tabelogo.className = "btn py-1";
+            tabelogo.innerHTML = "Tabelogo";
+            // tabelog request
+            var requestTabelogo = function(Info) {
+                var request = async function() {
+                    const headers = new Headers();
+                    headers.append("Content-Type", "application/json");
+                    const JApayload = {
+                        place_id: Info.id,
+                        api_mask: detailsAPIMaskForAddress.join(","),
+                        language_code: "ja",
+                    }
+                    const body = {
+                        method: 'POST',
+                        body: JSON.stringify(JApayload),
+                        headers: headers,
+                    }
+                    let response = await fetch(quickSearchLink, body)
+                    let JPInfo = await response.json()
+                    console.log(JPInfo)
+                    const TBpayload = {
+                        area: Info.administrative_area_level_1.toLowerCase(),
+                        place_name: JPInfo.displayName.text,
+                    }
+                    let TabelogoResponse = await fetch(tabelogoLink, {
+                        method: 'POST',
+                        body: JSON.stringify(TBpayload),
+                        headers: headers,
+                    })
+                    let TabelogoInfo = await TabelogoResponse.json()
+                    console.log(TabelogoInfo)
+                }
+                return request
+            }
+            tabelogf = requestTabelogo(Info)
+            tabelogo.addEventListener("click", tabelogf)
+            ele.appendChild(tabelogo)
+        }
+        ele.appendChild(save)
+        ele.appendChild(close)
     }
 
     // return a flex with save and center button
@@ -434,16 +472,31 @@
                 <div class="row pb-1">
                     <h5 class="card-title">${Info.TWdisplayName}</h5>
                 </div>
+        `
+        if (Info.rating != null) {
+            HTML += `
                 <div class="row pb-1" style="font-size: 14px; font-weight: 400;">
                     <div class="col card-text">Rating: ${Info.rating} (${Info.userRatingCount})</div>               
                 </div>
-                <div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>
-                <div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>
-               <div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>
-                <div class="flex py-2" style="font-size: 12px;">
-                    <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
-                    <a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>
-                </div>`
+        `
+        }
+        if (Info.primaryType != null) {
+            HTML += `<div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>`
+        }
+        if (Info.TWformattedAddress != null) {
+            HTML += `<div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>`
+        }
+        if (Info.internationalPhoneNumber != null){
+            HTML += `<div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>`
+        }
+        HTML += `
+             <div class="flex py-2" style="font-size: 12px;">
+                <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
+        `
+        if (Info.websiteUri != null) {
+            HTML += `<a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>`
+        }
+        HTML += `</div>`
 
         if (Info.TWweekdayDescriptions != null) {
             HTML += `<div style="font-size: 14px;">Open Time</div>`
