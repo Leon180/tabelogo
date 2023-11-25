@@ -1,6 +1,7 @@
 BROKER_BINARY=brokerApp
 TABELOGSPIDER_BINARY=tabelogspiderApp
 AUTHENTICATE_BINARY=authenticateApp
+GOOGLEMAP_BINARY=googleMapApp
 
 ## up: start docker compose
 up:
@@ -15,7 +16,7 @@ down:
 	@echo "Done!"
 
 ## up_build: start docker compose with build
-up_build: build_authenticate build_broker 
+up_build: build_authenticate build_broker build_google-map
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."
@@ -32,6 +33,12 @@ build_broker:
 build_authenticate:
 	@echo "Building authenticate binary..."
 	cd ../authenticate && env GOOS=linux CGO_ENABLED=0 go build -o ${AUTHENTICATE_BINARY} ./cmd/api
+	@echo "Done!"
+
+## build_googlemap: build googlemap binary
+build_google-map:
+	@echo "Building google-map binary..."
+	cd ../google-map && env GOOS=linux CGO_ENABLED=0 go build -o ${GOOGLEMAP_BINARY} ./cmd/api
 	@echo "Done!"
 
 ## build_tabelogspider: build tabelogspider binary

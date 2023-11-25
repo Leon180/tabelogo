@@ -19,8 +19,14 @@ func NewServer() *Server {
 	router.Use(gin.Recovery())
 	// Routes
 	router.POST("/", server.Broker)
-	router.POST("/tabelog", server.TabelogSpider)
-	router.POST("/regist", server.Regist)
+	// router.POST("/tabelog", server.TabelogSpider)
+	// Authenticate service:
+	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
+	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))
+	router.POST("/renew_access", server.TransRequest("POST", authenticateServiceURL+"/renew_access"))
+	// Google API service:
+	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
+	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))
 	server.router = router
 	return server
 }

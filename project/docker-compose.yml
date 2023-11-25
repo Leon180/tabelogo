@@ -2,24 +2,34 @@ version: '3'
 
 services:
 
-  broker:
+  broker-service:
     build:
       context: ./../broker
       dockerfile: broker.dockerfile
     restart: always
     ports:
       - "8080:8080"
+    links:
+      - authenticate-service
+      - google-map-service
     deploy:
       mode: replicated
       replicas: 1
 
-  authenticate:
+  authenticate-service:
     build:
       context: ./../authenticate
       dockerfile: authenticate.dockerfile
     restart: always
-    ports:
-      - "80:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  google-map-service:
+    build:
+      context: ./../google-map
+      dockerfile: google-map.dockerfile
+    restart: always
     deploy:
       mode: replicated
       replicas: 1
