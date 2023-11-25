@@ -16,7 +16,7 @@ down:
 	@echo "Done!"
 
 ## up_build: start docker compose with build
-up_build: build_authenticate build_broker build_google-map
+up_build: build_broker build_authenticate build_google-map build_tabelogspider
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."

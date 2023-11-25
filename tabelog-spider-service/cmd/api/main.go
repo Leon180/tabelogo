@@ -2,8 +2,7 @@ package main
 
 const (
 	webPort         = "80"
-	radisPort       = "6379"
-	maxCollectLinks = 3
+	maxCollectLinks = 5
 )
 
 func main() {

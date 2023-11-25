@@ -12,6 +12,7 @@ services:
     links:
       - authenticate-service
       - google-map-service
+      - tabelog-spider-service
     deploy:
       mode: replicated
       replicas: 1
@@ -49,11 +50,11 @@ services:
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
-  # tabelog-spider-service:
-  #   build:
-  #     context: ./../tabelog-spider-service
-  #     dockerfile: tabelog-spider-service.dockerfile
-  #   restart: always
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
+  tabelog-spider-service:
+    build:
+      context: ./../tabelog-spider-service
+      dockerfile: tabelog-spider-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1

@@ -378,9 +378,40 @@
                 map.setZoom(16)
             };
             return center;
-        },
-        centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
+        }
+        centf = setMapCenterToLocate(map, Info.location.latitude);
         center.addEventListener("click", centf)
+        if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
+            const tabelogo = document.createElement('div');
+            tabelogo.id = `tabelogo-${Info.id}`;
+            tabelogo.className = "btn py-1";
+            tabelogo.innerHTML = "Tabelogo";
+            // tabelog request
+            var requestTabelogo = function(Info) {
+                var request = async function() {
+                    const headers = new Headers();
+                    headers.append("Content-Type", "application/json");
+                    payload = {
+                        place_id: Info.id,
+                        api_mask: detailsAPIMaskForAddress.join(","),
+                        language_code: "ja",
+                    }
+                    const body = {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: headers,
+                    }
+                    let response = await fetch(quickSearchLink, body)
+                    let data = await response.json()
+                    console.log(data)
+                    
+                }
+                return request
+            }
+            tabelogf = requestTabelogo(Info)
+            tabelogo.addEventListener("click", tabelogf)
+            flex.appendChild(tabelogo)
+        }
         flex.appendChild(save)
         flex.appendChild(center)
         return flex
@@ -432,6 +463,8 @@
         const listInfo = {
             "id": null,
             "location": null,
+            "country": null,
+            "administrative_area_level_1": null,
             "TWdisplayName": null,
             "primaryType": null,
             "rating": null,
@@ -452,6 +485,18 @@
         }
         if (to.hasOwnProperty("id")) {
             listInfo.id = to.id
+        }
+        if (to.hasOwnProperty("addressComponents")) {
+            to.addressComponents.forEach((ac) => {
+                ac.types.forEach((t)=>{
+                    if (t == "country") {
+                        listInfo.country = ac.shortText
+                    }
+                    if (t == "administrative_area_level_1") {
+                        listInfo.administrative_area_level_1 = ac.shortText
+                    }
+                })
+            })
         }
         if (to.hasOwnProperty("location")) {
             listInfo.location = to.location
@@ -509,46 +554,6 @@
         .then((response) => response.json())
         .then((data) => {
             sent.innerHTML = "empty post request"
-            recevied.innerHTML = JSON.stringify(data, null, 4)
-            if (data.error) {
-                console.log(data)
-            } 
-        })
-        .catch((error) => {
-            console.log(error)
-        });
-    })
-    
-    GetTabelogInfoBtn.addEventListener("click", function(){
-        
-        let searchArea;
-
-        selectedPlaceJP.addressComponents.forEach((item) => {
-            item.types.forEach((type) => {
-                if (type === "locality") {
-                    searchArea = item.longText
-                }
-            })
-        })
-
-        const payload = {
-            searchName: selectedPlaceJP.displayName.text,
-            searchArea: searchArea,
-        }
-        
-        const headers = new Headers();
-        headers.append("Content-Type", "application/json");
-
-        const body = {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: headers,
-        }
-
-        fetch("http:\/\/localhost:8080/tabelog", body)
-        .then((response) => response.json())
-        .then((data) => {
-            sent.innerHTML = JSON.stringify(body, null, 4)
             recevied.innerHTML = JSON.stringify(data, null, 4)
             if (data.error) {
                 console.log(data)

@@ -19,7 +19,7 @@ func NewServer() *Server {
 	router.Use(gin.Recovery())
 	// Routes
 	router.POST("/", server.Broker)
-	// router.POST("/tabelog", server.TabelogSpider)
+	router.POST("/tabelogo", server.TransRequest("POST", tabelogSpiderServiceURL))
 	// Authenticate service:
 	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
 	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))
