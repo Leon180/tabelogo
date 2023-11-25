@@ -15,10 +15,12 @@ type LinkSpiderRequest struct {
 }
 
 type TabelogInfo struct {
+	Link        string
 	Name        string
 	Rating      string
 	RatingCount string
 	Bookmarks   string
+	Phone       string
 	Type        []string
 }
 
@@ -42,14 +44,15 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	lSpider := NewLinkSpider(lSpiderOption)
 	err = lSpider.Collect()
 	if err != nil {
-		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 	lCollection := lSpider.GetCollections()
 	if len(lCollection) == 0 {
-		fmt.Println("No links found")
 		c.JSON(http.StatusBadRequest, fmt.Errorf("no links found"))
 		return
 	}
+	lCollection = RemoveDuplicateString(lCollection)
 	if len(lCollection) > maxCollectLinks {
 		lCollection = lCollection[:maxCollectLinks:maxCollectLinks]
 	}
@@ -57,15 +60,16 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	tabelogInfoCollection := make([]TabelogInfo, len(lCollection))
 	var wg sync.WaitGroup
 	wg.Add(len(lCollection))
-	for i, link := range lCollection {
-		fmt.Println(link)
-		go func(link string) {
+	fmt.Println(lCollection)
+	for index, link := range lCollection {
+		go func(link string, index int) {
 			// table photo link: link+"/table/"
 			// menu link: link+"/dtlmenu/"
 			//	drink menu link: link+"/dtlmenu/drink/"
 			// comments link: link+"/dtlrvwlst/"
 			// rating distribute link: link+"/dtlratings/"
 			defer wg.Done()
+			fmt.Println(link)
 			tbcRequest := TabelogContentSpider{
 				Url: link,
 				ContentSelector: ContentSelector{
@@ -75,24 +79,17 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 						"rating":      ".rdheader-rating__score b.c-rating__val",
 						"ratingCount": ".rdheader-rating__review-target .num",
 						"bookmarks":   ".rdheader-rating__hozon-target .num",
+						"phone":       ".rstinfo-table__tel-num",
 					},
 				},
 			}
 			tbSpider := NewtabelogContentSpider(tbcRequest)
 			err = tbSpider.Collect()
 			if err != nil {
-				fmt.Println(err)
 				c.JSON(http.StatusInternalServerError, errorResponse(err))
 				return
 			}
 			tbc := tbSpider.GetCollections()
-			fmt.Println(tbc)
-			tabelogInfoCollection[i] = TabelogInfo{
-				Name:        tbc["name"][0],
-				Rating:      tbc["rating"][0],
-				RatingCount: tbc["ratingCount"][0],
-				Bookmarks:   tbc["bookmarks"][0],
-			}
 
 			// get type
 			tbListOption := TabelogListContentSpider{
@@ -113,19 +110,25 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 			tbListSpider := NewtabelogListContentSpider(tbListOption)
 			err = tbListSpider.Collect()
 			if err != nil {
-				fmt.Println(err)
 				c.JSON(http.StatusInternalServerError, errorResponse(err))
 				return
 			}
 			tbcList := tbListSpider.GetCollections()
-			typeList, exist := tbcList[0]["type"]
-			if !exist {
-				fmt.Println("type not found")
-				c.JSON(http.StatusInternalServerError, fmt.Errorf("type not found in tabelog"))
-				return
+			typeList := make([]string, len(tbcList))
+			for i, tbc := range tbcList {
+				typeList[i] = tbc["type"][0]
 			}
-			tabelogInfoCollection[i].Type = typeList
-		}(link)
+
+			tabelogInfoCollection[index] = TabelogInfo{
+				Link:        link,
+				Name:        tbc["name"][0],
+				Rating:      tbc["rating"][0],
+				RatingCount: tbc["ratingCount"][0],
+				Bookmarks:   tbc["bookmarks"][0],
+				Phone:       tbc["phone"][0],
+				Type:        typeList,
+			}
+		}(link, index)
 	}
 	wg.Wait()
 	c.JSON(http.StatusOK, tabelogInfoCollection)

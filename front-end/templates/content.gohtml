@@ -146,6 +146,7 @@
     {{/* Ｓervice link  */}}
     const quickSearchLink = "http://localhost:8080/quick_search"
     const advanceSearchLink = "http://localhost:8080/advance_search"
+    const tabelogoLink = "http://localhost:8080/tabelogo"
     const textAPIReturnAmount = 20
 
     // btn 
@@ -180,10 +181,10 @@
     const searchResults = {
         "TW": null,
     }
-    const detailsAPIMask = ["id","formatted_address","address_components","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
+    const detailsAPIMask = ["id","international_phone_number","formatted_address","address_components","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
     const detailsAPIMaskNoAdvance = ["id","formatted_address","address_components","googleMapsUri","displayName","photos","accessibilityOptions"];
     const detailsAPIMaskForAddress = ["id","formatted_address","address_components","location","displayName"];
-    const textAPIMask = ["id","formattedAddress","addressComponents","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
+    const textAPIMask = ["id","internationalPhoneNumber","formattedAddress","addressComponents","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
     const textAPIMaskNoAdvance = ["id","formattedAddress","addressComponents","googleMapsUri","displayName","photos","accessibilityOptions"];
     const textAPIMaskForAddress = ["id","formattedAddress","addressComponents","location","displayName"];
 
@@ -391,20 +392,30 @@
                 var request = async function() {
                     const headers = new Headers();
                     headers.append("Content-Type", "application/json");
-                    payload = {
+                    const JApayload = {
                         place_id: Info.id,
                         api_mask: detailsAPIMaskForAddress.join(","),
                         language_code: "ja",
                     }
                     const body = {
                         method: 'POST',
-                        body: JSON.stringify(payload),
+                        body: JSON.stringify(JApayload),
                         headers: headers,
                     }
                     let response = await fetch(quickSearchLink, body)
-                    let data = await response.json()
-                    console.log(data)
-                    
+                    let JPInfo = await response.json()
+                    console.log(JPInfo)
+                    const TBpayload = {
+                        area: Info.administrative_area_level_1.toLowerCase(),
+                        place_name: JPInfo.displayName.text,
+                    }
+                    let TabelogoResponse = await fetch(tabelogoLink, {
+                        method: 'POST',
+                        body: JSON.stringify(TBpayload),
+                        headers: headers,
+                    })
+                    let TabelogoInfo = await TabelogoResponse.json()
+                    console.log(TabelogoInfo)
                 }
                 return request
             }
@@ -428,6 +439,7 @@
                 </div>
                 <div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>
                 <div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>
+               <div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>
                 <div class="flex py-2" style="font-size: 12px;">
                     <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
                     <a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>
@@ -462,6 +474,7 @@
     function filterInfo(data, index) {
         const listInfo = {
             "id": null,
+            "internationalPhoneNumber": null,
             "location": null,
             "country": null,
             "administrative_area_level_1": null,
@@ -485,6 +498,9 @@
         }
         if (to.hasOwnProperty("id")) {
             listInfo.id = to.id
+        }
+        if (to.hasOwnProperty("internationalPhoneNumber")) {
+            listInfo.internationalPhoneNumber = to.internationalPhoneNumber
         }
         if (to.hasOwnProperty("addressComponents")) {
             to.addressComponents.forEach((ac) => {

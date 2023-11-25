@@ -13,9 +13,20 @@ func errorResponse(err error) gin.H {
 func ParamsCombine(u string, params map[string]string) string {
 	nu := u + "?"
 	for k, v := range params {
-		if k == "sk" || k == "sw" {
-			nu = nu + k + "=" + url.QueryEscape(v) + "&"
-		}
+		nu = nu + k + "=" + url.QueryEscape(v) + "&"
 	}
 	return nu
+}
+
+func RemoveDuplicateString(s []string) []string {
+	m := make(map[string]byte)
+	var r []string
+	for _, v := range s {
+		l := len(m)
+		m[v] = 0
+		if len(m) != l {
+			r = append(r, v)
+		}
+	}
+	return r
 }
