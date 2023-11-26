@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ func (s *Server) Broker(c *gin.Context) {
 
 func (s *Server) TransRequest(method, url string) func(*gin.Context) {
 	return func(c *gin.Context) {
+		fmt.Println(url)
 		var err error
 		body := c.Request.Body
 		// submit request to tabelog spider service

@@ -14,6 +14,7 @@ services:
       - google-map-service
       - tabelog-spider-service
       - logger-service
+      - mail-service
     deploy:
       mode: replicated
       replicas: 1
@@ -83,3 +84,19 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: jt79100
     volumes:
       - ./db-data/mongo/:/data/db/
+  
+  mail-service:
+    build:
+      context: ./../mail-service
+      dockerfile: ./../mail-service/mail-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    links:
+      - mailhog
+
+  mailhog:
+    image: 'jcalonso/mailhog:latest'
+    ports:
+      - "8025:8025"

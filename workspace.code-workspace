@@ -26,6 +26,9 @@
 		},
 		{
 			"path": "logger-service"
+		},
+		{
+			"path": "mail-service"
 		}
 	],
 	"settings": {

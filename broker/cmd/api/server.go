@@ -30,6 +30,8 @@ func NewServer() *Server {
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))
 	// logger service:(for testing)
 	router.POST("/write_log", server.TransRequest("POST", loggerServiceURL+"/write_log"))
+	// mail
+	router.POST("/send_mail", server.TransRequest("POST", mailServiceURL+"/send"))
 	server.router = router
 	return server
 }

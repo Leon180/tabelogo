@@ -6,6 +6,7 @@ const (
 	authenticateServiceURL  = "http://authenticate-service"   // service's name
 	googleMapServiceURL     = "http://google-map-service"     // service's name
 	loggerServiceURL        = "http://logger-service"         // service's name
+	mailServiceURL          = "http://mail-service"           // service's name
 )
 
 func main() {
