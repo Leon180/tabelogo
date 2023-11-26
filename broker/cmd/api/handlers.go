@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broker/rabbitmq/event"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -42,4 +43,57 @@ func (s *Server) TransRequest(method, url string) func(*gin.Context) {
 		}
 		c.JSON(http.StatusOK, resp)
 	}
+}
+
+type LogPayload struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
+type JSONResponse struct {
+	Error   bool   `json:"error"`
+	Message string `json:"message"`
+}
+
+func (s *Server) logEventViaRabbit(c *gin.Context) {
+	var l LogPayload
+	if err := c.ShouldBindJSON(&l); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	err := s.pushToQueue(l.Name, l.Data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var resp JSONResponse
+	resp.Error = false
+	resp.Message = "logged via RabbitMQ"
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// pushToQueue pushes a message into RabbitMQ
+func (s *Server) pushToQueue(name, msg string) error {
+	emitter, err := event.NewEventEmitter(s.rabbitMQ)
+	if err != nil {
+		return err
+	}
+
+	payload := LogPayload{
+		Name: name,
+		Data: msg,
+	}
+
+	j, err := json.MarshalIndent(&payload, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	err = emitter.Push(string(j), "log.INFO")
+	if err != nil {
+		return err
+	}
+	return nil
 }

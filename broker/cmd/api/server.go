@@ -3,14 +3,19 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Server struct {
-	router *gin.Engine
+	router   *gin.Engine
+	rabbitMQ *amqp.Connection
 }
 
-func NewServer() *Server {
-	server := &Server{}
+func NewServer(rabbitConn *amqp.Connection) *Server {
+
+	server := &Server{
+		rabbitMQ: rabbitConn,
+	}
 	router := gin.Default()
 	// CORS configuration
 	router.Use(cors.New(CORSConfig()))
@@ -29,7 +34,8 @@ func NewServer() *Server {
 	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))
 	// logger service:(for testing)
-	router.POST("/write_log", server.TransRequest("POST", loggerServiceURL+"/write_log"))
+	// router.POST("/write_log", server.TransRequest("POST", loggerServiceURL+"/write_log"))
+	router.POST("/write_log", server.logEventViaRabbit)
 	// mail
 	router.POST("/send_mail", server.TransRequest("POST", mailServiceURL+"/send"))
 	server.router = router

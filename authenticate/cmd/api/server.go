@@ -6,16 +6,18 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Server struct {
 	config     Config
 	router     *gin.Engine
 	store      db.Store
+	rabbitMQ   *amqp.Connection
 	tokenMaker token.Maker
 }
 
-func NewServer(config Config, store db.Store) (*Server, error) {
+func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection) (*Server, error) {
 
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
@@ -26,6 +28,7 @@ func NewServer(config Config, store db.Store) (*Server, error) {
 		config:     config,
 		tokenMaker: tokenMaker,
 		store:      store,
+		rabbitMQ:   rabbitConn,
 	}
 	router := gin.Default()
 	// CORS configuration

@@ -24,6 +24,13 @@ type TabelogInfo struct {
 	Type        []string
 }
 
+// table photo link: link+"/table/"
+// menu link: link+"/dtlmenu/"
+//	drink menu link: link+"/dtlmenu/drink/"
+// comments link: link+"/dtlrvwlst/"
+// rating distribute link: link+"/dtlratings/"
+// photo link: link+"/dtlphotolst
+
 func (s *Server) TabelogSpider(c *gin.Context) {
 	var req LinkSpiderRequest
 	var err error
@@ -63,11 +70,6 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	fmt.Println(lCollection)
 	for index, link := range lCollection {
 		go func(link string, index int) {
-			// table photo link: link+"/table/"
-			// menu link: link+"/dtlmenu/"
-			//	drink menu link: link+"/dtlmenu/drink/"
-			// comments link: link+"/dtlrvwlst/"
-			// rating distribute link: link+"/dtlratings/"
 			defer wg.Done()
 			fmt.Println(link)
 			tbcRequest := TabelogContentSpider{

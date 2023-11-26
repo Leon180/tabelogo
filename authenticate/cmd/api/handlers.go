@@ -63,7 +63,11 @@ func (server *Server) Regist(c *gin.Context) {
 	}
 
 	// log auth event
-	if err := server.LogRequest("authenticated", fmt.Sprintf("user %s has registed", user.Email)); err != nil {
+	// if err := server.LogRequest("authenticated", fmt.Sprintf("user %s has registed", user.Email)); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
+	if err := server.logEventViaRabbit("authenticated", fmt.Sprintf("user %s regist", user.Email), "log.INFO"); err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -109,10 +113,14 @@ func (server *Server) Login(c *gin.Context) {
 	}
 	if err := ComparePassword(user.HashedPassword, request.Password); err != nil {
 		// auth log
-		if err := server.LogRequest("unauthenticated", fmt.Sprintf("user %s log in failed: mistype password, from IP: %s, UserAgent: %s", user.Email, c.ClientIP(), c.Request.UserAgent())); err != nil {
+		if err := server.logEventViaRabbit("unauthenticated", fmt.Sprintf("user %s log in failed: mistype password, from IP: %s, UserAgent: %s", user.Email, c.ClientIP(), c.Request.UserAgent()), "log.ERROR"); err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+		// if err := server.LogRequest("unauthenticated", fmt.Sprintf("user %s log in failed: mistype password, from IP: %s, UserAgent: %s", user.Email, c.ClientIP(), c.Request.UserAgent())); err != nil {
+		// 	c.JSON(http.StatusInternalServerError, errorResponse(err))
+		// 	return
+		// }
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -148,10 +156,14 @@ func (server *Server) Login(c *gin.Context) {
 	}
 
 	// log auth event
-	if err := server.LogRequest("authenticated", fmt.Sprintf("user %s log in", user.Email)); err != nil {
+	if err := server.logEventViaRabbit("authenticated", fmt.Sprintf("user %s log in", user.Email), "log.INFO"); err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	// if err := server.LogRequest("authenticated", fmt.Sprintf("user %s log in", user.Email)); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, errorResponse(err))
+	// 	return
+	// }
 
 	resp := LoginResponse{
 		SessionID:             uuid.UUID(session.SessionID),
