@@ -19,6 +19,7 @@ func NewServer() *Server {
 	router.Use(gin.Recovery())
 	// Routes
 	router.POST("/", server.Broker)
+	// Tabelog spider service:
 	router.POST("/tabelogo", server.TransRequest("POST", tabelogSpiderServiceURL))
 	// Authenticate service:
 	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
@@ -27,6 +28,8 @@ func NewServer() *Server {
 	// Google API service:
 	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))
+	// logger service:(for testing)
+	router.POST("/write_log", server.TransRequest("POST", loggerServiceURL+"/write_log"))
 	server.router = router
 	return server
 }

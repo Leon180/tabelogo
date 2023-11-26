@@ -5,6 +5,7 @@ const (
 	tabelogSpiderServiceURL = "http://tabelog-spider-service" // service's name
 	authenticateServiceURL  = "http://authenticate-service"   // service's name
 	googleMapServiceURL     = "http://google-map-service"     // service's name
+	loggerServiceURL        = "http://logger-service"         // service's name
 )
 
 func main() {

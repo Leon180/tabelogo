@@ -23,6 +23,9 @@
 		},
 		{
 			"path": "db"
+		},
+		{
+			"path": "logger-service"
 		}
 	],
 	"settings": {

@@ -13,6 +13,7 @@ services:
       - authenticate-service
       - google-map-service
       - tabelog-spider-service
+      - logger-service
     deploy:
       mode: replicated
       replicas: 1
@@ -22,6 +23,8 @@ services:
       context: ./../authenticate
       dockerfile: authenticate.dockerfile
     restart: always
+    links: 
+      - logger-service
     deploy:
       mode: replicated
       replicas: 1
@@ -58,3 +61,25 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+  
+  logger-service:
+    build:
+      context: ./../logger-service
+      dockerfile: logger-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    links:
+      - mongo
+
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: jt79100
+    volumes:
+      - ./db-data/mongo/:/data/db/

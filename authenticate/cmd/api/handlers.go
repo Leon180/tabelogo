@@ -61,6 +61,13 @@ func (server *Server) Regist(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	// log auth event
+	if err := server.LogRequest("authenticated", fmt.Sprintf("user %s has registed", user.Email)); err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"user": NewUserResponse(user)})
 }
 
@@ -101,6 +108,11 @@ func (server *Server) Login(c *gin.Context) {
 		return
 	}
 	if err := ComparePassword(user.HashedPassword, request.Password); err != nil {
+		// auth log
+		if err := server.LogRequest("unauthenticated", fmt.Sprintf("user %s log in failed: mistype password, from IP: %s, UserAgent: %s", user.Email, c.ClientIP(), c.Request.UserAgent())); err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -131,6 +143,12 @@ func (server *Server) Login(c *gin.Context) {
 		ExpiresAt:    refreshPayload.ExpiresAt,
 	})
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// log auth event
+	if err := server.LogRequest("authenticated", fmt.Sprintf("user %s log in", user.Email)); err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -212,4 +230,17 @@ func (server *Server) RenewAccessToken(c *gin.Context) {
 
 func (server *Server) Message(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
+}
+
+type VarifyAccessTokenRequest struct {
+	AccessToken string `json:"access_token" binding:"required"`
+}
+
+func VerifyAccessToken(c *gin.Context) {
+	var request VarifyAccessTokenRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
 }
