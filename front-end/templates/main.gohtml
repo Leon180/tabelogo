@@ -104,37 +104,11 @@
         </div>
     </div>
 </div>
-{{/* api test button */}}
-<div class="row mt-3">
-    <div class="col">
-        <a id="CurrentPositionBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Direct to current position</a>
-        <a id="BrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Broker!</a>
-        <a id="GetTabelogInfoBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Get Tabelog</a>
-    </div>
-</div>
-{{/* api test result */}}
-<div class="row mt-3">
-    <div class="col">
-        <h4 class="mt-5">Sent</h4>
-        <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
-            <pre id="payload"><span class="text-muted">Nothing sent yet...</span></pre>
-        </div>
-    </div>
-    <div class="col">
-        <h4 class="mt-5">Received</h4>
-        <div class="mt-1" style="outline: 1px solid silver; padding: 2em;">
-            <pre id="received"><span class="text-muted">Nothing received yet...</span></pre>
-        </div>
-    </div>
-</div>
         
 {{end}}
 
 {{define "js"}}
-    {{/* google map api */}}
-    {{/* Language could set, ref: https://developers.google.com/maps/documentation/javascript/load-maps-js-api?hl=zh-tw s */}}
-    
-    {{/* Todo: restrict to use generate map only */}}
+    {{/* google map(restrict to use place(old), map only) */}}
     <script async
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBvexSf5aOR04wPtAnoq29dUwotprd-Igk&libraries=places&callback=initMap&region=JP&language=ja">
     </script>
@@ -144,15 +118,15 @@
     <script>
 
     {{/* Ｓervice link  */}}
-    const quickSearchLink = "http://localhost:8080/quick_search"
-    const advanceSearchLink = "http://localhost:8080/advance_search"
-    const tabelogoLink = "http://localhost:8080/tabelogo"
+    const brokerUrl = {{.BrokerURL}}
+    const quickSearchLink = `${brokerUrl}/quick_search`
+    const advanceSearchLink = `${brokerUrl}/advance_search`
+    const tabelogoLink = `${brokerUrl}/tabelogo`
     const textAPIReturnAmount = 20
 
     // btn 
     const MapInitBtn = document.getElementById('MapInitBtn');
     const CurentPositionBtn = document.getElementById('CurrentPositionBtn');
-    const BrokerBtn = document.getElementById('BrokerBtn');
     const GetTabelogInfoBtn = document.getElementById('GetTabelogInfoBtn');
     const AdvanceSearchBtn = document.getElementById('AdvanceSearchBtn');
     const CloseInfoBtn = document.getElementById('close-info-btn');
@@ -612,26 +586,6 @@
         AutoSearchBar.value = ""
         searchPlaceCloseSave.innerHTML = ""
     }
-
-    // api
-    BrokerBtn.addEventListener("click", function(){
-        const body = {
-            method: "POST",
-        }
-
-        fetch("http:\/\/localhost:8080/", body)
-        .then((response) => response.json())
-        .then((data) => {
-            sent.innerHTML = "empty post request"
-            recevied.innerHTML = JSON.stringify(data, null, 4)
-            if (data.error) {
-                console.log(data)
-            } 
-        })
-        .catch((error) => {
-            console.log(error)
-        });
-    })
 
     </script>
 {{end}}

@@ -1,0 +1,18 @@
+{{define "nav" }}
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" style="height:8vh;">
+        <div class="container-fluid">
+            <a id="homepage" class="nav-link btn" href="/">Tabelogo</a>
+            <div id="current-place-name"></div>
+            <ul class="nav justify-content-end">
+                <li class="nav-item dropdown justify-content-end">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Hi User: {}</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">My Favorite</a></li>
+                        <li><a class="dropdown-item" href="#">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        </nav>
+    </nav>
+{{end}}

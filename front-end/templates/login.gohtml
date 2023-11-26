@@ -1,0 +1,89 @@
+{{template "base" .}}
+
+{{define "content" }}
+
+<div class="row justify-content-center">
+    <div class="col-sm-5 col-10">
+        <div class="mt-2 ms-3">
+           <div class="card text-center">
+                <div class="card-header">
+                    User Login
+                </div>
+                <div class="card-body mb-1">
+                    <div class="mb-4">
+                        <div class="form-floating mb-2">
+                            <input type="email" class="form-control" id="login-email" placeholder="name@example.com">
+                            <label for="login-email">Email</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="login-password" placeholder="Password">
+                            <label for="login-password">Password</label>
+                        </div>
+                    </div>
+                    <div id="login-request" class="btn btn-outline-secondary">Login</div>
+                </div>
+                <a href="/regist" class="mb-4">No accout yet, go to regist!</a>
+            </div>
+        </div>
+    </div>
+</div>
+        
+{{end}}
+
+{{define "js"}}
+    {{/* bootstrap */}}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+    <script>
+        const brokerUrl = {{.BrokerURL}}
+        const logInUrl = `${brokerUrl}/login`
+        const loginRequest = document.getElementById("login-request");
+        const loginEmail = document.getElementById("login-email");
+        const loginPassword = document.getElementById("login-password");
+        
+        loginRequest.addEventListener("click", () => {
+            let invalidInput = false
+            const email = loginEmail.value;
+            if (!email) {
+                addClassForAWhile(loginEmail, "is-invalid", 1000);
+                invalidInput = true;
+            }
+            const password = loginPassword.value;
+            if (!password) {
+                addClassForAWhile(loginPassword, "is-invalid", 1000);
+                invalidInput = true;
+            }
+            if (invalidInput) {
+                return
+            }
+            const payload = {
+                email: email,
+                password: password
+            };
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+            fetch(logInUrl, {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(payload)
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data);
+                if (!data.session_id){
+                    alert("Login failed, please check your email and password");
+                    return;
+                } else {
+                    window.location.href = "/";
+                }
+            })
+        })
+
+    function addClassForAWhile(element, className, time) {
+        element.classList.add(className);
+        setTimeout(() => {
+            element.classList.remove(className);
+        }, time);
+    }
+    </script>
+{{end}}

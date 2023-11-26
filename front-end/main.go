@@ -14,14 +14,24 @@ const (
 )
 
 func main() {
+
+	config, err := LoadConfig(".")
+	if err != nil {
+		log.Panic(err)
+	}
 	// handleize function: render
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		renderFrontEnd(w, "content.gohtml")
+		renderFrontEnd(w, "main.gohtml", config)
 	})
-
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		renderFrontEnd(w, "login.gohtml", config)
+	})
+	http.HandleFunc("/regist", func(w http.ResponseWriter, r *http.Request) {
+		renderFrontEnd(w, "regist.gohtml", config)
+	})
 	// build connection and start listen...
 	fmt.Println("Starting front end server and listen on port: " + frontEndPort)
-	err := http.ListenAndServe(frontEndPort, nil)
+	err = http.ListenAndServe(frontEndPort, nil)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -30,9 +40,9 @@ func main() {
 //go:embed templates
 var templatesFS embed.FS
 
-func renderFrontEnd(w http.ResponseWriter, t string) {
+func renderFrontEnd(w http.ResponseWriter, t string, config Config) {
 
-	partials, err := ReadFilesName("templates")
+	partials, err := ReadFilesName("templates/partials")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,9 +51,7 @@ func renderFrontEnd(w http.ResponseWriter, t string) {
 	var templateSlice []string
 	templateSlice = append(templateSlice, fmt.Sprintf("templates/%s", t))
 
-	for _, x := range partials {
-		templateSlice = append(templateSlice, x)
-	}
+	templateSlice = append(templateSlice, partials...)
 
 	tmpl, err := template.ParseFS(templatesFS, templateSlice...)
 	if err != nil {
@@ -51,14 +59,15 @@ func renderFrontEnd(w http.ResponseWriter, t string) {
 		return
 	}
 
-	// var data struct {
-	// 	BrokerURL string
-	// }
+	var data struct {
+		BrokerURL  string
+		WebsiteURL string
+	}
 
-	// data.BrokerURL = os.Getenv("BROKER_URL")
-	// data.BrokerURL = "http://localhost:8080"
+	data.BrokerURL = config.BrokerURL
+	data.WebsiteURL = config.WebsiteURL
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
