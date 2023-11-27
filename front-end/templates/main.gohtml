@@ -158,7 +158,7 @@
                                 <div class="form-check form-switch">
                                 {{/* if rankPreference is selected, choose distance instead of relevence */}}
                                     <input class="form-check-input" type="checkbox" role="switch" id="rankPreference-bool" checked>
-                                    <label class="form-check-label" for="rankPreference-bool" style="font-size:12px;">Distance first</label>
+                                    <label class="form-check-label" for="rankPreference-bool" style="font-size:12px;">Revelence First</label>
                                 </div>
                             </div>
                         </div>
@@ -187,9 +187,6 @@
                 </div>
             </li>
             {{/* list information of serach results */}}
-            {{/* tmp butt */}}
-            <button type="button" class="btn btn-primary" id="tabelogo-toastBtn">Show live toast</button>
-
             <li id="list-search-results" class="list-group-item">
             
                 
@@ -334,7 +331,7 @@
             max_result_count: textAPIReturnAmount,
             min_rating: parseInt(document.getElementById("minRating-range").value),
             open_now: document.getElementById("openNow-bool").checked,
-            rank_preference: (document.getElementById("rankPreference-bool").checked)?"DISTANCE":"RELEVANCE",
+            rank_preference: (document.getElementById("rankPreference-bool").checked)?"RELEVANCE":"DISTANCE",
         }
         let payloadTW = {
             ...payload,
@@ -434,9 +431,9 @@
     // mark place on map, if marker is null, init a new marker
     function markPlace(map, lat, lng) {
         // map
-        map.setCenter({lat: lat, lng: lng});
+        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
         // marker
-        marker.setPosition({lat: lat,lng: lng});
+        marker.setPosition({lat: parseFloat(lat),lng: parseFloat(lng)});
     }
 
     // places:
@@ -487,6 +484,11 @@
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
                     console.log(TabelogoInfo)
+                    const toast = generateTabelogoToast(Info.id, TabelogoInfo)
+                    toastContainer.appendChild(toast) // add to toast container
+                    const freshToast = document.getElementById(`toast-listener-${Info.id}`)
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
+                    toastBootstrap.show()
                 }
                 return request
             }
@@ -526,7 +528,7 @@
             };
             return center;
         }
-        centf = setMapCenterToLocate(map, Info.location.latitude);
+        centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
         center.addEventListener("click", centf)
         if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
             const tabelogo = document.createElement('div');
@@ -566,14 +568,11 @@
                     let TabelogoInfo = await TabelogoResponse.json()
                     console.log(TabelogoInfo)
                     console.log("start to generate toast")
-                    {{/* toastContainer.innerHTML = ""
                     const toast = generateTabelogoToast(Info.id, TabelogoInfo)
-                    console.log(toast)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
-                    console.log(freshToast)
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
-                    toastBootstrap.show() */}}
+                    toastBootstrap.show()
                 }
                 return request
             }
@@ -766,7 +765,6 @@
         const toastBody = generateToastBody(googleId, returnDataArr)
         toast.appendChild(toastHeader)
         toast.appendChild(toastBody)
-        console.log(toast)
         return toast
     }
 
@@ -779,7 +777,6 @@
         row.appendChild(generateToastSideList(googleId, returnDataArr))
         row.appendChild(generateToastMainList(googleId, returnDataArr))
         toastBody.appendChild(row)
-        console.log("toastBody", toastBody)
         return toastBody
     }
 
@@ -797,12 +794,12 @@
         col.className = "col-4";
         let HTML=`
             <div id="list-${googleId}" class="list-group">`
-        returnDataArr.forEach((i, data)=>{
-            HTML +=`<a class="list-group-item list-group-item-action" href="#list-item-${data.Link}">Result-${i}</a>`
-        })
+
+        for (let i=0; i<returnDataArr.length; i++){
+            HTML +=`<a class="list-group-item list-group-item-action" href="#list-item-${returnDataArr[i].Link}">Result-${i+1}</a>`
+        }
         HTML += `</div>`
         col.innerHTML = HTML
-        console.log("sidelist", col)
         return col
     }
 
@@ -814,7 +811,7 @@
     function generateToastMainList(googleId, returnDataArr) {
         const col = document.createElement('div');
         col.className = "col-8";
-        col.style = "height: 23vh; overflow:scroll;"
+        col.style = "height: 25vh; overflow:scroll;"
         const divc = document.createElement('div');
         divc.dataset.bsSpy = "scroll";
         divc.dataset.bsTarget = `#list-${googleId}`;
@@ -825,7 +822,6 @@
             divc.appendChild(generateToastMainListInfo(data))
         })
         col.appendChild(divc)
-        console.log("mainlist", col)
         return col
     }
 
@@ -858,7 +854,6 @@
             </div>`
         HTML += `</div>`
         list.innerHTML = HTML
-        console.log("mainlistinfo", list)
         return list
     }
 
