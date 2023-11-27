@@ -1,11 +1,136 @@
 {{template "base" .}}
 
 {{define "content" }}
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+  <div id="tabelogo-toast-container" class="toast-container top-0 end-0 p-3">
+
+    {{/* <!-- put toasts within -->
+    <div class="toast" id="tabelogo-toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="me-auto">Tabelogo</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        <div class="row" >
+            <div class="col-4">
+                <div id="list-example" class="list-group">
+                <a class="list-group-item list-group-item-action" href="#list-item-1">Result1</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-2">Item 2</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-3">Item 3</a>
+                <a class="list-group-item list-group-item-action" href="#list-item-4">Item 4</a>
+                </div>
+            </div>
+            <div class="col-8" style="height: 23vh; overflow:scroll;">
+                <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true" class="scrollspy-example text-center" tabindex="0">
+                    // list
+                    <div class="mb-2">
+                        <h6 id="list-item-1">カラシビ味噌らー麺 鬼金棒 神田本店</h6>
+                        <div class="row pb-1" style="font-size: 12px; font-weight: 400;">
+                            <div class="col card-text">ラーメン</div>    
+                            <div class="col card-text">丼</div>               
+                        </div>
+                        <div class="row pb-1" style="font-size: 12px; font-weight: 400;">
+                            <div class="col card-text">"Rating": "3.73"(1569)</div>               
+                        </div>
+                        <div class="card-text " style="font-size: 12px;">03-6206-0239</div>
+                        <div class="flex" style="font-size: 12px;">
+                            <a href="https://tabelog.com/tokyo/A1310/A131002/13097205/" target=”_blank” style="font-size: 12px;">Tabelog</a>
+                            <div id="photo" class="btn py-0 my-0" style="font-size: 12px;">Tabephoto</div>
+                        </div>
+                        // photo
+                        // modal
+                        <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" alt="..." >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" alt="..." >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" alt="..." >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        // modal
+                        <div id="carouselExampleFade" class="carousel slide carousel-fade">
+                            <div class="carousel-inner text-center" style="width:200px; height:130px; cursor: pointer;">
+                                <div class="carousel-item active" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" class="d-block w-100" alt="..." >
+                                </div>
+                                <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal2">
+                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" class="d-block w-100" alt="..." >
+                                </div>
+                                <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal3">
+                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" class="d-block w-100" alt="..." >
+                                </div>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                        // photo
+                    </div>
+                   
+                    <h4 id="list-item-2">Item 2</h4>
+                    <p>This is some placeholder content for the scrollspy page. Note that as you scroll down the page, the appropriate navigation link is highlighted. It's repeated throughout the component example. We keep adding some more example copy here to emphasize the scrolling and highlighting.</p>
+                    <h4 id="list-item-3">Item 3</h4>
+                    <p>...</p>
+                    <h4 id="list-item-4">Item 4</h4>
+                    <p>...</p>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div> */}}
+
+    {{/* <div class="toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <img src="..." class="rounded me-2" alt="...">
+        <strong class="me-auto">Bootstrap</strong>
+        <small class="text-body-secondary">2 seconds ago</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        Heads up, toasts will stack automatically
+      </div>
+    </div> */}}
+  </div>
+</div>
 
 {{/* offcanvas */}}
 <div class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel" style="width: 41.66666667%;">
     {{/* offcanvas header */}}
     <div class="offcanvas-header" style="height:8vh;">
+    {{/*  */}}
         <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Advance Search</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
@@ -62,7 +187,11 @@
                 </div>
             </li>
             {{/* list information of serach results */}}
+            {{/* tmp butt */}}
+            <button type="button" class="btn btn-primary" id="tabelogo-toastBtn">Show live toast</button>
+
             <li id="list-search-results" class="list-group-item">
+            
                 
             </li>
         </ul>
@@ -126,7 +255,7 @@
 
     // btn 
     const MapInitBtn = document.getElementById('MapInitBtn');
-    const CurentPositionBtn = document.getElementById('CurrentPositionBtn');
+    {{/* const CurentPositionBtn = document.getElementById('CurrentPositionBtn'); */}}
     const GetTabelogInfoBtn = document.getElementById('GetTabelogInfoBtn');
     const AdvanceSearchBtn = document.getElementById('AdvanceSearchBtn');
     const CloseInfoBtn = document.getElementById('close-info-btn');
@@ -138,6 +267,10 @@
     const searchPlaceInformation = document.getElementById("search-place-information");
     const searchPlaceCloseSave = document.getElementById("search-place-close-save");
     const listSearchResults = document.getElementById("list-search-results");
+
+    // toast
+    const toastContainer = document.getElementById('tabelogo-toast-container')
+    let toast;
 
     // backend
     const sent = document.getElementById('payload');
@@ -161,6 +294,7 @@
     const textAPIMask = ["id","internationalPhoneNumber","formattedAddress","addressComponents","location","rating", "userRatingCount","googleMapsUri","websiteUri","regularOpeningHours","displayName","primaryType","photos","accessibilityOptions", "types"];
     const textAPIMaskNoAdvance = ["id","formattedAddress","addressComponents","googleMapsUri","displayName","photos","accessibilityOptions"];
     const textAPIMaskForAddress = ["id","formattedAddress","addressComponents","location","displayName"];
+
 
     // Button Listener
     MapInitBtn.addEventListener("click", function(){
@@ -186,7 +320,7 @@
             })
         })
     });
-    CurrentPositionBtn.addEventListener("click", goToCurrentPosition);
+    {{/* CurrentPositionBtn.addEventListener("click", goToCurrentPosition); */}}
     AdvanceSearchBtn.addEventListener("click", async function(){
         // clear searchResults
         searchResults.TW = null
@@ -400,7 +534,10 @@
             tabelogo.className = "btn py-1";
             tabelogo.innerHTML = "Tabelogo";
             // tabelog request
-            var requestTabelogo = function(Info) {
+            var buildToast = function(Info, toast){
+                
+            }
+            var requestTabelogo = function(Info, toastContainer, fn) {
                 var request = async function() {
                     const headers = new Headers();
                     headers.append("Content-Type", "application/json");
@@ -428,10 +565,20 @@
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
                     console.log(TabelogoInfo)
+                    console.log("start to generate toast")
+                    {{/* toastContainer.innerHTML = ""
+                    const toast = generateTabelogoToast(Info.id, TabelogoInfo)
+                    console.log(toast)
+                    toastContainer.appendChild(toast) // add to toast container
+                    const freshToast = document.getElementById(`toast-listener-${Info.id}`)
+                    console.log(freshToast)
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
+                    toastBootstrap.show() */}}
                 }
                 return request
             }
-            tabelogf = requestTabelogo(Info)
+
+            tabelogf = requestTabelogo(Info, toastContainer, buildToast)
             tabelogo.addEventListener("click", tabelogf)
             flex.appendChild(tabelogo)
         }
@@ -440,6 +587,22 @@
         return flex
     }
 
+
+    {{/* 
+        <div class="row pb-1">
+            <h5 class="card-title">${Info.TWdisplayName}</h5>
+        </div>
+        <div class="row pb-1" style="font-size: 14px; font-weight: 400;">
+            <div class="col card-text">Rating: ${Info.rating} (${Info.userRatingCount})</div>               
+        </div>
+        <div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>
+        <div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>
+        <div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>
+        <div class="flex py-2" style="font-size: 12px;">
+            <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
+            <a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>`
+        </div>
+     */}}
     function generateInfoNode(Info) {
         const node = document.createElement('div');
         let HTML = `
@@ -585,6 +748,118 @@
         searchPlaceInformation.innerHTML = ""
         AutoSearchBar.value = ""
         searchPlaceCloseSave.innerHTML = ""
+    }
+
+    function generateTabelogoToast(googleId, returnDataArr) {
+        const toast = document.createElement('div');
+        toast.className = "toast";
+        toast.id = `toast-listener-${googleId}`;
+        toast.dataset.bsAutohide = "false";
+        toast.role = "alert";
+        toast["aria-live"] = "assertive";
+        toast["aria-atomic"] = "true";
+        const toastHeader = document.createElement('div');
+        toastHeader.className = "toast-header";
+        toastHeader.innerHTML = `
+                <strong class="me-auto">Tabelogo</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
+        const toastBody = generateToastBody(googleId, returnDataArr)
+        toast.appendChild(toastHeader)
+        toast.appendChild(toastBody)
+        console.log(toast)
+        return toast
+    }
+
+    function generateToastBody(googleId, returnDataArr) {
+        // create toast body node
+        const toastBody = document.createElement('div');
+        toastBody.className = "toast-body";
+        const row = document.createElement('div');
+        row.className = "row";
+        row.appendChild(generateToastSideList(googleId, returnDataArr))
+        row.appendChild(generateToastMainList(googleId, returnDataArr))
+        toastBody.appendChild(row)
+        console.log("toastBody", toastBody)
+        return toastBody
+    }
+
+    
+    {{/* <div class="col-4">
+        <div id="list-example" class="list-group">
+        <a class="list-group-item list-group-item-action" href="#list-item-1">Result1</a>
+        <a class="list-group-item list-group-item-action" href="#list-item-2">Item 2</a>
+        <a class="list-group-item list-group-item-action" href="#list-item-3">Item 3</a>
+        <a class="list-group-item list-group-item-action" href="#list-item-4">Item 4</a>
+        </div>
+    </div> */}}
+    function generateToastSideList(googleId, returnDataArr) {
+        const col = document.createElement('div');
+        col.className = "col-4";
+        let HTML=`
+            <div id="list-${googleId}" class="list-group">`
+        returnDataArr.forEach((i, data)=>{
+            HTML +=`<a class="list-group-item list-group-item-action" href="#list-item-${data.Link}">Result-${i}</a>`
+        })
+        HTML += `</div>`
+        col.innerHTML = HTML
+        console.log("sidelist", col)
+        return col
+    }
+
+    {{/* <div class="col-8" style="height: 23vh; overflow:scroll;">
+        <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true" class="scrollspy-example text-center" tabindex="0">
+            list...
+        </div>
+    </div> */}}
+    function generateToastMainList(googleId, returnDataArr) {
+        const col = document.createElement('div');
+        col.className = "col-8";
+        col.style = "height: 23vh; overflow:scroll;"
+        const divc = document.createElement('div');
+        divc.dataset.bsSpy = "scroll";
+        divc.dataset.bsTarget = `#list-${googleId}`;
+        divc.dataset.bsSmoothScroll = "true";
+        divc.className = "scrollspy-example text-center";
+        divc.tabIndex = "0";
+        returnDataArr.forEach((data)=>{
+            divc.appendChild(generateToastMainListInfo(data))
+        })
+        col.appendChild(divc)
+        console.log("mainlist", col)
+        return col
+    }
+
+    function generateToastMainListInfo(data) {
+        const list = document.createElement('div');
+        // photo will be appendChild after id:photo-parent-${data.Link}
+        let HTML = `
+        <div id="photo-parent-${data.Link}" class="mb-2">
+            <h6 id="list-item-${data.Link}">${data.Name}</h6>`
+        if (data.hasOwnProperty("Type")) {
+            HTML += `<div class="row pb-1" style="font-size: 12px; font-weight: 400;">`
+            data.Type.forEach((type)=>{
+                HTML += `<div class="col card-text">${type}</div>`
+            })
+            HTML += `</div>`
+        }
+        if (data.hasOwnProperty("Rating")) {
+            HTML += `
+            <div class="row pb-1" style="font-size: 12px; font-weight: 400;">
+                <div class="col card-text">Rating: ${data.Rating}(${data.RatingCount})</div>               
+            </div>`
+        }
+        if (data.hasOwnProperty("Phone")) {
+            HTML += `<div class="card-text " style="font-size: 12px;">${data.Phone}</div>`
+        }
+        HTML +=`
+            <div class="flex" style="font-size: 12px;">
+                <a href="${data.Link}" target=”_blank” style="font-size: 12px;">Tabelog</a>
+                <div data-Tabe-Link="${data.Link}" data-Tabe-Name="${data.Name}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
+            </div>`
+        HTML += `</div>`
+        list.innerHTML = HTML
+        console.log("mainlistinfo", list)
+        return list
     }
 
     </script>

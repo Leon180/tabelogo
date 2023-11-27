@@ -26,6 +26,7 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/", server.Broker)
 	// Tabelog spider service:
 	router.POST("/tabelogo", server.TransRequest("POST", tabelogSpiderServiceURL))
+	router.POST("/tabephoto", server.TransRequest("POST", tabelogSpiderServiceURL+"/photo"))
 	// Authenticate service:
 	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
 	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))

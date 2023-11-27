@@ -2,7 +2,7 @@ package main
 
 const (
 	webPort         = "80"
-	maxCollectLinks = 5
+	maxCollectLinks = 4
 )
 
 func main() {

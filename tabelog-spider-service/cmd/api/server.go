@@ -20,6 +20,7 @@ func NewServer() *Server {
 
 	// Routes
 	router.POST("/", server.TabelogSpider)
+	router.POST("/photo", server.TabelogPhotoSpider)
 
 	server.router = router
 	return server

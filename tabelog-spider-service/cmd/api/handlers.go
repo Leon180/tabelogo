@@ -135,3 +135,58 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	wg.Wait()
 	c.JSON(http.StatusOK, tabelogInfoCollection)
 }
+
+type TabelogPhotoRequest struct {
+	Link string `json:"link" binding:"required"`
+	Name string `json:"name" binding:"required"`
+}
+
+type TabelogPhoto struct {
+	Link  string
+	Name  string
+	Photo []string
+}
+
+func (s *Server) TabelogPhotoSpider(c *gin.Context) {
+	var req TabelogPhotoRequest
+	var err error
+	if err = c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// get photo
+	tbListOption := TabelogListContentSpider{
+		Url: req.Link + "dtlphotolst",
+		ListCondition: func(e *colly.HTMLElement) bool {
+			return true
+		},
+		ListContentSelector: ListContentSelector{
+			ParentContainerSelector: ".rstdtl-photo-list",
+			ContentSelector: ContentSelector{
+				ContainerSelector: ".rstdtl-photo-list__item",
+				ChildSelector: map[string]string{
+					"img": ".rstdtl-photo-list__img",
+				},
+			},
+		},
+	}
+	tbListSpider := NewtabelogListContentSpider(tbListOption)
+	err = tbListSpider.Collect()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	tbcList := tbListSpider.GetCollections()
+	imgList := make([]string, len(tbcList))
+	for i, tbc := range tbcList {
+		imgList[i] = tbc["img"][0]
+	}
+
+	var resp = TabelogPhoto{
+		Link:  req.Link,
+		Name:  req.Name,
+		Photo: imgList,
+	}
+	c.JSON(http.StatusOK, resp)
+}
