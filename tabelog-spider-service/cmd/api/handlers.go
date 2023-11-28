@@ -56,7 +56,7 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	}
 	lCollection := lSpider.GetCollections()
 	if len(lCollection) == 0 {
-		c.JSON(http.StatusBadRequest, fmt.Errorf("no links found"))
+		c.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("no search result")))
 		return
 	}
 	lCollection = RemoveDuplicateString(lCollection)
@@ -133,7 +133,9 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 		}(link, index)
 	}
 	wg.Wait()
-	c.JSON(http.StatusOK, tabelogInfoCollection)
+	c.JSON(http.StatusOK, gin.H{
+		"result": tabelogInfoCollection,
+	})
 }
 
 type TabelogPhotoRequest struct {
@@ -178,6 +180,10 @@ func (s *Server) TabelogPhotoSpider(c *gin.Context) {
 		return
 	}
 	tbcList := tbListSpider.GetCollections()
+	if len(tbcList) == 0 {
+		c.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("no photo")))
+		return
+	}
 	imgList := make([]string, len(tbcList))
 	for i, tbc := range tbcList {
 		imgList[i] = tbc["img"][0]
@@ -188,5 +194,7 @@ func (s *Server) TabelogPhotoSpider(c *gin.Context) {
 		Name:  req.Name,
 		Photo: imgList,
 	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, gin.H{
+		"result": resp,
+	})
 }

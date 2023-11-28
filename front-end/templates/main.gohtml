@@ -4,125 +4,6 @@
 <div aria-live="polite" aria-atomic="true" class="position-relative">
   <div id="tabelogo-toast-container" class="toast-container top-0 end-0 p-3">
 
-    {{/* <!-- put toasts within -->
-    <div class="toast" id="tabelogo-toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Tabelogo</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        <div class="row" >
-            <div class="col-4">
-                <div id="list-example" class="list-group">
-                <a class="list-group-item list-group-item-action" href="#list-item-1">Result1</a>
-                <a class="list-group-item list-group-item-action" href="#list-item-2">Item 2</a>
-                <a class="list-group-item list-group-item-action" href="#list-item-3">Item 3</a>
-                <a class="list-group-item list-group-item-action" href="#list-item-4">Item 4</a>
-                </div>
-            </div>
-            <div class="col-8" style="height: 23vh; overflow:scroll;">
-                <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true" class="scrollspy-example text-center" tabindex="0">
-                    // list
-                    <div class="mb-2">
-                        <h6 id="list-item-1">カラシビ味噌らー麺 鬼金棒 神田本店</h6>
-                        <div class="row pb-1" style="font-size: 12px; font-weight: 400;">
-                            <div class="col card-text">ラーメン</div>    
-                            <div class="col card-text">丼</div>               
-                        </div>
-                        <div class="row pb-1" style="font-size: 12px; font-weight: 400;">
-                            <div class="col card-text">"Rating": "3.73"(1569)</div>               
-                        </div>
-                        <div class="card-text " style="font-size: 12px;">03-6206-0239</div>
-                        <div class="flex" style="font-size: 12px;">
-                            <a href="https://tabelog.com/tokyo/A1310/A131002/13097205/" target=”_blank” style="font-size: 12px;">Tabelog</a>
-                            <div id="photo" class="btn py-0 my-0" style="font-size: 12px;">Tabephoto</div>
-                        </div>
-                        // photo
-                        // modal
-                        <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" alt="..." >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" alt="..." >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" alt="..." >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        // modal
-                        <div id="carouselExampleFade" class="carousel slide carousel-fade">
-                            <div class="carousel-inner text-center" style="width:200px; height:130px; cursor: pointer;">
-                                <div class="carousel-item active" data-bs-toggle="modal" data-bs-target="#exampleModal1">
-                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" class="d-block w-100" alt="..." >
-                                </div>
-                                <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal2">
-                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" class="d-block w-100" alt="..." >
-                                </div>
-                                <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal3">
-                                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" class="d-block w-100" alt="..." >
-                                </div>
-                            </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Previous</span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="next">
-                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                <span class="visually-hidden">Next</span>
-                            </button>
-                        </div>
-                        // photo
-                    </div>
-                   
-                    <h4 id="list-item-2">Item 2</h4>
-                    <p>This is some placeholder content for the scrollspy page. Note that as you scroll down the page, the appropriate navigation link is highlighted. It's repeated throughout the component example. We keep adding some more example copy here to emphasize the scrolling and highlighting.</p>
-                    <h4 id="list-item-3">Item 3</h4>
-                    <p>...</p>
-                    <h4 id="list-item-4">Item 4</h4>
-                    <p>...</p>
-                </div>
-            </div>
-        </div>
-      </div>
-    </div> */}}
-
-    {{/* <div class="toast" data-bs-autohide="false" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <img src="..." class="rounded me-2" alt="...">
-        <strong class="me-auto">Bootstrap</strong>
-        <small class="text-body-secondary">2 seconds ago</small>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        Heads up, toasts will stack automatically
-      </div>
-    </div> */}}
   </div>
 </div>
 
@@ -186,6 +67,17 @@
                     
                 </div>
             </li>
+            
+            {{/* offcanvas Mark Place */}}
+            <li id="offcanvas-mark-container" class="list-group-item d-none">
+            <div id="offcanvas-mark-place-place-close-save" class="d-flex justify-content-end">
+
+            </div>
+            <div id="offcanvas-mark-place">
+            
+            </div>
+            {{/* show ingo */}}
+            </li>
             {{/* list information of serach results */}}
             <li id="list-search-results" class="list-group-item">
             
@@ -248,6 +140,7 @@
     const quickSearchLink = `${brokerUrl}/quick_search`
     const advanceSearchLink = `${brokerUrl}/advance_search`
     const tabelogoLink = `${brokerUrl}/tabelogo`
+    const tabeLogoImgLink = `${brokerUrl}/tabephoto`
     const textAPIReturnAmount = 20
 
     // btn 
@@ -264,6 +157,9 @@
     const searchPlaceInformation = document.getElementById("search-place-information");
     const searchPlaceCloseSave = document.getElementById("search-place-close-save");
     const listSearchResults = document.getElementById("list-search-results");
+    const offcanvasMarkContainer = document.getElementById("offcanvas-mark-container")
+    const offcanvasMarkPlace = document.getElementById("offcanvas-mark-place");
+    const offcanvasMarkPlaceCloseSave = document.getElementById("offcanvas-mark-place-place-close-save")
 
     // toast
     const toastContainer = document.getElementById('tabelogo-toast-container')
@@ -276,6 +172,10 @@
     // map
     let map;
     let marker;
+    let infoWindow;
+    let infoWindows = [];
+    let markers = [];
+    
     let autocompleteOptions;
     let currentPosition;
     let place; // for the detail of API return data
@@ -292,32 +192,45 @@
     const textAPIMaskNoAdvance = ["id","formattedAddress","addressComponents","googleMapsUri","displayName","photos","accessibilityOptions"];
     const textAPIMaskForAddress = ["id","formattedAddress","addressComponents","location","displayName"];
 
-
     // Button Listener
     MapInitBtn.addEventListener("click", function(){
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat:23.553118, lng: 121.0211024}, // Taiwan for init
             zoom: 8,
         });
+        
         goToCurrentPosition();
         marker = new google.maps.Marker({
             map,
         });
         MapInitBtn.style.display = "none";
         map.addListener("click", async (e)=>{
-            console.log(e)
+            // cancel the default marker and infoWindow
+            e.stop()
             Promise.allSettled([
                 initSelectedPlace(selectedPlace, "TW", e.placeId, detailsAPIMask, "zh-TW", true)
             ]).then((value)=>{
-                searchPlaceCloseSave.innerHTML = ""
-                searchPlaceInformation.innerHTML = ""
                 const listInfo = filterInfo(selectedPlace.TW)
-                searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                generateCloseSave(searchPlaceCloseSave, listInfo)
+                // if offcanvas is open, show another info card
+                if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
+                    offcanvasMarkPlace.innerHTML = ""
+                    offcanvasMarkPlaceCloseSave.innerHTML = ""
+                    offcanvasMarkPlace.appendChild(generateInfoNode(listInfo))
+                    generateCloseSave(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
+                    offcanvasMarkContainer.classList.remove("d-none")
+                    document.getElementById("offcanvas-mark-place-place-close-save").scrollIntoView({behavior: "smooth"})
+                } else {
+                    searchPlaceCloseSave.innerHTML = ""
+                    searchPlaceInformation.innerHTML = ""
+                    searchPlaceInformation.appendChild(generateInfoNode(listInfo))
+                    generateCloseSave(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+                }
             })
         })
     });
+
     {{/* CurrentPositionBtn.addEventListener("click", goToCurrentPosition); */}}
+
     AdvanceSearchBtn.addEventListener("click", async function(){
         // clear searchResults
         searchResults.TW = null
@@ -341,9 +254,60 @@
             advancSearch(searchResults, "TW", textAPIMask, payloadTW),
         ])
         .then((value)=>{
+            markers.forEach((m)=>{
+                m.setMap(null)
+            })
+            infoWindows.forEach((iw)=>{
+                iw.close()
+            })
            generateListInfoHTML(searchResults)
+           generateMarkers(searchResults)
+           {{/* if (selectedPlace.TW != null) {
+                map.setCenter({lat: selectedPlace.TW.location.latitude, lng: selectedPlace.TW.location.longitude});
+            } */}}
         })
     });
+
+    // mark place on map, if marker is null, init a new marker
+    function markPlace(map, lat, lng) {
+        // map
+        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
+        // marker
+        marker.setMap(map);
+        marker.setPosition({lat: parseFloat(lat),lng: parseFloat(lng)});
+    }
+
+    function generateMarkers(serachResults){
+        if (!serachResults.TW || !serachResults.TW.hasOwnProperty("places")) {
+            console.log("NO DATA, please try again later...")
+            return
+        }
+        for (let i=0; i<serachResults.TW.places.length; i++) {
+            let listInfo = filterInfo(serachResults.TW, i)
+            const marker = new google.maps.Marker({
+                position: {lat: listInfo.location.latitude, lng: listInfo.location.longitude},
+                map: map
+            });
+            markers.push(marker)
+            // infoWindow for label name
+            const contentString =
+            `<a href="#advance-result-${listInfo.id}">${listInfo.TWdisplayName}</a>`
+            const infoWindow = new google.maps.InfoWindow({
+                content: contentString,
+            });
+            infoWindow.setPosition({lat: listInfo.location.latitude, lng: listInfo.location.longitude})
+            infoWindow.setOptions({
+                disableAutoPan : true,
+                pixelOffset: new google.maps.Size(0, 40)
+            })
+            const styleInfo = document.getElementsByClassName("gm-style-iw-a")
+            for (let i=0; i<styleInfo.length; i++) {
+                styleInfo[i].style.backgroundColor = "none"
+            }
+            infoWindows.push(infoWindow)
+            infoWindow.open({map, marker});
+        }
+    }
 
     // goToCurrentPostion()
     async function goToCurrentPosition(){
@@ -366,11 +330,19 @@
                     Promise.allSettled([
                         initSelectedPlace(selectedPlace, "TW", place.place_id, detailsAPIMask, "zh-TW", true)
                     ]).then((value)=>{
-                        searchPlaceCloseSave.innerHTML = ""
-                        searchPlaceInformation.innerHTML = ""
                         const listInfo = filterInfo(selectedPlace.TW)
-                        searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                        generateCloseSave(searchPlaceCloseSave, listInfo)
+                        if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
+                            offcanvasMarkPlace.innerHTML = ""
+                            offcanvasMarkPlaceCloseSave.innerHTML = ""
+                            offcanvasMarkPlace.appendChild(generateInfoNode(listInfo))
+                            generateCloseSave(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
+                            offcanvasMarkContainer.classList.remove("d-none")
+                        } else {
+                            searchPlaceCloseSave.innerHTML = ""
+                            searchPlaceInformation.innerHTML = ""
+                            searchPlaceInformation.appendChild(generateInfoNode(listInfo))
+                            generateCloseSave(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+                        }
                     })                    
                 }
             })
@@ -428,16 +400,8 @@
         })
     }
 
-    // mark place on map, if marker is null, init a new marker
-    function markPlace(map, lat, lng) {
-        // map
-        map.setCenter({lat: parseFloat(lat), lng: parseFloat(lng)});
-        // marker
-        marker.setPosition({lat: parseFloat(lat),lng: parseFloat(lng)});
-    }
-
     // places:
-    function generateCloseSave(ele, Info){
+    function generateCloseSave(ele, Info, fn){
         const save = document.createElement('div');
         save.id = "save-place-btn";
         save.className = "btn py-1";
@@ -449,7 +413,20 @@
         close.id = "close-info-btn";
         close.className = "btn py-1";
         close.innerHTML = "Close";
-        close.addEventListener("click", ClearQuickInfoAndSearchBar)
+        close.addEventListener("click", fn)
+        const center = document.createElement('div');
+        center.id = `center-${Info.id}`;
+        center.className = "btn py-1";
+        center.innerHTML = "Center";
+        var setMapCenterToLocate = function (map, lat, lng) {
+            var center = function () {
+                markPlace(map, lat, lng)
+                map.setZoom(16)
+            };
+            return center;
+        }
+        centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
+        center.addEventListener("click", centf)
         if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
             const tabelogo = document.createElement('div');
             tabelogo.id = `tabelogo-${Info.id}`;
@@ -484,11 +461,12 @@
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
                     console.log(TabelogoInfo)
-                    const toast = generateTabelogoToast(Info.id, TabelogoInfo)
+                    const toast = generateTabelogoToast(Info.id, Info.TWdisplayName, TabelogoInfo)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
                     toastBootstrap.show()
+                    generateTabelogoImage()
                 }
                 return request
             }
@@ -496,6 +474,7 @@
             tabelogo.addEventListener("click", tabelogf)
             ele.appendChild(tabelogo)
         }
+        ele.appendChild(center)
         ele.appendChild(save)
         ele.appendChild(close)
     }
@@ -509,6 +488,7 @@
     ` */}}
     function generateCenterSave(Info){
         const flex = document.createElement('div');
+        flex.id=`advance-result-${Info.id}`
         flex.className = "d-flex justify-content-end";
         const save = document.createElement('div');
         save.id = `save-${Info.id}`;
@@ -555,7 +535,6 @@
                     }
                     let response = await fetch(quickSearchLink, body)
                     let JPInfo = await response.json()
-                    console.log(JPInfo)
                     const TBpayload = {
                         area: Info.administrative_area_level_1.toLowerCase(),
                         place_name: JPInfo.displayName.text,
@@ -566,13 +545,12 @@
                         headers: headers,
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
-                    console.log(TabelogoInfo)
-                    console.log("start to generate toast")
-                    const toast = generateTabelogoToast(Info.id, TabelogoInfo)
+                    const toast = generateTabelogoToast(Info.id, Info.TWdisplayName, TabelogoInfo)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
                     toastBootstrap.show()
+                    generateTabelogoImage()
                 }
                 return request
             }
@@ -747,9 +725,17 @@
         searchPlaceInformation.innerHTML = ""
         AutoSearchBar.value = ""
         searchPlaceCloseSave.innerHTML = ""
+        marker.setMap(null);
     }
 
-    function generateTabelogoToast(googleId, returnDataArr) {
+    function ClearOffcanvasInfo(){
+        offcanvasMarkContainer.classList.add("d-none")
+        offcanvasMarkPlace.innerHTML = ""
+        offcanvasMarkPlaceCloseSave.innerHTML = ""
+        marker.setMap(null);
+    }
+
+    function generateTabelogoToast(googleId, name, returnDataArr) {
         const toast = document.createElement('div');
         toast.className = "toast";
         toast.id = `toast-listener-${googleId}`;
@@ -760,9 +746,17 @@
         const toastHeader = document.createElement('div');
         toastHeader.className = "toast-header";
         toastHeader.innerHTML = `
-                <strong class="me-auto">Tabelogo</strong>
+                <strong class="me-auto">${name}</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
-        const toastBody = generateToastBody(googleId, returnDataArr)
+        let toastBody;
+        console.log(returnDataArr)
+        if (returnDataArr.hasOwnProperty("error")) {
+            toastBody = document.createElement('div');
+            toastBody.className = "toast-body";
+            toastBody.innerHTML = `No info on tabelog...`
+        } else {
+            toastBody = generateToastBody(googleId, returnDataArr.result)
+        }
         toast.appendChild(toastHeader)
         toast.appendChild(toastBody)
         return toast
@@ -827,6 +821,7 @@
 
     function generateToastMainListInfo(data) {
         const list = document.createElement('div');
+        list.className = "mb-4";
         // photo will be appendChild after id:photo-parent-${data.Link}
         let HTML = `
         <div id="photo-parent-${data.Link}" class="mb-2">
@@ -850,11 +845,225 @@
         HTML +=`
             <div class="flex" style="font-size: 12px;">
                 <a href="${data.Link}" target=”_blank” style="font-size: 12px;">Tabelog</a>
-                <div data-Tabe-Link="${data.Link}" data-Tabe-Name="${data.Name}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
+                <div data-tabe-link="${data.Link}" data-tabe-name="${data.Name}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
             </div>`
         HTML += `</div>`
         list.innerHTML = HTML
         return list
+    }
+
+    function generateTabelogoImage() {
+        // create Image
+        const tabephotoBtn = document.getElementsByClassName("tabelogo-photo-btn")
+        console.log(tabephotoBtn)
+        for(let i=0;i<tabephotoBtn.length;i++){
+            
+            const btn = tabephotoBtn[i]
+            btn.addEventListener("click", async function(){
+                console.log(btn.dataset)
+                const tabeName = btn.dataset.tabeName
+                const tabeLink = btn.dataset.tabeLink
+                const headers = new Headers();
+                headers.append("Content-Type", "application/json");
+                const imgPayload = {
+                    link: tabeLink,
+                    name: tabeName,
+                }
+                const body = {
+                    method: 'POST',
+                    body: JSON.stringify(imgPayload),
+                    headers: headers,
+                }
+                let response = await fetch(tabeLogoImgLink, body)
+                let imgInfo = await response.json()
+                console.log(imgInfo)
+                let m;
+                let c;
+                const parEle = document.getElementById(`photo-parent-${tabeLink}`)
+                if (imgInfo.hasOwnProperty("error")) {
+                    console.log("No photo found...")
+                    const notext = document.createElement('div');
+                    notext.className = "no-photo";
+                    notext.style = "font-size: 12px; font-weight: 400;"
+                    notext.innerHTML = "No photo found..."
+                    parEle.appendChild(notext)
+                    return
+                } else{
+                    [m, c] = generateTabelogoImageModalCarousel(imgInfo.result)
+                }
+                const existTM = parEle.getElementsByClassName("tabelogo-modals")
+                const existNoText = parEle.getElementsByClassName("no-photo")
+                if (existNoText.length > 0) {
+                    parEle.removeChild(existNoText[0])
+                }
+                if (existTM.length > 0) {
+                    setTimeout(function(newEle, old){
+                        parEle.replaceChild(newEle, old)
+                    }, 100, m, existTM[0])
+                } else {
+                    parEle.appendChild(m)
+                }
+                const existCI = parEle.getElementsByClassName("carousel")
+                console.log(existCI)
+                if(existCI.length > 0) {
+                    setTimeout(function(newEle, old){
+                        parEle.replaceChild(newEle, old)
+                    }, 100, c, existCI[0])
+                } else {
+                    parEle.appendChild(c)
+                }
+            })
+        }
+    }
+
+    {{/* <div class="tabelogo-modals">
+        <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" alt="..." >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" alt="..." >
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" alt="..." >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    <div id="carouselExampleFade" class="carousel slide carousel-fade">
+        <div class="carousel-inner text-center" style="width:200px; height:130px; cursor: pointer;">
+            <div class="carousel-item active" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" class="d-block w-100" alt="..." >
+            </div>
+            <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal2">
+                <img src="https://tblg.k-img.com/restaurant/images/Rvw/117269/320x320_rect_117269887.jpg" class="d-block w-100" alt="..." >
+            </div>
+            <div class="carousel-item" data-bs-toggle="modal" data-bs-target="#exampleModal3">
+                <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" class="d-block w-100" alt="..." >
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+     */}}
+    function generateTabelogoImageModalCarousel(returnData){
+        const modalContainer = document.createElement('div');
+        modalContainer.className = "tabelogo-modals";
+        for (let i=0; i<returnData.Photo.length; i++) {
+            modalContainer.appendChild(generateTabelogoModal(returnData.Link, returnData.Photo[i], i))
+        }
+        const carouselContainer = document.createElement('div');
+        carouselContainer.className = "carousel slide carousel-fade";
+        carouselContainer.id = `carousel-${returnData.Link.replace("https://tabelog.com/", "").replace(/\//g,"")}`
+        const carouselInner = document.createElement('div');
+        carouselInner.className = "carousel-inner text-center";
+        carouselInner.style = "width:200px; height:130px; cursor: pointer;"
+        for (let i=0; i<returnData.Photo.length; i++) {
+            carouselInner.appendChild(generateTabelogoCarouselItem(returnData.Link, returnData.Photo[i], i))
+        }
+        carouselContainer.appendChild(carouselInner)
+        const prevBtn = document.createElement('button');
+        prevBtn.className = "carousel-control-prev";
+        prevBtn.type = "button";
+        prevBtn.dataset.bsTarget = `#carousel-${returnData.Link.replace("https://tabelog.com/", "").replace(/\//g,"")}`;
+        prevBtn.dataset.bsSlide = "prev";
+        prevBtn.innerHTML = `
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>`
+        const nextBtn = document.createElement('button');
+        nextBtn.className = "carousel-control-next";
+        nextBtn.type = "button";
+        nextBtn.dataset.bsTarget = `#carousel-${returnData.Link.replace("https://tabelog.com/", "").replace(/\//g,"")}`;
+        nextBtn.dataset.bsSlide = "next";
+        nextBtn.innerHTML = `
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>`
+        carouselContainer.appendChild(prevBtn)
+        carouselContainer.appendChild(nextBtn)
+
+        return [modalContainer, carouselContainer]
+    }
+
+    {{/* <div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="https://tblg.k-img.com/restaurant/images/Rvw/117265/320x320_rect_117265790.jpg" alt="..." >
+                </div>
+            </div>
+        </div>
+    </div> */}}
+    function generateTabelogoModal(link, image, index) {
+        const modal = document.createElement("div")
+        modal.className = "modal fade"
+        modal.id = `${link.replace("https://tabelog.com/", "").replace(/\//g,"")}-modal-${index}`
+        modal.tabIndex = "-1"
+        modal["aria-labelledby"] = "exampleModalLabel"
+        modal["aria-hidden"] = "true"
+        modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="${image}" alt="..." >
+                </div>
+            </div>
+        </div>
+        `
+        return modal
+    }
+
+    {{/* <div class="carousel-item active" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+        <img src="https://tblg.k-img.com/restaurant/images/Rvw/192621/320x320_rect_6587ab9a0c59fb5499cb1054399607ff.jpg" class="d-block w-100" alt="..." >
+    </div> */}}
+    function generateTabelogoCarouselItem(link, image, index) {
+        const item = document.createElement("div")
+        item.className = "carousel-item"
+        if (index == 0) {
+            item.className += " active"
+        }
+        item.dataset.bsToggle = "modal"
+        item.dataset.bsTarget = `#${link.replace("https://tabelog.com/", "").replace(/\//g,"")}-modal-${index}`
+        item.innerHTML = `
+            <img src="${image}" class="d-block w-100" alt="..." >
+        `
+        return item
     }
 
     </script>

@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// handleize function: render
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		renderFrontEnd(w, "main.gohtml", config)
