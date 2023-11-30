@@ -532,3 +532,314 @@ func (server *Server) RemoveFavorite(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorite": fav, "Place": place})
 }
+
+func (server *Server) ToggleFavorite(c *gin.Context) {
+	var request SaveFavoriteRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	arg := db.CreatePlaceParams{
+		GoogleID:              request.GoogleID,
+		TwDisplayName:         request.TwDisplayName,
+		TwFormattedAddress:    request.TwFormattedAddress,
+		TwWeekdayDescriptions: pq.StringArray(request.TwWeekdayDescriptions),
+		GoogleMapUri:          request.GoogleMapUri,
+		Lat:                   request.Lat,
+		Lng:                   request.Lng,
+		Types:                 pq.StringArray(request.Types),
+	}
+	if len(request.AdministrativeAreaLevel1) != 0 {
+		arg.AdministrativeAreaLevel1 = sql.NullString{
+			String: request.AdministrativeAreaLevel1,
+			Valid:  true,
+		}
+	} else {
+		arg.AdministrativeAreaLevel1 = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	if len(request.Country) != 0 {
+		arg.Country = sql.NullString{
+			String: request.Country,
+			Valid:  true,
+		}
+	} else {
+		arg.Country = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	if len(request.InternationalPhoneNumber) != 0 {
+		arg.InternationalPhoneNumber = sql.NullString{
+			String: request.InternationalPhoneNumber,
+			Valid:  true,
+		}
+	} else {
+		arg.InternationalPhoneNumber = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	if len(request.PrimaryType) != 0 {
+		arg.PrimaryType = sql.NullString{
+			String: request.PrimaryType,
+			Valid:  true,
+		}
+	} else {
+		arg.PrimaryType = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	if len(request.Rating) != 0 {
+		arg.Rating = sql.NullString{
+			String: request.Rating,
+			Valid:  true,
+		}
+	} else {
+		arg.Rating = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	if request.UserRatingCount != 0 {
+		arg.UserRatingCount = sql.NullInt32{
+			Int32: request.UserRatingCount,
+			Valid: true,
+		}
+	} else {
+		arg.UserRatingCount = sql.NullInt32{
+			Int32: 0,
+			Valid: false,
+		}
+	}
+	if len(request.WebsiteUri) != 0 {
+		arg.WebsiteUri = sql.NullString{
+			String: request.WebsiteUri,
+			Valid:  true,
+		}
+	} else {
+		arg.WebsiteUri = sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+
+	// check if place exists, if not, create one
+	place, err := server.store.GetPlaceByGoogleId(c, request.GoogleID)
+	if err != nil {
+		if err == sql.ErrNoRows { // place not found
+			place, err = server.store.CreatePlace(c, arg)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		} else {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	// check if favorite exists, if not, create one, if yes, delete it
+	fav, err := server.store.GetFavorite(c, db.GetFavoriteParams{
+		UserID:  user.UserID,
+		PlaceID: place.PlaceID,
+	})
+	if fav.UserID != 0 {
+		err = server.store.RemoveFavorite(c, db.RemoveFavoriteParams{
+			UserID:  user.UserID,
+			PlaceID: place.PlaceID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"action": "remove", "User": NewUserResponse(user), "Favorite": fav, "Place": place})
+	}
+	if err != nil {
+		if err == sql.ErrNoRows { // favorite not found
+			fav, err = server.store.CreateFavorite(c, db.CreateFavoriteParams{
+				UserID:  user.UserID,
+				PlaceID: place.PlaceID,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+		} else {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"action": "add", "User": NewUserResponse(user), "Favorite": fav, "Place": place})
+}
+
+type GetListFavoritesRequest struct {
+	Limit  int32 `json:"limit" binding:"required"`
+	Offset int32 `json:"offset"`
+}
+
+func (server *Server) GetListFavorites(c *gin.Context) {
+	var request GetListFavoritesRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	favs, err := server.store.ListFavorite(c, db.ListFavoriteParams{
+		UserID: user.UserID,
+		Limit:  request.Limit,
+		Offset: request.Offset,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	places := make([]db.Place, len(favs))
+	for i, fav := range favs {
+		place, err := server.store.GetPlaceById(c, fav.PlaceID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		places[i] = place
+	}
+
+	c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": places})
+}
+
+func (server *Server) GetUser(c *gin.Context) {
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user)})
+}
+
+// while load in serch result, call this api to check if the place is in favorite list and update the info if exist.
+func (server *Server) CheckAndUpdateFavorite(c *gin.Context) {
+	var request SaveFavoriteRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// check if place exists, if yes, update it
+	place, err := server.store.GetPlaceByGoogleId(c, request.GoogleID)
+	if err != nil {
+		if err == sql.ErrNoRows { // place not found
+			c.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("place not found")))
+		} else {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+	// update place
+	updateArg := db.UpdatePlaceParams{
+		PlaceID: place.PlaceID,
+		GoogleID: sql.NullString{
+			String: place.GoogleID,
+			Valid:  true,
+		},
+		TwDisplayName: sql.NullString{
+			String: request.TwDisplayName,
+			Valid:  true,
+		},
+		TwFormattedAddress: sql.NullString{
+			String: request.TwFormattedAddress,
+			Valid:  true,
+		},
+		TwWeekdayDescriptions: pq.StringArray(request.TwWeekdayDescriptions),
+		GoogleMapUri: sql.NullString{
+			String: request.GoogleMapUri,
+			Valid:  true,
+		},
+		Lat: sql.NullString{
+			String: request.Lat,
+			Valid:  true,
+		},
+		Lng: sql.NullString{
+			String: request.Lng,
+			Valid:  true,
+		},
+		Types: pq.StringArray(request.Types),
+		AdministrativeAreaLevel1: sql.NullString{
+			String: request.AdministrativeAreaLevel1,
+			Valid:  true,
+		},
+		Country: sql.NullString{
+			String: request.Country,
+			Valid:  true,
+		},
+		InternationalPhoneNumber: sql.NullString{
+			String: request.InternationalPhoneNumber,
+			Valid:  true,
+		},
+		PrimaryType: sql.NullString{
+			String: request.PrimaryType,
+			Valid:  true,
+		},
+		Rating: sql.NullString{
+			String: request.Rating,
+			Valid:  true,
+		},
+		UserRatingCount: sql.NullInt32{
+			Int32: request.UserRatingCount,
+			Valid: true,
+		},
+		WebsiteUri: sql.NullString{
+			String: request.WebsiteUri,
+			Valid:  true,
+		},
+	}
+	place, err = server.store.UpdatePlace(c, updateArg)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	// check if favorite exists,
+	fav, err := server.store.GetFavorite(c, db.GetFavoriteParams{
+		UserID:  user.UserID,
+		PlaceID: place.PlaceID,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows { // favorite not found
+			c.JSON(http.StatusOK, gin.H{"isFavorite": false, "User": NewUserResponse(user), "Place": place})
+		} else {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"isFavorite": true, "User": NewUserResponse(user), "Favorite": fav, "Place": place})
+}

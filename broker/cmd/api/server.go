@@ -33,6 +33,10 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/renew_access", server.TransRequest("POST", authenticateServiceURL+"/renew_access"))
 	router.POST("/save_fav", server.TransRequest("POST", authenticateServiceURL+"/save_fav"))
 	router.POST("/remove_fav", server.TransRequest("POST", authenticateServiceURL+"/remove_fav"))
+	router.POST("/favorite", server.TransRequest("POST", authenticateServiceURL+"/favorite")) // toggle favorite
+	router.POST("/get_favs", server.TransRequest("POST", authenticateServiceURL+"/get_favs"))
+	router.POST("/check_update_fav", server.TransRequest("POST", authenticateServiceURL+"/check_update_fav"))
+	router.POST("/get_user", server.TransRequest("POST", authenticateServiceURL+"/get_user"))
 	// Google API service:
 	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))

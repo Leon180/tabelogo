@@ -294,7 +294,7 @@
             markers.push(marker)
             // infoWindow for label name
             const contentString =
-            `<a href="#advance-result-${listInfo.id}">${listInfo.TWdisplayName}</a>`
+            `<a href="#advance-result-${listInfo.id}">${listInfo.TwDisplayName}</a>`
             const infoWindow = new google.maps.InfoWindow({
                 content: contentString,
             });
@@ -404,14 +404,88 @@
     }
 
     // places:
-    function generateCloseSave(ele, Info, fn){
+    async function generateCloseSave(ele, Info, fn){
+        // save
         const save = document.createElement('div');
-        save.id = "save-place-btn";
+        save.id = `save-${Info.id}`;
         save.className = "btn py-1";
-        save.innerHTML = "Save";
-        save.addEventListener("click", function(){
-            console.log("save")
-        })
+        // check and update favorite
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        const saveParam = {
+            ...Info,
+        }
+        saveParam.google_id = saveParam.id
+        saveParam.tw_display_name = saveParam.TwDisplayName
+        saveParam.tw_formatted_address = saveParam.TwFormattedAddress
+        saveParam.tw_weekday_descriptions = saveParam.TwWeekdayDescriptions
+        saveParam.international_phone_number = saveParam.internationalPhoneNumber
+        saveParam.google_map_uri = saveParam.googleMapsUri
+        saveParam.website_uri = saveParam.websiteUri
+        saveParam.primary_type = saveParam.primaryType
+        saveParam.user_rating_count = saveParam.userRatingCount
+        saveParam.lat = saveParam.location.latitude.toString()
+        saveParam.lng = saveParam.location.longitude.toString()
+        saveParam.rating = saveParam.rating.toString()
+        const body = {
+            method: 'POST',
+            body: JSON.stringify(saveParam),
+            headers: headers,
+        }
+        let response = await fetch(`${brokerUrl}/check_update_fav`, body)
+        let responseJSON = await response.json()
+        console.log(responseJSON)
+        if (responseJSON.error!=null) {
+            console.log(responseJSON.error)
+            save.innerHTML = "Save";
+            save.disabled = false
+        } else {
+            if (responseJSON.isFavorite == true) {
+                save.innerHTML = "Saved";
+                save.disabled = true
+            } else {
+                save.innerHTML = "Save";
+                save.disabled = false
+            }
+        }
+        const savePlace = function (ele, info) {
+            const savePlaceToFavorite = function () {
+                const headers = new Headers();
+                headers.append("Content-Type", "application/json");
+                headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+                const body = {
+                    method: 'POST',
+                    body: JSON.stringify(info),
+                    headers: headers,
+                }
+                console.log(JSON.stringify(info))
+                fetch(`${brokerUrl}/favorite`, body)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error!=null) {
+                        console.log(data.error)
+                        if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                            window.localStorage.removeItem("tabelogo_token")
+                            alert("Session expired, Please login")
+                        }
+                        save.innerHTML = "Save"
+                        save.disabled = false
+                    } else {
+                        if (data.action == "add") {
+                            save.innerHTML = "Saved"
+                            save.disabled = true
+                        }  else {
+                            save.innerHTML = "Save"
+                            save.disabled = false
+                        }
+                    }
+                })
+            };
+            return savePlaceToFavorite;
+        }
+        sp = savePlace(save, saveParam)
+        save.addEventListener("click", sp)
         const close = document.createElement('div');
         close.id = "close-info-btn";
         close.className = "btn py-1";
@@ -464,7 +538,7 @@
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
                     console.log(TabelogoInfo)
-                    const toast = generateTabelogoToast(Info.id, Info.TWdisplayName, TabelogoInfo)
+                    const toast = generateTabelogoToast(Info.id, Info.TwDisplayName, TabelogoInfo)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
@@ -489,17 +563,95 @@
             <div id="center-list-place-btn" class="btn py-1">Center</div>
         </div>
     ` */}}
-    function generateCenterSave(Info){
+    async function generateCenterSave(Info){
         const flex = document.createElement('div');
         flex.id=`advance-result-${Info.id}`
         flex.className = "d-flex justify-content-end";
+        // save
         const save = document.createElement('div');
         save.id = `save-${Info.id}`;
         save.className = "btn py-1";
-        save.innerHTML = "Save";
-        save.addEventListener("click", function(){
-            console.log("save")
-        })
+        // check and update favorite
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        const saveParam = {
+            ...Info,
+        }
+        saveParam.google_id = saveParam.id
+        saveParam.tw_display_name = saveParam.TwDisplayName
+        saveParam.tw_formatted_address = saveParam.TwFormattedAddress
+        saveParam.tw_weekday_descriptions = saveParam.TwWeekdayDescriptions
+        saveParam.international_phone_number = saveParam.internationalPhoneNumber
+        saveParam.google_map_uri = saveParam.googleMapsUri
+        saveParam.website_uri = saveParam.websiteUri
+        saveParam.primary_type = saveParam.primaryType
+        saveParam.user_rating_count = saveParam.userRatingCount
+        saveParam.lat = saveParam.location.latitude.toString()
+        saveParam.lng = saveParam.location.longitude.toString()
+        saveParam.rating = saveParam.rating.toString()
+        const body = {
+            method: 'POST',
+            body: JSON.stringify(saveParam),
+            headers: headers,
+        }
+        let response = await fetch(`${brokerUrl}/check_update_fav`, body)
+        let responseJSON = await response.json()
+        console.log(responseJSON)
+        if (responseJSON.error!=null) {
+            console.log(responseJSON.error)
+            save.innerHTML = "Save";
+            save.disabled = false
+            if (responseJSON.error == "failed to verify token: token has expired") {
+                window.localStorage.removeItem("tabelogo_token")
+                alert("Session expired, Please login")
+            }
+        } else {
+            if (responseJSON.isFavorite == true) {
+                save.innerHTML = "Saved";
+                save.disabled = true
+            } else {
+                save.innerHTML = "Save";
+                save.disabled = false
+            }
+        }     
+        const savePlace = function (ele, info) {
+            const savePlaceToFavorite = function () {
+                const headers = new Headers();
+                headers.append("Content-Type", "application/json");
+                headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+                const body = {
+                    method: 'POST',
+                    body: JSON.stringify(info),
+                    headers: headers,
+                }
+                fetch(`${brokerUrl}/favorite`, body)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error!=null) {
+                        console.log(data.error)
+                        if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                            window.localStorage.removeItem("tabelogo_token")
+                            alert("Session expired, Please login")
+                        }
+                        save.innerHTML = "Save"
+                        save.disabled = false
+                    } else {
+                        if (data.action == "add") {
+                            save.innerHTML = "Saved"
+                            save.disabled = true
+                        }  else {
+                            save.innerHTML = "Save"
+                            save.disabled = false
+                        }
+                    }
+                })
+            };
+            return savePlaceToFavorite;
+        }
+        sp = savePlace(save, saveParam)
+        save.addEventListener("click", sp)
+        // center
         const center = document.createElement('div');
         center.id = `center-${Info.id}`;
         center.className = "btn py-1";
@@ -548,7 +700,7 @@
                         headers: headers,
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
-                    const toast = generateTabelogoToast(Info.id, Info.TWdisplayName, TabelogoInfo)
+                    const toast = generateTabelogoToast(Info.id, Info.TwDisplayName, TabelogoInfo)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(freshToast)
@@ -570,13 +722,13 @@
 
     {{/* 
         <div class="row pb-1">
-            <h5 class="card-title">${Info.TWdisplayName}</h5>
+            <h5 class="card-title">${Info.TwDisplayName}</h5>
         </div>
         <div class="row pb-1" style="font-size: 14px; font-weight: 400;">
             <div class="col card-text">Rating: ${Info.rating} (${Info.userRatingCount})</div>               
         </div>
         <div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>
-        <div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>
+        <div class="card-text " style="font-size: 14px;">${Info.TwFormattedAddress}</div>
         <div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>
         <div class="flex py-2" style="font-size: 12px;">
             <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
@@ -587,7 +739,7 @@
         const node = document.createElement('div');
         let HTML = `
                 <div class="row pb-1">
-                    <h5 class="card-title">${Info.TWdisplayName}</h5>
+                    <h5 class="card-title">${Info.TwDisplayName}</h5>
                 </div>
         `
         if (Info.rating != null) {
@@ -600,8 +752,8 @@
         if (Info.primaryType != null) {
             HTML += `<div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>`
         }
-        if (Info.TWformattedAddress != null) {
-            HTML += `<div class="card-text " style="font-size: 14px;">${Info.TWformattedAddress}</div>`
+        if (Info.TwFormattedAddress != null) {
+            HTML += `<div class="card-text " style="font-size: 14px;">${Info.TwFormattedAddress}</div>`
         }
         if (Info.internationalPhoneNumber != null){
             HTML += `<div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>`
@@ -615,10 +767,10 @@
         }
         HTML += `</div>`
 
-        if (Info.TWweekdayDescriptions != null) {
+        if (Info.TwWeekdayDescriptions != null) {
             HTML += `<div style="font-size: 14px;">Open Time</div>`
-            for (let i = 0; i < Info.TWweekdayDescriptions.length; i++) {
-                HTML += `<div style="font-size: 14px;">${Info.TWweekdayDescriptions[i]}</div>`
+            for (let i = 0; i < Info.TwWeekdayDescriptions.length; i++) {
+                HTML += `<div style="font-size: 14px;">${Info.TwWeekdayDescriptions[i]}</div>`
             }
         }
         node.innerHTML = HTML
@@ -648,12 +800,12 @@
             "location": null,
             "country": null,
             "administrative_area_level_1": null,
-            "TWdisplayName": null,
+            "TwDisplayName": null,
             "primaryType": null,
             "rating": null,
             "userRatingCount": null,
-            "TWformattedAddress": null,
-            "TWweekdayDescriptions": null,
+            "TwFormattedAddress": null,
+            "TwWeekdayDescriptions": null,
             "accessibilityOptions": null,
             "googleMapsUri": null,
             "websiteUri": null,
@@ -688,7 +840,7 @@
             listInfo.location = to.location
         }
         if (to.hasOwnProperty("displayName")) {
-            listInfo.TWdisplayName = to.displayName.text
+            listInfo.TwDisplayName = to.displayName.text
         }
         if (to.hasOwnProperty("primaryType")) {
             listInfo.primaryType = to.primaryType
@@ -700,10 +852,10 @@
             listInfo.userRatingCount = to.userRatingCount
         }
         if (to.hasOwnProperty("formattedAddress")) {
-            listInfo.TWformattedAddress = to.formattedAddress
+            listInfo.TwFormattedAddress = to.formattedAddress
         }
         if (to.hasOwnProperty("regularOpeningHours")) {
-            listInfo.TWweekdayDescriptions = to.regularOpeningHours.weekdayDescriptions
+            listInfo.TwWeekdayDescriptions = to.regularOpeningHours.weekdayDescriptions
         }
         if (to.hasOwnProperty("accessibilityOptions")) {
             listInfo.accessibilityOptions = to.accessibilityOptions

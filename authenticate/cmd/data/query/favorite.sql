@@ -21,3 +21,4 @@ WHERE user_id = $1 AND place_id = $2;
 -- name: GetFavorite :one
 SELECT * FROM favorites
 WHERE user_id = $1 AND place_id = $2;
+

@@ -44,6 +44,10 @@ func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection) (*Ser
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 	authRoutes.POST("/save_fav", server.SaveFavorite)
 	authRoutes.POST("/remove_fav", server.RemoveFavorite)
+	authRoutes.POST("/favorite", server.ToggleFavorite)
+	authRoutes.POST("/get_favs", server.GetListFavorites)
+	authRoutes.POST("/check_update_fav", server.CheckAndUpdateFavorite)
+	authRoutes.POST("/get_user", server.GetUser)
 	// authRoutes.POST("/delete", server.DeletePlace)
 	// authRoutes.POST("/get", server.GetPlace)
 	server.router = router
