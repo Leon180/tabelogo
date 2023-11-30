@@ -12,30 +12,30 @@ import (
 )
 
 type Favorite struct {
-	UserID    sql.NullInt64 `json:"user_id"`
-	PlaceID   sql.NullInt64 `json:"place_id"`
-	CreatedAt time.Time     `json:"created_at"`
-	UpdatedAt time.Time     `json:"updated_at"`
+	FavoriteID int64     `json:"favorite_id"`
+	UserID     int64     `json:"user_id"`
+	PlaceID    int64     `json:"place_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Place struct {
 	PlaceID                  int64          `json:"place_id"`
-	GoogleID                 sql.NullString `json:"google_id"`
-	TwDisplayName            sql.NullString `json:"tw_display_name"`
-	JpDisplayName            sql.NullString `json:"jp_display_name"`
+	GoogleID                 string         `json:"google_id"`
+	TwDisplayName            string         `json:"tw_display_name"`
+	TwFormattedAddress       string         `json:"tw_formatted_address"`
+	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
+	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
+	Country                  sql.NullString `json:"country"`
+	GoogleMapUri             string         `json:"google_map_uri"`
+	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
+	Lat                      string         `json:"lat"`
+	Lng                      string         `json:"lng"`
 	PrimaryType              sql.NullString `json:"primary_type"`
 	Rating                   sql.NullString `json:"rating"`
-	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
-	JpFormattedAddress       sql.NullString `json:"jp_formatted_address"`
-	EnCity                   sql.NullString `json:"en_city"`
-	JpDistrict               sql.NullString `json:"jp_district"`
-	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
-	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
-	AccessibilityOptions     []string       `json:"accessibility_options"`
-	GoogleMapUri             sql.NullString `json:"google_map_uri"`
-	WebsiteUri               sql.NullString `json:"website_uri"`
-	PhotosName               []string       `json:"photos_name"`
 	Types                    []string       `json:"types"`
+	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
+	WebsiteUri               sql.NullString `json:"website_uri"`
 	CreatedAt                time.Time      `json:"created_at"`
 	UpdatedAt                time.Time      `json:"updated_at"`
 }

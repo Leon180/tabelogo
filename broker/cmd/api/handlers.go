@@ -18,14 +18,16 @@ func (s *Server) TransRequest(method, url string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		fmt.Println(url)
 		var err error
+		header := c.Request.Header
 		body := c.Request.Body
+
 		// submit request to tabelog spider service
 		request, err := http.NewRequest(method, url, body)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-		request.Header.Set("Content-Type", "application/json")
+		request.Header = header
 		client := &http.Client{}
 		response, err := client.Do(request)
 		if err != nil {

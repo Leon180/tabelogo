@@ -116,7 +116,6 @@
     </div>
     {{/* Google Map */}}
     <div class="col-sm-7 col-12" style="padding-right:0; height:92vh;">
-        <a id="MapInitBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Init Google Map</a>
         <div id="map" class="row" style="height:100%; width:100%;">
              
         </div>
@@ -128,7 +127,7 @@
 {{define "js"}}
     {{/* google map(restrict to use place(old), map only) */}}
     <script async
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBvexSf5aOR04wPtAnoq29dUwotprd-Igk&libraries=places&callback=initMap&region=JP&language=ja">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBvexSf5aOR04wPtAnoq29dUwotprd-Igk&libraries=places&region=JP&language=ja&callback=initMap">
     </script>
     {{/* bootstrap */}}
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
@@ -144,8 +143,6 @@
     const textAPIReturnAmount = 20
 
     // btn 
-    const MapInitBtn = document.getElementById('MapInitBtn');
-    {{/* const CurentPositionBtn = document.getElementById('CurrentPositionBtn'); */}}
     const GetTabelogInfoBtn = document.getElementById('GetTabelogInfoBtn');
     const AdvanceSearchBtn = document.getElementById('AdvanceSearchBtn');
     const CloseInfoBtn = document.getElementById('close-info-btn');
@@ -192,18 +189,19 @@
     const textAPIMaskNoAdvance = ["id","formattedAddress","addressComponents","googleMapsUri","displayName","photos","accessibilityOptions"];
     const textAPIMaskForAddress = ["id","formattedAddress","addressComponents","location","displayName"];
 
-    // Button Listener
-    MapInitBtn.addEventListener("click", function(){
+    function initMap(){
+        // generate map and center to Taiwan
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat:23.553118, lng: 121.0211024}, // Taiwan for init
             zoom: 8,
         });
-        
+        // go to current position
         goToCurrentPosition();
+        // init marker
         marker = new google.maps.Marker({
             map,
         });
-        MapInitBtn.style.display = "none";
+        // init map's event listener(while click on map, show info card and mark place)
         map.addListener("click", async (e)=>{
             // cancel the default marker and infoWindow
             e.stop()
@@ -211,30 +209,36 @@
                 initSelectedPlace(selectedPlace, "TW", e.placeId, detailsAPIMask, "zh-TW", true)
             ]).then((value)=>{
                 const listInfo = filterInfo(selectedPlace.TW)
-                // if offcanvas is open, show another info card
+                // if offcanvas(advance search) is open, show info card on offcanvas
+                // else show info card on quick search
                 if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
+                    // clear offcanvas info card
                     offcanvasMarkPlace.innerHTML = ""
                     offcanvasMarkPlaceCloseSave.innerHTML = ""
+                    // append new info card
                     offcanvasMarkPlace.appendChild(generateInfoNode(listInfo))
                     generateCloseSave(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
                     offcanvasMarkContainer.classList.remove("d-none")
+                    // scroll to the item info card
                     document.getElementById("offcanvas-mark-place-place-close-save").scrollIntoView({behavior: "smooth"})
                 } else {
+                    // clear quick info card
                     searchPlaceCloseSave.innerHTML = ""
                     searchPlaceInformation.innerHTML = ""
+                    // append new info card
                     searchPlaceInformation.appendChild(generateInfoNode(listInfo))
                     generateCloseSave(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
                 }
             })
         })
-    });
-
-    {{/* CurrentPositionBtn.addEventListener("click", goToCurrentPosition); */}}
+    }
 
     AdvanceSearchBtn.addEventListener("click", async function(){
         // clear searchResults
         searchResults.TW = null
+        // clear HTML in listSearchResults
         listSearchResults.innerHTML = ""
+        // request advance search
         const payload = {
             text_query: document.getElementById("textQuery-input").value,
             low_latitude: map.getBounds().eb.lo,
@@ -254,17 +258,16 @@
             advancSearch(searchResults, "TW", textAPIMask, payloadTW),
         ])
         .then((value)=>{
+            // clear markers and infoWindows
             markers.forEach((m)=>{
                 m.setMap(null)
             })
             infoWindows.forEach((iw)=>{
                 iw.close()
             })
-           generateListInfoHTML(searchResults)
-           generateMarkers(searchResults)
-           {{/* if (selectedPlace.TW != null) {
-                map.setCenter({lat: selectedPlace.TW.location.latitude, lng: selectedPlace.TW.location.longitude});
-            } */}}
+            // generate new markers and infoWindows
+            generateListInfoHTML(searchResults)
+            generateMarkers(searchResults)
         })
     });
 

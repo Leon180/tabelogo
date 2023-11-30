@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createFavorite = `-- name: CreateFavorite :one
@@ -17,18 +16,42 @@ INSERT INTO favorites (
 ) VALUES (
     $1, 
     $2
-) RETURNING user_id, place_id, created_at, updated_at
+) RETURNING favorite_id, user_id, place_id, created_at, updated_at
 `
 
 type CreateFavoriteParams struct {
-	UserID  sql.NullInt64 `json:"user_id"`
-	PlaceID sql.NullInt64 `json:"place_id"`
+	UserID  int64 `json:"user_id"`
+	PlaceID int64 `json:"place_id"`
 }
 
 func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) (Favorite, error) {
 	row := q.db.QueryRowContext(ctx, createFavorite, arg.UserID, arg.PlaceID)
 	var i Favorite
 	err := row.Scan(
+		&i.FavoriteID,
+		&i.UserID,
+		&i.PlaceID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getFavorite = `-- name: GetFavorite :one
+SELECT favorite_id, user_id, place_id, created_at, updated_at FROM favorites
+WHERE user_id = $1 AND place_id = $2
+`
+
+type GetFavoriteParams struct {
+	UserID  int64 `json:"user_id"`
+	PlaceID int64 `json:"place_id"`
+}
+
+func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error) {
+	row := q.db.QueryRowContext(ctx, getFavorite, arg.UserID, arg.PlaceID)
+	var i Favorite
+	err := row.Scan(
+		&i.FavoriteID,
 		&i.UserID,
 		&i.PlaceID,
 		&i.CreatedAt,
@@ -38,7 +61,7 @@ func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) 
 }
 
 const listFavorite = `-- name: ListFavorite :many
-SELECT user_id, place_id, created_at, updated_at FROM favorites
+SELECT favorite_id, user_id, place_id, created_at, updated_at FROM favorites
 WHERE user_id = $1
 ORDER BY created_at ASC
 LIMIT $2
@@ -46,9 +69,9 @@ OFFSET $3
 `
 
 type ListFavoriteParams struct {
-	UserID sql.NullInt64 `json:"user_id"`
-	Limit  int32         `json:"limit"`
-	Offset int32         `json:"offset"`
+	UserID int64 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
 }
 
 func (q *Queries) ListFavorite(ctx context.Context, arg ListFavoriteParams) ([]Favorite, error) {
@@ -61,6 +84,7 @@ func (q *Queries) ListFavorite(ctx context.Context, arg ListFavoriteParams) ([]F
 	for rows.Next() {
 		var i Favorite
 		if err := rows.Scan(
+			&i.FavoriteID,
 			&i.UserID,
 			&i.PlaceID,
 			&i.CreatedAt,
@@ -77,4 +101,19 @@ func (q *Queries) ListFavorite(ctx context.Context, arg ListFavoriteParams) ([]F
 		return nil, err
 	}
 	return items, nil
+}
+
+const removeFavorite = `-- name: RemoveFavorite :exec
+DELETE FROM favorites
+WHERE user_id = $1 AND place_id = $2
+`
+
+type RemoveFavoriteParams struct {
+	UserID  int64 `json:"user_id"`
+	PlaceID int64 `json:"place_id"`
+}
+
+func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
+	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.PlaceID)
+	return err
 }

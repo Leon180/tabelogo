@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-11-24T03:50:58.516Z
+-- Generated at: 2023-11-29T17:01:52.904Z
 
 CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
@@ -12,29 +12,29 @@ CREATE TABLE "users" (
 
 CREATE TABLE "places" (
   "place_id" bigserial PRIMARY KEY,
-  "google_id" varchar,
-  "tw_display_name" varchar,
-  "jp_display_name" varchar,
-  "primary_type" varchar,
-  "rating" numeric(2,1),
-  "user_rating_count" int,
-  "jp_formatted_address" varchar,
-  "en_city" varchar,
-  "jp_district" varchar,
-  "international_phone_number" varchar,
+  "google_id" varchar UNIQUE NOT NULL,
+  "tw_display_name" varchar NOT NULL,
+  "tw_formatted_address" varchar NOT NULL,
   "tw_weekday_descriptions" varchar[],
-  "accessibility_options" varchar[],
-  "google_map_uri" varchar,
-  "website_uri" varchar,
-  "photos_name" varchar[],
+  "administrative_area_level_1" varchar,
+  "country" varchar,
+  "google_map_uri" varchar NOT NULL,
+  "international_phone_number" varchar,
+  "lat" numeric NOT NULL,
+  "lng" numeric NOT NULL,
+  "primary_type" varchar,
+  "rating" numeric,
   "types" varchar[],
+  "user_rating_count" integer,
+  "website_uri" varchar,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "favorites" (
-  "user_id" bigserial,
-  "place_id" bigserial,
+  "favorite_id" bigserial PRIMARY KEY,
+  "user_id" bigserial NOT NULL,
+  "place_id" bigserial NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

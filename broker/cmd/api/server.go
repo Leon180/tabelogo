@@ -31,6 +31,8 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
 	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))
 	router.POST("/renew_access", server.TransRequest("POST", authenticateServiceURL+"/renew_access"))
+	router.POST("/save_fav", server.TransRequest("POST", authenticateServiceURL+"/save_fav"))
+	router.POST("/remove_fav", server.TransRequest("POST", authenticateServiceURL+"/remove_fav"))
 	// Google API service:
 	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))
@@ -39,6 +41,7 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/write_log", server.logEventViaRabbit)
 	// mail
 	router.POST("/send_mail", server.TransRequest("POST", mailServiceURL+"/send"))
+
 	server.router = router
 	return server
 }
