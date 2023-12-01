@@ -602,10 +602,6 @@
             console.log(responseJSON.error)
             save.innerHTML = "Save";
             save.disabled = false
-            if (responseJSON.error == "failed to verify token: token has expired") {
-                window.localStorage.removeItem("tabelogo_token")
-                alert("Session expired, Please login")
-            }
         } else {
             if (responseJSON.isFavorite == true) {
                 save.innerHTML = "Saved";
@@ -625,6 +621,7 @@
                     body: JSON.stringify(info),
                     headers: headers,
                 }
+                console.log(JSON.stringify(info))
                 fetch(`${brokerUrl}/favorite`, body)
                 .then((response) => response.json())
                 .then((data) => {
@@ -670,10 +667,6 @@
             tabelogo.id = `tabelogo-${Info.id}`;
             tabelogo.className = "btn py-1";
             tabelogo.innerHTML = "Tabelogo";
-            // tabelog request
-            var buildToast = function(Info, toast){
-                
-            }
             var requestTabelogo = function(Info, toastContainer, fn) {
                 var request = async function() {
                     const headers = new Headers();
@@ -710,12 +703,13 @@
                 return request
             }
 
-            tabelogf = requestTabelogo(Info, toastContainer, buildToast)
+            tabelogf = requestTabelogo(Info, toastContainer)
             tabelogo.addEventListener("click", tabelogf)
             flex.appendChild(tabelogo)
         }
         flex.appendChild(save)
         flex.appendChild(center)
+        console.log(flex)
         return flex
     }
 
@@ -777,7 +771,7 @@
         return node
     }
 
-    function generateListInfoHTML(data) {
+    async function generateListInfoHTML(data) {
         // let JPdata = JPTWdata.JP
         let TWdata = data.TW
         if (!TWdata || !TWdata.hasOwnProperty("places")) {
@@ -785,8 +779,10 @@
         }
         for (let i=0; i<TWdata.places.length; i++) {
             let listInfo = filterInfo(TWdata, i)
+            console.log(listInfo)
            // gcs
-            listSearchResults.appendChild(generateCenterSave(listInfo))
+            const centerSaveTabe = await generateCenterSave(listInfo)
+            listSearchResults.appendChild(centerSaveTabe)
             listnode = generateInfoNode(listInfo)
             listnode.innerHTML += `<hr>`
             listSearchResults.appendChild(listnode)
