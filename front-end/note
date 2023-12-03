@@ -1,0 +1,24 @@
+const details = [
+        "id", // id for detail apu
+        "international_phone_number",
+        "formatted_address",
+        "address_components", // array of components
+        "location", // lat, lng
+        "rating",
+        "googleMapsUri",
+        "websiteUri",
+        "regularOpeningHours", // array of opening hours, will use weekdayDescriptions
+        "displayName",
+        "primaryType",
+        "takeout", // bool
+        "delivery", // bool
+        "reservable", // bool
+        "editorialSummary", // destription of place
+        "reviews",
+        "photos", // array of photos
+        "outdoorSeating", // bool
+        "liveMusic", // bool
+        "restroom", // bool
+        "paymentOptions", // array of payment options
+        "accessibilityOptions", // array of accessibility options
+    ];
