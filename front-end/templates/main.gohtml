@@ -107,7 +107,7 @@
                         <div class="d-flex justify-content-around align-items-center">
                             <button class="btn mb-1 btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Advance Search</button>
                             <div id="show-favorite-btn" class="" style="vertical-align: middle;" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Show favorites">
-                                <div class="go-to-current" style="cursor:pointer;">
+                                <div class="" style="cursor:pointer;">
                                     <i class="fa-solid fa-bookmark"></i>
                                 </div>
                             </div>
@@ -1128,7 +1128,6 @@
                 <strong class="me-auto">${name}</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>`
         let toastBody;
-        console.log(returnDataArr)
         if (returnDataArr.hasOwnProperty("error")) {
             toastBody = document.createElement('div');
             toastBody.className = "toast-body";
@@ -1234,12 +1233,10 @@
     function generateTabelogoImage() {
         // create Image
         const tabephotoBtn = document.getElementsByClassName("tabelogo-photo-btn")
-        console.log(tabephotoBtn)
         for(let i=0;i<tabephotoBtn.length;i++){
             
             const btn = tabephotoBtn[i]
             btn.addEventListener("click", async function(){
-                console.log(btn.dataset)
                 const tabeName = btn.dataset.tabeName
                 const tabeLink = btn.dataset.tabeLink
                 const headers = new Headers();
@@ -1255,12 +1252,10 @@
                 }
                 let response = await fetch(tabeLogoImgLink, body)
                 let imgInfo = await response.json()
-                console.log(imgInfo)
                 let m;
                 let c;
                 const parEle = document.getElementById(`photo-parent-${tabeLink}`)
                 if (imgInfo.hasOwnProperty("error")) {
-                    console.log("No photo found...")
                     const notext = document.createElement('div');
                     notext.className = "no-photo";
                     notext.style = "font-size: 12px; font-weight: 400;"
@@ -1283,7 +1278,6 @@
                     parEle.appendChild(m)
                 }
                 const existCI = parEle.getElementsByClassName("carousel")
-                console.log(existCI)
                 if(existCI.length > 0) {
                     setTimeout(function(newEle, old){
                         parEle.replaceChild(newEle, old)
@@ -1478,7 +1472,6 @@
         try {
             let response = await fetch(`${brokerUrl}/get_favs`, body)
             let responseJSON = await response.json()
-            console.log(responseJSON)
             if (responseJSON.hasOwnProperty("error")) {
                 if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
                     window.localStorage.removeItem("tabelogo_token")
@@ -1491,12 +1484,25 @@
                 return
             }
             // generate new markers and infoWindows
+            const closeFn = function(){
+                favoriteListContainer.innerHTML = ""
+                favoriteListContainer.classList.add("d-none")
+                favoriteMarkers.forEach((m)=>{
+                    m.setMap(null)
+                })
+                favoriteMarkers = []
+                favoriteInfoWindows.forEach((iw)=>{
+                    iw.close()
+                })
+                favoriteInfoWindows = []
+            }
+            favoriteListContainer.appendChild(generateCloseListButton(closeFn))
             await generateFavoriteListHTML(responseJSON.Favorites)
             generateFavoriteMarkers(map, responseJSON.Favorites)
         }
         catch (error){
             alert(`We meet some problem, please try again later...
-                error: ${responseJSON.error}
+                error: ${error}
             `)
             return
         }
@@ -1506,7 +1512,6 @@
     async function generateFavoriteListHTML(data) {
         for (let i=0; i<data.length; i++) {
             let listInfo = filterInfoFromFavorite(data, i)
-            console.log(listInfo)
             const centerSaveTabe = await generateInfoButton(null, listInfo, null)
             favoriteListContainer.appendChild(centerSaveTabe)
             listnode = generateInfoNode(listInfo)
@@ -1540,6 +1545,19 @@
             favoriteInfoWindows.push(infoWindow)
             infoWindow.open({map, marker});
         }
+    }
+
+    function generateCloseListButton(closeFn) {
+        // close
+        const flex = document.createElement('div');
+        flex.className = "d-flex justify-content-end";
+        const close = document.createElement('div');
+        close.id = "close-info-btn";
+        close.className = "btn py-1";
+        close.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
+        close.addEventListener("click", closeFn)
+        flex.appendChild(close)
+        return flex
     }
 
     </script>
