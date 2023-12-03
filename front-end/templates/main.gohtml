@@ -105,7 +105,12 @@
                             <label for="quick-search-input" class="">Quick Search</label>
                         </div>
                         <div class="d-flex justify-content-around align-items-center">
-                            <button class="btn mb-1 btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Advance Search</button> 
+                            <button class="btn mb-1 btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Advance Search</button>
+                            <div id="show-favorite-btn" class="" style="vertical-align: middle;" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Show favorites">
+                                <div class="go-to-current" style="cursor:pointer;">
+                                    <i class="fa-solid fa-bookmark"></i>
+                                </div>
+                            </div>
                             <div class="" style="vertical-align: middle;" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Go to current position">
                                 <div class="go-to-current" style="cursor:pointer;">
                                     <i class="fa-solid fa-location-dot"></i>
@@ -114,16 +119,24 @@
                         </div>
                     </li>
                     {{/* info */}}
-                    <li id="search-place-container" class="list-group-item pt-2 pb-1 d-none">
+                    <li class="list-group-item" style="overflow: auto; max-height:66vh;">
+                        <div id="search-place-container" class="pt-2 pb-1 d-none">
                         
-                        <div id="search-place-close-save" class="d-flex justify-content-end">
+                            <div id="search-place-close-save" class="d-flex justify-content-end">
+                                
+                            </div>
                             
+                            <div id="search-place-information" class="row">
+                                
+                            </div>
+
+                            <hr>
                         </div>
-                        
-                        <div id="search-place-information" class="row" style="overflow: auto; max-height:330px;">
-                            
+                        <div id="favorite-list" class="pt-2 pb-1 d-none">
+
                         </div>
                     </li>
+                    
                 </ul>
             </div>
         </div>
@@ -168,6 +181,7 @@
     const GetTabelogInfoBtn = document.getElementById('GetTabelogInfoBtn');
     const AdvanceSearchBtn = document.getElementById('AdvanceSearchBtn');
     const CloseInfoBtn = document.getElementById('close-info-btn');
+    const ShowFavoriteBtn = document.getElementById('show-favorite-btn');
 
     // Input
     const AutoSearchBar = document.getElementById('quick-search-input');
@@ -182,6 +196,7 @@
     const offcanvasMarkPlaceCloseSave = document.getElementById("offcanvas-mark-place-place-close-save")
     const bsOffcanvas = new bootstrap.Offcanvas('#offcanvasScrolling')
     const userPannel = document.getElementById("userpanel")
+    const favoriteListContainer = document.getElementById("favorite-list")
 
     // toast
     const toastContainer = document.getElementById('tabelogo-toast-container')
@@ -193,7 +208,9 @@
     const mapContainer = document.getElementById("map")
     let marker;
     let infoWindow;
+    let favoriteInfoWindows = [];
     let infoWindows = [];
+    let favoriteMarkers = [];
     let markers = [];
     let goToCurrentIcon;
     
@@ -304,9 +321,11 @@
             markers.forEach((m)=>{
                 m.setMap(null)
             })
+            markers = []
             infoWindows.forEach((iw)=>{
                 iw.close()
             })
+            infoWindows = []
             // error handling
             if (searchResults.TW.hasOwnProperty("error")) {
                 console.log(searchResults.TW.error)
@@ -1008,6 +1027,77 @@
         return listInfo
     }
 
+    function filterInfoFromFavorite(data, index) {
+        const listInfo = {
+            "id": null,
+            "internationalPhoneNumber": null,
+            "location": null,
+            "country": null,
+            "administrative_area_level_1": null,
+            "TwDisplayName": null,
+            "primaryType": null,
+            "rating": null,
+            "userRatingCount": null,
+            "TwFormattedAddress": null,
+            "TwWeekdayDescriptions": null,
+            "accessibilityOptions": null,
+            "googleMapsUri": null,
+            "websiteUri": null,
+            "photos": null,
+            "types": null,
+        }
+        if (index!=null) {
+            to = data[index]
+        }
+        else {
+            to = data
+        }
+        if (to.hasOwnProperty("google_id")) {
+            listInfo.id = to.google_id
+        }
+        if (to.hasOwnProperty("international_phone_number") && to.international_phone_number.hasOwnProperty("String")) {
+            listInfo.internationalPhoneNumber = to.international_phone_number.String
+        }
+        if (to.hasOwnProperty("country") && to.country.hasOwnProperty("String")) {
+            listInfo.country = to.country.String
+        }
+        if (to.hasOwnProperty("administrative_area_level_1") && to.administrative_area_level_1.hasOwnProperty("String")) {
+            listInfo.administrative_area_level_1 = to.administrative_area_level_1.String
+        }
+        listInfo.location = {
+            "latitude": parseFloat(to.lat),
+            "longitude": parseFloat(to.lng),
+        }
+        if (to.hasOwnProperty("tw_display_name")) {
+            listInfo.TwDisplayName = to.tw_display_name
+        }
+        if (to.hasOwnProperty("primary_type") && to.primary_type.hasOwnProperty("String")) {
+            listInfo.primaryType = to.primary_type.String
+        }
+        if (to.hasOwnProperty("rating") && to.rating.hasOwnProperty("String")) {
+            listInfo.rating = to.rating.String
+        }
+        if (to.hasOwnProperty("user_rating_count")&& to.user_rating_count.hasOwnProperty("Int32")) {
+            listInfo.userRatingCount = to.user_rating_count.Int32
+        }
+        if (to.hasOwnProperty("tw_formatted_address")) {
+            listInfo.TwFormattedAddress = to.tw_formatted_address
+        }
+        if (to.hasOwnProperty("tw_weekday_descriptions")) {
+            listInfo.TwWeekdayDescriptions = to.tw_weekday_descriptions
+        }
+        if (to.hasOwnProperty("google_map_uri")) {
+            listInfo.googleMapsUri = to.google_map_uri
+        }
+        if (to.hasOwnProperty("website_uri") && to.website_uri.hasOwnProperty("String")) {
+            listInfo.websiteUri = to.website_uri.String
+        }
+        if (to.hasOwnProperty("types")){
+            listInfo.types = to.types
+        }
+        return listInfo
+    }
+
     // clear info card, input's value and selectedPlace
     function ClearQuickInfoAndSearchBar(){
         searchPlaceContainer.classList.add("d-none")
@@ -1353,6 +1443,103 @@
             <img src="${image}" class="d-block w-100" alt="..." >
         `
         return item
+    }
+
+    ShowFavoriteBtn.addEventListener("click", async function(){
+        favoriteListContainer.innerHTML = ""
+        favoriteListContainer.classList.add("d-none")
+        await generateFavoriteList(10, 0)
+        favoriteListContainer.classList.remove("d-none")
+    })
+
+    async function generateFavoriteList(limit, offset) {
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        const payload = {
+            limit: limit,
+            offset: offset,
+        }
+        const body = {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+        }
+        favoriteMarkers.forEach((m)=>{
+            m.setMap(null)
+        })
+        favoriteMarkers = []
+        favoriteInfoWindows.forEach((iw)=>{
+            iw.close()
+        })
+        favoriteInfoWindows = []
+        // show loading
+        {{/* generateFavoriteListLoading() */}}
+        try {
+            let response = await fetch(`${brokerUrl}/get_favs`, body)
+            let responseJSON = await response.json()
+            console.log(responseJSON)
+            if (responseJSON.hasOwnProperty("error")) {
+                if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                    window.localStorage.removeItem("tabelogo_token")
+                    alert("Session expired, Please login")
+                } else {
+                    alert(`We meet some problem, please try again later...
+                        error: ${responseJSON.error}
+                    `)
+                }
+                return
+            }
+            // generate new markers and infoWindows
+            await generateFavoriteListHTML(responseJSON.Favorites)
+            generateFavoriteMarkers(map, responseJSON.Favorites)
+        }
+        catch (error){
+            alert(`We meet some problem, please try again later...
+                error: ${responseJSON.error}
+            `)
+            return
+        }
+
+    }
+
+    async function generateFavoriteListHTML(data) {
+        for (let i=0; i<data.length; i++) {
+            let listInfo = filterInfoFromFavorite(data, i)
+            console.log(listInfo)
+            const centerSaveTabe = await generateInfoButton(null, listInfo, null)
+            favoriteListContainer.appendChild(centerSaveTabe)
+            listnode = generateInfoNode(listInfo)
+            listnode.innerHTML += `<hr>`
+            favoriteListContainer.appendChild(listnode)
+        }
+    }
+
+    // input: map and searchResult(TW or JP or others...)
+    function generateFavoriteMarkers(map, data){
+        for (let i=0; i<data.length; i++) {
+            let listInfo = filterInfoFromFavorite(data, i)
+            const marker = new google.maps.Marker({
+                position: {lat: listInfo.location.latitude, lng: listInfo.location.longitude},
+                map: map
+            });
+            // save the marker in array, to clear it later
+            favoriteMarkers.push(marker)
+            // infoWindow for label name
+            const contentString =
+            `<a onclick="offCanvasOpen()" href="#advance-result-${listInfo.id}">${listInfo.TwDisplayName}</a>`
+            const infoWindow = new google.maps.InfoWindow({
+                content: contentString,
+            });
+            infoWindow.setPosition({lat: listInfo.location.latitude, lng: listInfo.location.longitude})
+            infoWindow.setOptions({
+                disableAutoPan : true, // disable auto pan
+                pixelOffset: new google.maps.Size(0, 40) // set the infoWindow position to the marker
+            })
+            // save the infoWindow in array, to close it later
+            favoriteInfoWindows.push(infoWindow)
+            infoWindow.open({map, marker});
+        }
     }
 
     </script>
