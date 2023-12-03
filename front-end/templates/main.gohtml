@@ -73,7 +73,7 @@
             <div id="offcanvas-mark-place-place-close-save" class="d-flex justify-content-end">
 
             </div>
-            <div id="offcanvas-mark-place">
+            <div id="offcanvas-mark-place-information">
             
             </div>
             {{/* show ingo */}}
@@ -100,7 +100,7 @@
                         <button class="btn mb-1 btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling">Advance Search</button>
                     </li>
                     {{/* info */}}
-                    <li class="list-group-item pt-2 pb-1">
+                    <li id="search-place-container" class="list-group-item pt-2 pb-1 d-none">
                         
                         <div id="search-place-close-save" class="d-flex justify-content-end">
                             
@@ -151,12 +151,14 @@
     const AutoSearchBar = document.getElementById('quick-search-input');
 
     // Info
+    const searchPlaceContainer = document.getElementById("search-place-container");
     const searchPlaceInformation = document.getElementById("search-place-information");
     const searchPlaceCloseSave = document.getElementById("search-place-close-save");
     const listSearchResults = document.getElementById("list-search-results");
     const offcanvasMarkContainer = document.getElementById("offcanvas-mark-container")
-    const offcanvasMarkPlace = document.getElementById("offcanvas-mark-place");
+    const offcanvasMarkPlaceInformation = document.getElementById("offcanvas-mark-place-information");
     const offcanvasMarkPlaceCloseSave = document.getElementById("offcanvas-mark-place-place-close-save")
+    const bsOffcanvas = new bootstrap.Offcanvas('#offcanvasScrolling')
 
     // toast
     const toastContainer = document.getElementById('tabelogo-toast-container')
@@ -205,30 +207,25 @@
         map.addListener("click", async (e)=>{
             // cancel the default marker and infoWindow
             e.stop()
+            if(!e.placeId){
+                return
+            }
             Promise.allSettled([
                 initSelectedPlace(selectedPlace, "TW", e.placeId, detailsAPIMask, "zh-TW", true)
             ]).then((value)=>{
-                const listInfo = filterInfo(selectedPlace.TW)
-                // if offcanvas(advance search) is open, show info card on offcanvas
-                // else show info card on quick search
-                if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
-                    // clear offcanvas info card
-                    offcanvasMarkPlace.innerHTML = ""
-                    offcanvasMarkPlaceCloseSave.innerHTML = ""
-                    // append new info card
-                    offcanvasMarkPlace.appendChild(generateInfoNode(listInfo))
-                    generateCloseSave(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
-                    offcanvasMarkContainer.classList.remove("d-none")
-                    // scroll to the item info card
-                    document.getElementById("offcanvas-mark-place-place-close-save").scrollIntoView({behavior: "smooth"})
-                } else {
-                    // clear quick info card
-                    searchPlaceCloseSave.innerHTML = ""
-                    searchPlaceInformation.innerHTML = ""
-                    // append new info card
-                    searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                    generateCloseSave(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+                // error handling
+                if (selectedPlace.TW.hasOwnProperty("error")) {
+                    console.log(selectedPlace.TW.error)
+                    alert(`We meet some problem, please try again later...
+                        error: ${selectedPlace.TW.error}
+                    `)
+                    return
                 }
+                const listInfo = filterInfo(selectedPlace.TW)
+                selectedInfoShow(listInfo)
+            })
+            .catch((error)=>{
+                console.log(error)
             })
         })
     }
@@ -255,7 +252,7 @@
             language_code: "zh-TW",
         }
         Promise.allSettled([
-            advancSearch(searchResults, "TW", textAPIMask, payloadTW),
+            advanceSearch(searchResults, "TW", textAPIMask, payloadTW),
         ])
         .then((value)=>{
             // clear markers and infoWindows
@@ -265,9 +262,20 @@
             infoWindows.forEach((iw)=>{
                 iw.close()
             })
+            // error handling
+            if (searchResults.TW.hasOwnProperty("error")) {
+                console.log(searchResults.TW.error)
+                alert(`We meet some problem, please try again later...
+                    error: ${searchResults.TW.error}
+                `)
+                return
+            }
             // generate new markers and infoWindows
-            generateListInfoHTML(searchResults)
-            generateMarkers(searchResults)
+            generateListInfoHTML(searchResults.TW)
+            generateMarkers(map, searchResults.TW)
+        })
+        .catch((error)=>{
+            console.log(error)
         })
     });
 
@@ -280,36 +288,35 @@
         marker.setPosition({lat: parseFloat(lat),lng: parseFloat(lng)});
     }
 
-    function generateMarkers(serachResults){
-        if (!serachResults.TW || !serachResults.TW.hasOwnProperty("places")) {
-            console.log("NO DATA, please try again later...")
-            return
-        }
-        for (let i=0; i<serachResults.TW.places.length; i++) {
-            let listInfo = filterInfo(serachResults.TW, i)
+    // input: map and searchResult(TW or JP or others...)
+    function generateMarkers(map, serachResult){
+        for (let i=0; i<serachResult.places.length; i++) {
+            let listInfo = filterInfo(serachResult, i)
             const marker = new google.maps.Marker({
                 position: {lat: listInfo.location.latitude, lng: listInfo.location.longitude},
                 map: map
             });
+            // save the marker in array, to clear it later
             markers.push(marker)
             // infoWindow for label name
             const contentString =
-            `<a href="#advance-result-${listInfo.id}">${listInfo.TwDisplayName}</a>`
+            `<a onclick="offCanvasOpen()" href="#advance-result-${listInfo.id}">${listInfo.TwDisplayName}</a>`
             const infoWindow = new google.maps.InfoWindow({
                 content: contentString,
             });
             infoWindow.setPosition({lat: listInfo.location.latitude, lng: listInfo.location.longitude})
             infoWindow.setOptions({
-                disableAutoPan : true,
-                pixelOffset: new google.maps.Size(0, 40)
+                disableAutoPan : true, // disable auto pan
+                pixelOffset: new google.maps.Size(0, 40) // set the infoWindow position to the marker
             })
-            const styleInfo = document.getElementsByClassName("gm-style-iw-a")
-            for (let i=0; i<styleInfo.length; i++) {
-                styleInfo[i].style.backgroundColor = "none"
-            }
+            // save the infoWindow in array, to close it later
             infoWindows.push(infoWindow)
             infoWindow.open({map, marker});
         }
+    }
+
+    function offCanvasOpen() {
+        bsOffcanvas.show()
     }
 
     // goToCurrentPostion()
@@ -333,19 +340,16 @@
                     Promise.allSettled([
                         initSelectedPlace(selectedPlace, "TW", place.place_id, detailsAPIMask, "zh-TW", true)
                     ]).then((value)=>{
-                        const listInfo = filterInfo(selectedPlace.TW)
-                        if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
-                            offcanvasMarkPlace.innerHTML = ""
-                            offcanvasMarkPlaceCloseSave.innerHTML = ""
-                            offcanvasMarkPlace.appendChild(generateInfoNode(listInfo))
-                            generateCloseSave(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
-                            offcanvasMarkContainer.classList.remove("d-none")
-                        } else {
-                            searchPlaceCloseSave.innerHTML = ""
-                            searchPlaceInformation.innerHTML = ""
-                            searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-                            generateCloseSave(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+                        // error handling
+                        if (selectedPlace.TW.hasOwnProperty("error")) {
+                            console.log(selectedPlace.TW.error)
+                            alert(`We meet some problem, please try again later...
+                                error: ${selectedPlace.TW.error}
+                            `)
+                            return
                         }
+                        const listInfo = filterInfo(selectedPlace.TW)
+                        selectedInfoShow(listInfo)
                     })                    
                 }
             })
@@ -378,7 +382,24 @@
         });
     }
 
-    async function advancSearch(obj, objParam, maskArray, payload){
+    function selectedInfoShow(listInfo) {
+        if (document.getElementById("offcanvasScrolling").classList.contains("show")) {
+            offcanvasMarkPlaceCloseSave.innerHTML = ""
+            offcanvasMarkPlaceInformation.innerHTML = ""
+            offcanvasMarkPlaceInformation.appendChild(generateInfoNode(listInfo))
+            generateInfoButton(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
+            offcanvasMarkContainer.classList.remove("d-none")
+            offcanvasMarkPlaceCloseSave.scrollIntoView({behavior: "smooth"})
+        } else {
+            searchPlaceCloseSave.innerHTML = ""
+            searchPlaceInformation.innerHTML = ""
+            searchPlaceInformation.appendChild(generateInfoNode(listInfo))
+            generateInfoButton(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+            searchPlaceContainer.classList.remove("d-none")
+        }
+    }
+
+    async function advanceSearch(obj, objParam, maskArray, payload){
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         let tmp = ""
@@ -404,12 +425,15 @@
     }
 
     // places:
-    async function generateCloseSave(ele, Info, fn){
+    async function generateInfoButton(ele, Info, closeFn){
+        const flex = document.createElement('div');
+        flex.id=`advance-result-${Info.id}`
+        flex.className = "d-flex justify-content-end";
         // save
         const save = document.createElement('div');
         save.id = `save-${Info.id}`;
         save.className = "btn py-1";
-        // check and update favorite
+        // check and update favorite(if user login)
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
@@ -435,20 +459,18 @@
         }
         let response = await fetch(`${brokerUrl}/check_update_fav`, body)
         let responseJSON = await response.json()
-        console.log(responseJSON)
-        if (responseJSON.error!=null) {
-            console.log(responseJSON.error)
+        // if user not login, or error
+        if (responseJSON.hasOwnProperty("error")) {
             save.innerHTML = "Save";
-            save.disabled = false
+            save.disabled = true; // disable save button
         } else {
             if (responseJSON.isFavorite == true) {
                 save.innerHTML = "Saved";
-                save.disabled = true
             } else {
                 save.innerHTML = "Save";
-                save.disabled = false
             }
         }
+        // save button listener
         const savePlace = function (ele, info) {
             const savePlaceToFavorite = function () {
                 const headers = new Headers();
@@ -459,25 +481,21 @@
                     body: JSON.stringify(info),
                     headers: headers,
                 }
-                console.log(JSON.stringify(info))
                 fetch(`${brokerUrl}/favorite`, body)
                 .then((response) => response.json())
                 .then((data) => {
                     if (data.error!=null) {
-                        console.log(data.error)
                         if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
                             window.localStorage.removeItem("tabelogo_token")
                             alert("Session expired, Please login")
                         }
                         save.innerHTML = "Save"
-                        save.disabled = false
+                        save.disabled = true
                     } else {
                         if (data.action == "add") {
                             save.innerHTML = "Saved"
-                            save.disabled = true
                         }  else {
                             save.innerHTML = "Save"
-                            save.disabled = false
                         }
                     }
                 })
@@ -486,11 +504,12 @@
         }
         sp = savePlace(save, saveParam)
         save.addEventListener("click", sp)
+        // close
         const close = document.createElement('div');
         close.id = "close-info-btn";
         close.className = "btn py-1";
         close.innerHTML = "Close";
-        close.addEventListener("click", fn)
+        close.addEventListener("click", closeFn)
         const center = document.createElement('div');
         center.id = `center-${Info.id}`;
         center.className = "btn py-1";
@@ -504,6 +523,7 @@
         }
         centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
         center.addEventListener("click", centf)
+        // tabelogo
         if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
             const tabelogo = document.createElement('div');
             tabelogo.id = `tabelogo-${Info.id}`;
@@ -526,7 +546,6 @@
                     }
                     let response = await fetch(quickSearchLink, body)
                     let JPInfo = await response.json()
-                    console.log(JPInfo)
                     const TBpayload = {
                         area: Info.administrative_area_level_1.toLowerCase(),
                         place_name: JPInfo.displayName.text,
@@ -537,7 +556,6 @@
                         headers: headers,
                     })
                     let TabelogoInfo = await TabelogoResponse.json()
-                    console.log(TabelogoInfo)
                     const toast = generateTabelogoToast(Info.id, Info.TwDisplayName, TabelogoInfo)
                     toastContainer.appendChild(toast) // add to toast container
                     const freshToast = document.getElementById(`toast-listener-${Info.id}`)
@@ -549,11 +567,26 @@
             }
             tabelogf = requestTabelogo(Info)
             tabelogo.addEventListener("click", tabelogf)
-            ele.appendChild(tabelogo)
+            if (ele!=null) {
+                ele.appendChild(tabelogo)
+            } else {
+                flex.appendChild(tabelogo)
+            }
         }
-        ele.appendChild(center)
-        ele.appendChild(save)
-        ele.appendChild(close)
+        if (ele!=null) {
+            ele.appendChild(center)
+            ele.appendChild(save)
+            if (closeFn!=null) {
+                ele.appendChild(close)
+            }
+        } else {
+            flex.appendChild(center)
+            flex.appendChild(save)
+            if (closeFn!=null) {
+                flex.appendChild(close)
+            }
+            return flex
+        }
     }
 
     // return a flex with save and center button
@@ -563,7 +596,7 @@
             <div id="center-list-place-btn" class="btn py-1">Center</div>
         </div>
     ` */}}
-    async function generateCenterSave(Info){
+    {{/* async function generateCenterSave(Info){
         const flex = document.createElement('div');
         flex.id=`advance-result-${Info.id}`
         flex.className = "d-flex justify-content-end";
@@ -709,9 +742,8 @@
         }
         flex.appendChild(save)
         flex.appendChild(center)
-        console.log(flex)
         return flex
-    }
+    } */}}
 
 
     {{/* 
@@ -773,15 +805,16 @@
 
     async function generateListInfoHTML(data) {
         // let JPdata = JPTWdata.JP
-        let TWdata = data.TW
-        if (!TWdata || !TWdata.hasOwnProperty("places")) {
-            return "NO DATA, please try again later..."
+        if (!data || data.hasOwnProperty("error")) {
+            alert(`We meet some problem, please try again later...
+                error: ${data.error}
+            `)
+            return
         }
-        for (let i=0; i<TWdata.places.length; i++) {
-            let listInfo = filterInfo(TWdata, i)
-            console.log(listInfo)
-           // gcs
-            const centerSaveTabe = await generateCenterSave(listInfo)
+        for (let i=0; i<data.places.length; i++) {
+            let listInfo = filterInfo(data, i)
+            const centerSaveTabe = await generateInfoButton(null, listInfo, null)
+            {{/* const centerSaveTabe = await generateCenterSave(listInfo) */}}
             listSearchResults.appendChild(centerSaveTabe)
             listnode = generateInfoNode(listInfo)
             listnode.innerHTML += `<hr>`
@@ -873,6 +906,7 @@
 
     // clear info card, input's value and selectedPlace
     function ClearQuickInfoAndSearchBar(){
+        searchPlaceContainer.classList.add("d-none")
         searchPlaceInformation.innerHTML = ""
         AutoSearchBar.value = ""
         searchPlaceCloseSave.innerHTML = ""
@@ -881,7 +915,7 @@
 
     function ClearOffcanvasInfo(){
         offcanvasMarkContainer.classList.add("d-none")
-        offcanvasMarkPlace.innerHTML = ""
+        offcanvasMarkPlaceInformation.innerHTML = ""
         offcanvasMarkPlaceCloseSave.innerHTML = ""
         marker.setMap(null);
     }
