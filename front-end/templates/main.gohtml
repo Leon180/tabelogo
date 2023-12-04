@@ -197,6 +197,11 @@
     const bsOffcanvas = new bootstrap.Offcanvas('#offcanvasScrolling')
     const userPannel = document.getElementById("userpanel")
     const favoriteListContainer = document.getElementById("favorite-list")
+    
+    // favorite
+    let favMethod = "get_favs";
+    let favCountry;
+    let favRegion;
 
     // toast
     const toastContainer = document.getElementById('tabelogo-toast-container')
@@ -238,6 +243,7 @@
         map = new google.maps.Map(document.getElementById('map'), {
             center: {lat:23.553118, lng: 121.0211024}, // Taiwan for init
             zoom: 8,
+            mapId: 'DEMO_MAP_ID',
         });
         // go to current position
         await goToCurrentPosition();
@@ -470,15 +476,16 @@
             offcanvasMarkPlaceCloseSave.innerHTML = ""
             offcanvasMarkPlaceInformation.innerHTML = ""
             offcanvasMarkPlaceInformation.appendChild(generateInfoNode(listInfo))
-            generateInfoButton(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo)
+            generateInfoButton(offcanvasMarkPlaceCloseSave, listInfo, ClearOffcanvasInfo, "offcanvas-selected")
             offcanvasMarkContainer.classList.remove("d-none")
             offcanvasMarkPlaceCloseSave.scrollIntoView({behavior: "smooth"})
         } else {
             searchPlaceCloseSave.innerHTML = ""
             searchPlaceInformation.innerHTML = ""
             searchPlaceInformation.appendChild(generateInfoNode(listInfo))
-            generateInfoButton(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar)
+            generateInfoButton(searchPlaceCloseSave, listInfo, ClearQuickInfoAndSearchBar, "selected")
             searchPlaceContainer.classList.remove("d-none")
+            searchPlaceCloseSave.scrollIntoView({behavior: "smooth"})
         }
     }
 
@@ -536,13 +543,12 @@
 
     // if ele is null, generate a new div, else directly append to ele
     // if closeFn is null, don't generate close button
-    async function generateInfoButton(ele, Info, closeFn){
+    async function generateInfoButton(ele, Info, closeFn, keyword){
         const flex = document.createElement('div');
-        flex.id=`advance-result-${Info.id}`
+        flex.id=`${keyword}-${Info.id}`
         flex.className = "d-flex justify-content-end";
         // save
         const save = document.createElement('div');
-        save.id = `save-${Info.id}`;
         save.className = "btn py-1";
         // check and update favorite(if user login)
         const headers = new Headers();
@@ -616,12 +622,10 @@
         save.addEventListener("click", sp)
         // close
         const close = document.createElement('div');
-        close.id = "close-info-btn";
         close.className = "btn py-1";
         close.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
         close.addEventListener("click", closeFn)
         const center = document.createElement('div');
-        center.id = `center-${Info.id}`;
         center.className = "btn py-1";
         center.innerHTML = `<i class="fa-solid fa-location-dot"></i>`;
         var setMapCenterToLocate = function (map, lat, lng) {
@@ -636,7 +640,6 @@
         // tabelogo
         if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
             const tabelogo = document.createElement('div');
-            tabelogo.id = `tabelogo-${Info.id}`;
             tabelogo.className = "btn py-1";
             tabelogo.innerHTML = "Tabelogo";
             // tabelog request
@@ -924,7 +927,7 @@
         }
         for (let i=0; i<data.places.length; i++) {
             let listInfo = filterInfo(data, i)
-            const centerSaveTabe = await generateInfoButton(null, listInfo, null)
+            const centerSaveTabe = await generateInfoButton(null, listInfo, null, "advance-result")
             {{/* const centerSaveTabe = await generateCenterSave(listInfo) */}}
             listSearchResults.appendChild(centerSaveTabe)
             listnode = generateInfoNode(listInfo)
@@ -1440,19 +1443,36 @@
     }
 
     ShowFavoriteBtn.addEventListener("click", async function(){
+        favoriteListShow()
+    })
+
+    async function favoriteListShow() {
         favoriteListContainer.innerHTML = ""
         favoriteListContainer.classList.add("d-none")
         await generateFavoriteList(10, 0)
         favoriteListContainer.classList.remove("d-none")
-    })
+        const cclb = document.getElementById("close-country-list-btn")
+        if (cclb!=null) {
+            cclb.scrollIntoView({behavior: "smooth"})
+        }
+    }
 
     async function generateFavoriteList(limit, offset) {
         const headers = new Headers();
+        let method = "get_favs"
         headers.append("Content-Type", "application/json");
         headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
         const payload = {
             limit: limit,
             offset: offset,
+        }
+        if (favCountry!=null) {
+            payload.country = favCountry
+            method = "get_favs_by_country"
+            if (favRegion!=null) {
+                payload.administrative_area_level_1 = favRegion
+                method = "get_favs_by_country_region"
+            }
         }
         const body = {
             method: 'POST',
@@ -1470,7 +1490,7 @@
         // show loading
         {{/* generateFavoriteListLoading() */}}
         try {
-            let response = await fetch(`${brokerUrl}/get_favs`, body)
+            let response = await fetch(`${brokerUrl}/${method}`, body)
             let responseJSON = await response.json()
             if (responseJSON.hasOwnProperty("error")) {
                 if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
@@ -1481,6 +1501,9 @@
                         error: ${responseJSON.error}
                     `)
                 }
+                return
+            }
+            if (responseJSON.Favorites.length == 0) {
                 return
             }
             // generate new markers and infoWindows
@@ -1495,9 +1518,95 @@
                     iw.close()
                 })
                 favoriteInfoWindows = []
+                favCountry = null
+                favRegion = null
             }
-            favoriteListContainer.appendChild(generateCloseListButton(closeFn))
-            await generateFavoriteListHTML(responseJSON.Favorites)
+            const [ccnode, fnode] = await Promise.all([
+                generateCloseCountryListButton(closeFn),
+                generateFavoriteListHTML(responseJSON.Favorites),  
+            ])
+            favoriteListContainer.appendChild(ccnode)
+            favoriteListContainer.appendChild(fnode)
+            // generate observer
+            const fnodeLast = fnode.lastChild
+            const callback = function (entries) {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        keepGenerateFavoriteList(limit, offset+limit)
+                        observer.unobserve(fnodeLast)
+                    }
+                });
+            }
+            const observer = new IntersectionObserver(callback);
+            observer.observe(fnodeLast);
+            generateFavoriteMarkers(map, responseJSON.Favorites)
+        }
+        catch (error){
+            alert(`We meet some problem, please try again later...
+                error: ${error}
+            `)
+            return
+        }
+
+    }
+
+    async function keepGenerateFavoriteList(limit, offset) {
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        const payload = {
+            limit: limit,
+            offset: offset,
+        }
+        let method = "get_favs"
+        if (favCountry!=null) {
+            payload.country = favCountry
+            method = "get_favs_by_country"
+            if (favRegion!=null) {
+                payload.administrative_area_level_1 = favRegion
+                method = "get_favs_by_country_region"
+            }
+        }
+        const body = {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+        }
+        // show loading
+        {{/* generateFavoriteListLoading() */}}
+        try {
+            let response = await fetch(`${brokerUrl}/${method}`, body)
+            let responseJSON = await response.json()
+            if (responseJSON.hasOwnProperty("error")) {
+                if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                    window.localStorage.removeItem("tabelogo_token")
+                    alert("Session expired, Please login")
+                } else {
+                    alert(`We meet some problem, please try again later...
+                        error: ${responseJSON.error}
+                    `)
+                }
+                return
+            }
+            if (responseJSON.Favorites.length == 0) {
+                return
+            }
+            const [fnode] = await Promise.all([
+                generateFavoriteListHTML(responseJSON.Favorites),  
+            ])
+            favoriteListContainer.appendChild(fnode)
+            // generate observer
+            const fnodeLast = fnode.lastChild
+            const callback = function (entries) {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        keepGenerateFavoriteList(limit, offset+limit, method)
+                        observer.unobserve(fnodeLast)
+                    }
+                });
+            }
+            const observer = new IntersectionObserver(callback);
+            observer.observe(fnodeLast);
             generateFavoriteMarkers(map, responseJSON.Favorites)
         }
         catch (error){
@@ -1510,29 +1619,41 @@
     }
 
     async function generateFavoriteListHTML(data) {
+        const div = document.createElement('div');
         for (let i=0; i<data.length; i++) {
             let listInfo = filterInfoFromFavorite(data, i)
-            const centerSaveTabe = await generateInfoButton(null, listInfo, null)
-            favoriteListContainer.appendChild(centerSaveTabe)
+            const centerSaveTabe = await generateInfoButton(null, listInfo, null, "favorites-list")
+            div.appendChild(centerSaveTabe)
             listnode = generateInfoNode(listInfo)
             listnode.innerHTML += `<hr>`
-            favoriteListContainer.appendChild(listnode)
+            div.appendChild(listnode)
         }
+        return div
     }
 
     // input: map and searchResult(TW or JP or others...)
     function generateFavoriteMarkers(map, data){
         for (let i=0; i<data.length; i++) {
             let listInfo = filterInfoFromFavorite(data, i)
+            const svgMarker = {
+                path: "M-1.547 12l6.563-6.609-1.406-1.406-5.156 5.203-2.063-2.109-1.406 1.406zM0 0q2.906 0 4.945 2.039t2.039 4.945q0 1.453-0.727 3.328t-1.758 3.516-2.039 3.070-1.711 2.273l-0.75 0.797q-0.281-0.328-0.75-0.867t-1.688-2.156-2.133-3.141-1.664-3.445-0.75-3.375q0-2.906 2.039-4.945t4.945-2.039z",
+                fillColor: "blue",
+                fillOpacity: 1.0,
+                strokeWeight: 0,
+                rotation: 0,
+                scale: 2.0,
+                anchor: new google.maps.Point(0, 20),
+            };
             const marker = new google.maps.Marker({
                 position: {lat: listInfo.location.latitude, lng: listInfo.location.longitude},
-                map: map
+                icon: svgMarker,
+                map: map,
             });
             // save the marker in array, to clear it later
             favoriteMarkers.push(marker)
             // infoWindow for label name
             const contentString =
-            `<a onclick="offCanvasOpen()" href="#advance-result-${listInfo.id}">${listInfo.TwDisplayName}</a>`
+            `<a href="#favorites-list-${listInfo.id}">${listInfo.TwDisplayName}</a>`
             const infoWindow = new google.maps.InfoWindow({
                 content: contentString,
             });
@@ -1547,17 +1668,132 @@
         }
     }
 
-    function generateCloseListButton(closeFn) {
-        // close
+    async function generateCloseCountryListButton(closeFn) {
         const flex = document.createElement('div');
-        flex.className = "d-flex justify-content-end";
+        flex.id = "close-country-list-btn";
+        flex.className = "d-flex justify-content-end align-items-center";
+        // fetch country list
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        const body = {
+            method: 'POST',
+            headers: headers,
+        }
+        let response = await fetch(`${brokerUrl}/get_fav_countries`, body)
+        let responseJSON = await response.json()
+        if (responseJSON.hasOwnProperty("error")) {
+            if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                window.localStorage.removeItem("tabelogo_token")
+                alert("Session expired, Please login")
+            } else {
+                alert(`We meet some problem, please try again later...
+                    error: ${responseJSON.error}
+                `)
+            }
+            return flex
+        }
+        const countryNode = document.createElement('div');
+        countryNode.id = "country-select-btn";
+        countryNode.className = "dropdown me-2";
+        countryNode.innerHTML = `
+            <div class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+                <i class="fa-solid fa-globe"></i>${favCountry==null?"":(" "+favCountry)}
+            </div>
+        `;
+        const dropdownNode = document.createElement('ul');
+        dropdownNode.className = "dropdown-menu";
+        responseJSON.Countries.forEach((c)=>{
+            const li = document.createElement('li');
+            li.innerHTML = `<button class="dropdown-item" type="button">${c.String}</button>`
+            li.addEventListener("click", async function(){
+                favRegion = null
+                favCountry = c.String
+                await favoriteListShow()
+                generateRegionButton(c.String)
+            })
+            dropdownNode.appendChild(li)
+        })
+        countryNode.appendChild(dropdownNode)
+   
+        // close
         const close = document.createElement('div');
         close.id = "close-info-btn";
         close.className = "btn py-1";
         close.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
         close.addEventListener("click", closeFn)
+        flex.appendChild(countryNode)
+        let regionNode = document.createElement("div");
+        regionNode.id = "region-select-btn";
+        regionNode.className = "dropdown";
+        if (favCountry!=null) {
+            regionNode = await generateRegionButton(favCountry)
+        }
+        flex.appendChild(regionNode)
         flex.appendChild(close)
+        console.log(flex)
         return flex
+    }
+
+    async function generateRegionButton(country) {
+        let regionNode = document.getElementById("region-select-btn");
+        // fetch country list
+        const headers = new Headers();
+        headers.append("Content-Type", "application/json");
+        headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);
+        payload = {
+            country: country,
+        }
+        const body = {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+        }
+        let response = await fetch(`${brokerUrl}/get_fav_regions`, body)
+        let responseJSON = await response.json()
+        console.log(responseJSON)
+        if (responseJSON.hasOwnProperty("error")) {
+            if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+                window.localStorage.removeItem("tabelogo_token")
+                alert("Session expired, Please login")
+            } else {
+                alert(`We meet some problem, please try again later...
+                    error: ${responseJSON.error}
+                `)
+            }
+        }
+        
+        const dropdownNode = document.createElement('ul');
+        dropdownNode.className = "dropdown-menu";
+        responseJSON.Regions.forEach((r)=>{
+            const li = document.createElement('li');
+            li.innerHTML = `<button class="dropdown-item" type="button">${r.String}</button>`
+            li.addEventListener("click", async function(){
+                favRegion = r.String
+                await favoriteListShow()
+            })
+            dropdownNode.appendChild(li)
+        })
+        if (regionNode==null) {
+            regionNode = document.createElement('div');
+            regionNode.id = "region-select-btn";
+            regionNode.className = "dropdown me-2";
+            regionNode.innerHTML = `
+            <div class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+                <i class="fa-solid fa-mountain-city"></i>${favRegion==null?"":(" "+favRegion)}
+            </div>
+        `;
+            regionNode.appendChild(dropdownNode)
+            return regionNode
+        } else {
+        regionNode.innerHTML = `
+            <div class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+                <i class="fa-solid fa-mountain-city"></i>${favRegion==null?"":(" "+favRegion)}
+            </div>
+        `;
+            regionNode.appendChild(dropdownNode)
+            return null
+        }
     }
 
     </script>

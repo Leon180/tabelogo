@@ -6,6 +6,7 @@ CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
   "email" varchar UNIQUE NOT NULL,
   "hashed_password" varchar NOT NULL,
+  "active" boolean NOT NULL DEFAULT false,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

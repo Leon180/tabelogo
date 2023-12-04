@@ -704,7 +704,7 @@ func (server *Server) GetListFavorites(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	favs, err := server.store.ListFavorite(c, db.ListFavoriteParams{
+	favs, err := server.store.ListFavoritesByCreateTime(c, db.ListFavoritesByCreateTimeParams{
 		UserID: user.UserID,
 		Limit:  request.Limit,
 		Offset: request.Offset,
@@ -713,17 +713,148 @@ func (server *Server) GetListFavorites(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	places := make([]db.Place, len(favs))
-	for i, fav := range favs {
-		place, err := server.store.GetPlaceById(c, fav.PlaceID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		places[i] = place
+
+	if len(favs) == 0 {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": []string{}})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": favs})
+	}
+}
+
+type GetListFavoritesByCountryRequest struct {
+	Country string `json:"country" binding:"required"`
+	Limit   int32  `json:"limit" binding:"required"`
+	Offset  int32  `json:"offset"`
+}
+
+func (server *Server) GetListFavoritesByCountry(c *gin.Context) {
+	var request GetListFavoritesByCountryRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	favs, err := server.store.ListFavoritesByCountry(c, db.ListFavoritesByCountryParams{
+		UserID: user.UserID,
+		Country: sql.NullString{
+			String: request.Country,
+			Valid:  true,
+		},
+		Limit:  request.Limit,
+		Offset: request.Offset,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": places})
+	if len(favs) == 0 {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": []string{}})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": favs})
+	}
+}
+
+type GetListFavoritesByCountryAndRegionRequest struct {
+	Country                  string `json:"country" binding:"required"`
+	AdministrativeAreaLevel1 string `json:"administrative_area_level_1"`
+	Limit                    int32  `json:"limit" binding:"required"`
+	Offset                   int32  `json:"offset"`
+}
+
+func (server *Server) GetListFavoritesByCountryAndRegion(c *gin.Context) {
+	var request GetListFavoritesByCountryAndRegionRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	// check if user exists, if not, return
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	favs, err := server.store.ListFavoritesByCountrAndRegion(c, db.ListFavoritesByCountrAndRegionParams{
+		UserID: user.UserID,
+		Country: sql.NullString{
+			String: request.Country,
+			Valid:  true,
+		},
+		AdministrativeAreaLevel1: sql.NullString{
+			String: request.AdministrativeAreaLevel1,
+			Valid:  true,
+		},
+		Limit:  request.Limit,
+		Offset: request.Offset,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(favs) == 0 {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": []string{}})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Favorites": favs})
+	}
+}
+
+func (server *Server) GetFavoritesCountry(c *gin.Context) {
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	countries, err := server.store.GetCountryList(c, user.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if len(countries) == 0 {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Countries": []string{}})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Countries": countries})
+	}
+}
+
+type GetFavoritesRegionRequest struct {
+	Country string `json:"country" binding:"required"`
+}
+
+func (server *Server) GetFavoritesRegion(c *gin.Context) {
+	var request GetFavoritesRegionRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	user, err := server.store.GetUser(c, authPayload.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	regions, err := server.store.GetRegionList(c, db.GetRegionListParams{
+		UserID: user.UserID,
+		Country: sql.NullString{
+			String: request.Country,
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"User": NewUserResponse(user), "Country": request.Country, "Regions": regions})
 }
 
 func (server *Server) GetUser(c *gin.Context) {
