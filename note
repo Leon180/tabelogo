@@ -1,0 +1,4 @@
+In below 2 situation, call refresh token:
+1. User click save to favorite: check_update_fa, favorite(toggle favorite)
+2. Generate fav list: get_favs, get_favs_by_country, get_favs_by_country_region
+refreshToken()

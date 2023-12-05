@@ -1,0 +1,53 @@
+Project tabelogo {
+  database_type: 'PostgreSQL'
+}
+
+Table users {
+  user_id bigserial [primary key]
+  email varchar [unique, not null]
+  hashed_password  varchar [not null]
+  active boolean [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table places {
+  place_id bigserial [primary key]
+  google_id varchar [unique, not null] // google return place_id for place detail
+  tw_display_name varchar [not null]
+  tw_formatted_address varchar [not null]
+  tw_weekday_descriptions "varchar[]"
+  administrative_area_level_1 varchar
+  country varchar
+  google_map_uri varchar [not null]
+  international_phone_number varchar
+  lat numeric [not null]
+  lng numeric [not null]
+  primary_type varchar
+  rating numeric
+  types "varchar[]"
+  user_rating_count integer
+  website_uri varchar
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table favorites {
+  favorite_id bigserial [primary key]
+  user_id bigserial [not null, ref: > users.user_id]
+  place_id bigserial [not null, ref: > places.place_id]
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+}
+
+Table sessions {
+  session_id uuid [primary key]
+  email varchar [not null, ref: > users.email]
+  refresh_token varchar [not null]
+  user_agent varchar [not null]
+  client_ip varchar [not null]
+  is_blocked boolean [not null, default: false]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+}
+

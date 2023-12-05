@@ -1,0 +1,40 @@
+{
+	"folders": [
+		{
+			"path": "broker"
+		},
+		{
+			"path": "front-end"
+		},
+		{
+			"path": "google-map"
+		},
+		{
+			"path": "helpers"
+		},
+		{
+			"path": "tabelog-spider-service"
+		},
+		{
+			"path": "project"
+		},
+		{
+			"path": "authenticate"
+		},
+		{
+			"path": "db"
+		},
+		{
+			"path": "logger-service"
+		},
+		{
+			"path": "mail-service"
+		},
+		{
+			"path": "listener-service"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "front-end"
+	}
+}
