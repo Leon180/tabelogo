@@ -16,25 +16,25 @@ import (
 const createFavorite = `-- name: CreateFavorite :one
 INSERT INTO favorites (
     user_id,
-    place_id
+    google_id
 ) VALUES (
     $1, 
     $2
-) RETURNING favorite_id, user_id, place_id, created_at, updated_at
+) RETURNING favorite_id, user_id, google_id, created_at, updated_at
 `
 
 type CreateFavoriteParams struct {
-	UserID  int64 `json:"user_id"`
-	PlaceID int64 `json:"place_id"`
+	UserID   int64  `json:"user_id"`
+	GoogleID string `json:"google_id"`
 }
 
 func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, createFavorite, arg.UserID, arg.PlaceID)
+	row := q.db.QueryRowContext(ctx, createFavorite, arg.UserID, arg.GoogleID)
 	var i Favorite
 	err := row.Scan(
 		&i.FavoriteID,
 		&i.UserID,
-		&i.PlaceID,
+		&i.GoogleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -42,7 +42,7 @@ func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) 
 }
 
 const getCountryList = `-- name: GetCountryList :many
-SELECT DISTINCT country FROM favorites JOIN places ON favorites.place_id = places.place_id
+SELECT DISTINCT country FROM favorites JOIN places ON favorites.google_id = places.google_id
 WHERE user_id = $1
 ORDER BY country ASC
 `
@@ -71,22 +71,22 @@ func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]sql.NullS
 }
 
 const getFavorite = `-- name: GetFavorite :one
-SELECT favorite_id, user_id, place_id, created_at, updated_at FROM favorites
-WHERE user_id = $1 AND place_id = $2
+SELECT favorite_id, user_id, google_id, created_at, updated_at FROM favorites
+WHERE user_id = $1 AND google_id = $2
 `
 
 type GetFavoriteParams struct {
-	UserID  int64 `json:"user_id"`
-	PlaceID int64 `json:"place_id"`
+	UserID   int64  `json:"user_id"`
+	GoogleID string `json:"google_id"`
 }
 
 func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, getFavorite, arg.UserID, arg.PlaceID)
+	row := q.db.QueryRowContext(ctx, getFavorite, arg.UserID, arg.GoogleID)
 	var i Favorite
 	err := row.Scan(
 		&i.FavoriteID,
 		&i.UserID,
-		&i.PlaceID,
+		&i.GoogleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -94,7 +94,7 @@ func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favor
 }
 
 const getRegionList = `-- name: GetRegionList :many
-SELECT DISTINCT administrative_area_level_1 FROM favorites JOIN places ON favorites.place_id = places.place_id
+SELECT DISTINCT administrative_area_level_1 FROM favorites JOIN places ON favorites.google_id = places.google_id
 WHERE user_id = $1 AND country = $2
 ORDER BY administrative_area_level_1 ASC
 `
@@ -129,7 +129,7 @@ func (q *Queries) GetRegionList(ctx context.Context, arg GetRegionListParams) ([
 
 const listFavoritesByCountrAndRegion = `-- name: ListFavoritesByCountrAndRegion :many
 SELECT
-    google_id,
+    favorites.google_id,
     tw_display_name,
     tw_formatted_address,
     tw_weekday_descriptions,
@@ -147,7 +147,7 @@ SELECT
     favorites.created_at,
     favorites.updated_at,
     favorite_id
-FROM favorites JOIN places ON favorites.place_id = places.place_id
+FROM favorites JOIN places ON favorites.google_id = places.google_id
 WHERE user_id = $1 AND country = $2 AND administrative_area_level_1 = $3
 ORDER BY favorites.created_at ASC
 LIMIT $4
@@ -233,7 +233,7 @@ func (q *Queries) ListFavoritesByCountrAndRegion(ctx context.Context, arg ListFa
 
 const listFavoritesByCountry = `-- name: ListFavoritesByCountry :many
 SELECT
-    google_id,
+    favorites.google_id,
     tw_display_name,
     tw_formatted_address,
     tw_weekday_descriptions,
@@ -251,7 +251,7 @@ SELECT
     favorites.created_at,
     favorites.updated_at,
     favorite_id
-FROM favorites JOIN places ON favorites.place_id = places.place_id
+FROM favorites JOIN places ON favorites.google_id = places.google_id
 WHERE user_id = $1 AND country = $2
 ORDER BY favorites.created_at ASC
 LIMIT $3
@@ -335,7 +335,7 @@ func (q *Queries) ListFavoritesByCountry(ctx context.Context, arg ListFavoritesB
 
 const listFavoritesByCreateTime = `-- name: ListFavoritesByCreateTime :many
 SELECT
-    google_id,
+    favorites.google_id,
     tw_display_name,
     tw_formatted_address,
     tw_weekday_descriptions,
@@ -353,7 +353,7 @@ SELECT
     favorites.created_at,
     favorites.updated_at,
     favorite_id
-FROM favorites JOIN places ON favorites.place_id = places.place_id
+FROM favorites JOIN places ON favorites.google_id = places.google_id
 WHERE user_id = $1
 ORDER BY favorites.created_at ASC
 LIMIT $2
@@ -431,15 +431,15 @@ func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavorit
 
 const removeFavorite = `-- name: RemoveFavorite :exec
 DELETE FROM favorites
-WHERE user_id = $1 AND place_id = $2
+WHERE user_id = $1 AND google_id = $2
 `
 
 type RemoveFavoriteParams struct {
-	UserID  int64 `json:"user_id"`
-	PlaceID int64 `json:"place_id"`
+	UserID   int64  `json:"user_id"`
+	GoogleID string `json:"google_id"`
 }
 
 func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
-	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.PlaceID)
+	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.GoogleID)
 	return err
 }

@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-12-04T05:31:05.975Z
+-- Generated at: 2023-12-06T16:32:19.802Z
 
 CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
@@ -12,8 +12,7 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE "places" (
-  "place_id" bigserial PRIMARY KEY,
-  "google_id" varchar UNIQUE NOT NULL,
+  "google_id" varchar PRIMARY KEY NOT NULL,
   "tw_display_name" varchar NOT NULL,
   "tw_formatted_address" varchar NOT NULL,
   "tw_weekday_descriptions" varchar[],
@@ -28,6 +27,7 @@ CREATE TABLE "places" (
   "types" varchar[],
   "user_rating_count" integer,
   "website_uri" varchar,
+  "place_version" integer NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -35,7 +35,7 @@ CREATE TABLE "places" (
 CREATE TABLE "favorites" (
   "favorite_id" bigserial PRIMARY KEY,
   "user_id" bigserial NOT NULL,
-  "place_id" bigserial NOT NULL,
+  "google_id" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -51,8 +51,18 @@ CREATE TABLE "sessions" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE INDEX ON "users" ("email");
+
+CREATE INDEX ON "places" ("google_id");
+
+CREATE INDEX ON "favorites" ("user_id");
+
+CREATE INDEX ON "favorites" ("google_id");
+
+CREATE INDEX ON "sessions" ("session_id");
+
 ALTER TABLE "favorites" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
 
-ALTER TABLE "favorites" ADD FOREIGN KEY ("place_id") REFERENCES "places" ("place_id");
+ALTER TABLE "favorites" ADD FOREIGN KEY ("google_id") REFERENCES "places" ("google_id");
 
 ALTER TABLE "sessions" ADD FOREIGN KEY ("email") REFERENCES "users" ("email");

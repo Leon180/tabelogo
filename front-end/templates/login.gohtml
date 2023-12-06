@@ -75,6 +75,7 @@
                 } else {
                     window.localStorage.setItem("tabelogo_token", data.session.access_token);
                     window.localStorage.setItem("tabelogo_refresh_token", data.session.refresh_token);
+                    window.localStorage.setItem("tabelogo_token_update_at", Date.now());
                     window.location.href = "/";
                 }
             })

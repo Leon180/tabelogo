@@ -9,4 +9,6 @@ CREATE TABLE "sessions" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE INDEX ON "sessions" ("session_id");
+
 ALTER TABLE "sessions" ADD FOREIGN KEY ("email") REFERENCES "users" ("email");

@@ -16,11 +16,10 @@ type Querier interface {
 	CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeletePlace(ctx context.Context, placeID int64) error
+	DeletePlace(ctx context.Context, arg DeletePlaceParams) error
 	GetCountryList(ctx context.Context, userID int64) ([]sql.NullString, error)
 	GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error)
 	GetPlaceByGoogleId(ctx context.Context, googleID string) (Place, error)
-	GetPlaceById(ctx context.Context, placeID int64) (Place, error)
 	GetRegionList(ctx context.Context, arg GetRegionListParams) ([]sql.NullString, error)
 	GetSession(ctx context.Context, sessionID uuid.UUID) (Session, error)
 	GetUser(ctx context.Context, email string) (User, error)

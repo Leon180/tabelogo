@@ -42,8 +42,6 @@ func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection) (*Ser
 	router.POST("/renew_access", server.RenewAccessToken)
 	// authGroup
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
-	authRoutes.POST("/save_fav", server.SaveFavorite)
-	authRoutes.POST("/remove_fav", server.RemoveFavorite)
 	authRoutes.POST("/favorite", server.ToggleFavorite)
 	authRoutes.POST("/get_favs", server.GetListFavorites)
 	authRoutes.POST("/get_favs_by_country", server.GetListFavoritesByCountry)

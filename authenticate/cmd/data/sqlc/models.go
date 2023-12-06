@@ -14,13 +14,12 @@ import (
 type Favorite struct {
 	FavoriteID int64     `json:"favorite_id"`
 	UserID     int64     `json:"user_id"`
-	PlaceID    int64     `json:"place_id"`
+	GoogleID   string    `json:"google_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Place struct {
-	PlaceID                  int64          `json:"place_id"`
 	GoogleID                 string         `json:"google_id"`
 	TwDisplayName            string         `json:"tw_display_name"`
 	TwFormattedAddress       string         `json:"tw_formatted_address"`
@@ -36,6 +35,7 @@ type Place struct {
 	Types                    []string       `json:"types"`
 	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
 	WebsiteUri               sql.NullString `json:"website_uri"`
+	PlaceVersion             int32          `json:"place_version"`
 	CreatedAt                time.Time      `json:"created_at"`
 	UpdatedAt                time.Time      `json:"updated_at"`
 }

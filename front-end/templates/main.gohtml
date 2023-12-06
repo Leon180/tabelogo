@@ -608,7 +608,6 @@
                     fetch(`${brokerUrl}/favorite`, body)
                     .then((response) => response.json())
                     .then((data) => {
-                        console.log(data)
                         if (data.error!=null) {
                             save.innerHTML = `<i class="fa-regular fa-bookmark"></i>`
                         } else {
@@ -1659,6 +1658,10 @@
 
     async function refreshToken() {
         try {
+            const token_update_at = localStorage.getItem("tabelogo_token_update_at")
+            if (Date.now()-token_update_at < 1000*60*3) { // update every 3 min
+                return
+            }
             const refresh_token = localStorage.getItem("tabelogo_refresh_token")
             if (refresh_token === null) {
                 window.localStorage.removeItem("tabelogo_token")

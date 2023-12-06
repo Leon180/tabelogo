@@ -31,8 +31,6 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
 	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))
 	router.POST("/renew_access", server.TransRequest("POST", authenticateServiceURL+"/renew_access"))
-	router.POST("/save_fav", server.TransRequest("POST", authenticateServiceURL+"/save_fav"))
-	router.POST("/remove_fav", server.TransRequest("POST", authenticateServiceURL+"/remove_fav"))
 	router.POST("/favorite", server.TransRequest("POST", authenticateServiceURL+"/favorite")) // toggle favorite
 	router.POST("/get_favs", server.TransRequest("POST", authenticateServiceURL+"/get_favs"))
 	router.POST("/get_favs_by_country", server.TransRequest("POST", authenticateServiceURL+"/get_favs_by_country"))

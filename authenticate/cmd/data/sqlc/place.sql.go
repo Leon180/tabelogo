@@ -28,10 +28,11 @@ INSERT INTO places (
   rating,
   types,
   user_rating_count,
-  website_uri
+  website_uri,
+  place_version
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
-) RETURNING place_id, google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 1
+) RETURNING google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
 `
 
 type CreatePlaceParams struct {
@@ -72,7 +73,6 @@ func (q *Queries) CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place
 	)
 	var i Place
 	err := row.Scan(
-		&i.PlaceID,
 		&i.GoogleID,
 		&i.TwDisplayName,
 		&i.TwFormattedAddress,
@@ -88,6 +88,7 @@ func (q *Queries) CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place
 		pq.Array(&i.Types),
 		&i.UserRatingCount,
 		&i.WebsiteUri,
+		&i.PlaceVersion,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -96,16 +97,21 @@ func (q *Queries) CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place
 
 const deletePlace = `-- name: DeletePlace :exec
 DELETE FROM places
-WHERE place_id = $1
+WHERE google_id = $1 AND place_version = $2
 `
 
-func (q *Queries) DeletePlace(ctx context.Context, placeID int64) error {
-	_, err := q.db.ExecContext(ctx, deletePlace, placeID)
+type DeletePlaceParams struct {
+	GoogleID     string `json:"google_id"`
+	PlaceVersion int32  `json:"place_version"`
+}
+
+func (q *Queries) DeletePlace(ctx context.Context, arg DeletePlaceParams) error {
+	_, err := q.db.ExecContext(ctx, deletePlace, arg.GoogleID, arg.PlaceVersion)
 	return err
 }
 
 const getPlaceByGoogleId = `-- name: GetPlaceByGoogleId :one
-SELECT place_id, google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, created_at, updated_at FROM places
+SELECT google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at FROM places
 WHERE google_id = $1 LIMIT 1
 `
 
@@ -113,7 +119,6 @@ func (q *Queries) GetPlaceByGoogleId(ctx context.Context, googleID string) (Plac
 	row := q.db.QueryRowContext(ctx, getPlaceByGoogleId, googleID)
 	var i Place
 	err := row.Scan(
-		&i.PlaceID,
 		&i.GoogleID,
 		&i.TwDisplayName,
 		&i.TwFormattedAddress,
@@ -129,37 +134,7 @@ func (q *Queries) GetPlaceByGoogleId(ctx context.Context, googleID string) (Plac
 		pq.Array(&i.Types),
 		&i.UserRatingCount,
 		&i.WebsiteUri,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getPlaceById = `-- name: GetPlaceById :one
-SELECT place_id, google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, created_at, updated_at FROM places
-WHERE place_id = $1 LIMIT 1
-`
-
-func (q *Queries) GetPlaceById(ctx context.Context, placeID int64) (Place, error) {
-	row := q.db.QueryRowContext(ctx, getPlaceById, placeID)
-	var i Place
-	err := row.Scan(
-		&i.PlaceID,
-		&i.GoogleID,
-		&i.TwDisplayName,
-		&i.TwFormattedAddress,
-		pq.Array(&i.TwWeekdayDescriptions),
-		&i.AdministrativeAreaLevel1,
-		&i.Country,
-		&i.GoogleMapUri,
-		&i.InternationalPhoneNumber,
-		&i.Lat,
-		&i.Lng,
-		&i.PrimaryType,
-		&i.Rating,
-		pq.Array(&i.Types),
-		&i.UserRatingCount,
-		&i.WebsiteUri,
+		&i.PlaceVersion,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -182,9 +157,10 @@ UPDATE places SET
     rating = COALESCE($12, rating),
     types = COALESCE($13, types),
     user_rating_count = COALESCE($14, user_rating_count),
-    website_uri = COALESCE($15, website_uri)
-WHERE place_id = $16
-RETURNING place_id, google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, created_at, updated_at
+    website_uri = COALESCE($15, website_uri),
+    place_version = (place_version + 1)
+WHERE google_id = $1 AND place_version = $16
+RETURNING google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
 `
 
 type UpdatePlaceParams struct {
@@ -203,7 +179,7 @@ type UpdatePlaceParams struct {
 	Types                    []string       `json:"types"`
 	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
 	WebsiteUri               sql.NullString `json:"website_uri"`
-	PlaceID                  int64          `json:"place_id"`
+	PlaceVersion             int32          `json:"place_version"`
 }
 
 func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place, error) {
@@ -223,11 +199,10 @@ func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place
 		pq.Array(arg.Types),
 		arg.UserRatingCount,
 		arg.WebsiteUri,
-		arg.PlaceID,
+		arg.PlaceVersion,
 	)
 	var i Place
 	err := row.Scan(
-		&i.PlaceID,
 		&i.GoogleID,
 		&i.TwDisplayName,
 		&i.TwFormattedAddress,
@@ -243,6 +218,7 @@ func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place
 		pq.Array(&i.Types),
 		&i.UserRatingCount,
 		&i.WebsiteUri,
+		&i.PlaceVersion,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

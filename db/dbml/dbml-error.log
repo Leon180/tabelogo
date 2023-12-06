@@ -25,3 +25,111 @@ SyntaxError: Expected " ", "[", PK, comment, newline, or unique but "n" found.
     at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
 {"start":{"offset":439,"line":16,"column":24},"end":{"offset":440,"line":16,"column":25}}
 
+2023-12-06T14:25:20.585Z
+SyntaxError: You have a syntax error at "db.dbml" line 18 column 22. Expected "default:", "increment", "not null", "note:", "null", "pk", "primary key", "ref:", "unique", comment, or whitespace but "p" found.
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:45:13
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+    at Object.dbml2sql (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/index.js:19:23)
+    at Object.<anonymous> (/opt/homebrew/lib/node_modules/@dbml/cli/bin/dbml2sql.js:4:19)
+    at Module._compile (node:internal/modules/cjs/loader:1241:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
+    at Module.load (node:internal/modules/cjs/loader:1091:32)
+    at Module._load (node:internal/modules/cjs/loader:938:12)
+
+ROOT_ERROR:
+SyntaxError: Expected "default:", "increment", "not null", "note:", "null", "pk", "primary key", "ref:", "unique", comment, or whitespace but "p" found.
+    at peg$buildStructuredError (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:1091:12)
+    at Object.peg$parse [as parse] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:6866:11)
+    at Function.parseDBMLToJSON (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:49:37)
+    at Function.parse (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:76:32)
+    at Object._export [as export] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/export/index.js:11:37)
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:69
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:42:23
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+{"start":{"offset":390,"line":18,"column":22},"end":{"offset":391,"line":18,"column":23}}
+
+2023-12-06T16:30:28.599Z
+SyntaxError: You have a syntax error at "db.dbml" line 21 column 59. Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "a" found.
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:45:13
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+    at Object.dbml2sql (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/index.js:19:23)
+    at Object.<anonymous> (/opt/homebrew/lib/node_modules/@dbml/cli/bin/dbml2sql.js:4:19)
+    at Module._compile (node:internal/modules/cjs/loader:1241:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
+    at Module.load (node:internal/modules/cjs/loader:1091:32)
+    at Module._load (node:internal/modules/cjs/loader:938:12)
+
+ROOT_ERROR:
+SyntaxError: Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "a" found.
+    at peg$buildStructuredError (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:1091:12)
+    at Object.peg$parse [as parse] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:6866:11)
+    at Function.parseDBMLToJSON (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:49:37)
+    at Function.parse (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:76:32)
+    at Object._export [as export] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/export/index.js:11:37)
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:69
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:42:23
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+{"start":{"offset":593,"line":21,"column":59},"end":{"offset":594,"line":21,"column":60}}
+
+2023-12-06T16:30:37.840Z
+SyntaxError: You have a syntax error at "db.dbml" line 21 column 59. Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "{" found.
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:45:13
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+    at Object.dbml2sql (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/index.js:19:23)
+    at Object.<anonymous> (/opt/homebrew/lib/node_modules/@dbml/cli/bin/dbml2sql.js:4:19)
+    at Module._compile (node:internal/modules/cjs/loader:1241:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
+    at Module.load (node:internal/modules/cjs/loader:1091:32)
+    at Module._load (node:internal/modules/cjs/loader:938:12)
+
+ROOT_ERROR:
+SyntaxError: Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "{" found.
+    at peg$buildStructuredError (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:1091:12)
+    at Object.peg$parse [as parse] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:6866:11)
+    at Function.parseDBMLToJSON (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:49:37)
+    at Function.parse (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:76:32)
+    at Object._export [as export] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/export/index.js:11:37)
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:69
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:42:23
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+{"start":{"offset":593,"line":21,"column":59},"end":{"offset":594,"line":21,"column":60}}
+
+2023-12-06T16:30:45.058Z
+SyntaxError: You have a syntax error at "db.dbml" line 21 column 59. Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "{" found.
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:45:13
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+    at Object.dbml2sql (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/index.js:19:23)
+    at Object.<anonymous> (/opt/homebrew/lib/node_modules/@dbml/cli/bin/dbml2sql.js:4:19)
+    at Module._compile (node:internal/modules/cjs/loader:1241:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
+    at Module.load (node:internal/modules/cjs/loader:1091:32)
+    at Module._load (node:internal/modules/cjs/loader:938:12)
+
+ROOT_ERROR:
+SyntaxError: Expected "-", "`", "false", "null", "true", [0-9], comment, string, or whitespace but "{" found.
+    at peg$buildStructuredError (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:1091:12)
+    at Object.peg$parse [as parse] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:6866:11)
+    at Function.parseDBMLToJSON (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:49:37)
+    at Function.parse (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:76:32)
+    at Object._export [as export] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/export/index.js:11:37)
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:69
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:42:23
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+{"start":{"offset":593,"line":21,"column":59},"end":{"offset":594,"line":21,"column":60}}
+

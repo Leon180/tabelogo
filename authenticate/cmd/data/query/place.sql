@@ -14,14 +14,11 @@ INSERT INTO places (
   rating,
   types,
   user_rating_count,
-  website_uri
+  website_uri,
+  place_version
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 1
 ) RETURNING *;
-
--- name: GetPlaceById :one
-SELECT * FROM places
-WHERE place_id = $1 LIMIT 1;
 
 -- name: GetPlaceByGoogleId :one
 SELECT * FROM places
@@ -43,10 +40,11 @@ UPDATE places SET
     rating = COALESCE(sqlc.narg(rating), rating),
     types = COALESCE(sqlc.narg(types), types),
     user_rating_count = COALESCE(sqlc.narg(user_rating_count), user_rating_count),
-    website_uri = COALESCE(sqlc.narg(website_uri), website_uri)
-WHERE place_id = sqlc.arg(place_id)
+    website_uri = COALESCE(sqlc.narg(website_uri), website_uri),
+    place_version = (place_version + 1)
+WHERE google_id = sqlc.arg(google_id) AND place_version = sqlc.arg(place_version)
 RETURNING *;
 
 -- name: DeletePlace :exec
 DELETE FROM places
-WHERE place_id = $1;
+WHERE google_id = $1 AND place_version = $2;
