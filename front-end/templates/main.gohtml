@@ -719,32 +719,32 @@
                     <h5 class="card-title">${Info.TwDisplayName}</h5>
                 </div>
         `
-        if (Info.rating != null) {
-            HTML += `
+        
+        HTML += `
                 <div class="row pb-1" style="font-size: 14px; font-weight: 400;">
                     <div class="col card-text">Rating: ${Info.rating} (${Info.userRatingCount})</div>               
                 </div>
         `
-        }
-        if (Info.primaryType != null) {
+
+        if (Info.primaryType != "") {
             HTML += `<div class="col card-text" style="font-size: 14px; font-weight: 400;">${String(Info.primaryType).replace("_", " ").toUpperCase() || "No types to show..."}</div>`
         }
-        if (Info.TwFormattedAddress != null) {
+        if (Info.TwFormattedAddress != "") {
             HTML += `<div class="card-text " style="font-size: 14px;">${Info.TwFormattedAddress}</div>`
         }
-        if (Info.internationalPhoneNumber != null){
+        if (Info.internationalPhoneNumber != ""){
             HTML += `<div class="card-text " style="font-size: 14px;">${Info.internationalPhoneNumber}</div>`
         }
         HTML += `
              <div class="flex py-2" style="font-size: 12px;">
                 <a href="${Info.googleMapsUri}" style="font-size: 12px;" target=”_blank”>Google map</a>
         `
-        if (Info.websiteUri != null) {
+        if (Info.websiteUri != "") {
             HTML += `<a href="${Info.websiteUri}" style="font-size: 12px;" target=”_blank”>Website</a>`
         }
         HTML += `</div>`
 
-        if (Info.TwWeekdayDescriptions != null) {
+        if (len(Info.TwWeekdayDescriptions)) {
             HTML += `<div style="font-size: 14px;">Open Time</div>`
             for (let i = 0; i < Info.TwWeekdayDescriptions.length; i++) {
                 HTML += `<div style="font-size: 14px;">${Info.TwWeekdayDescriptions[i]}</div>`
@@ -792,22 +792,22 @@
 
     function filterInfo(data, index) {
         const listInfo = {
-            "id": null,
-            "internationalPhoneNumber": null,
+            "id": "",
+            "internationalPhoneNumber": "",
             "location": null,
-            "country": null,
-            "administrative_area_level_1": null,
-            "TwDisplayName": null,
-            "primaryType": null,
-            "rating": null,
-            "userRatingCount": null,
-            "TwFormattedAddress": null,
-            "TwWeekdayDescriptions": null,
-            "accessibilityOptions": null,
-            "googleMapsUri": null,
-            "websiteUri": null,
-            "photos": null,
-            "types": null,
+            "country": "",
+            "administrative_area_level_1": "",
+            "TwDisplayName": "",
+            "primaryType": "",
+            "rating": 0.0,
+            "userRatingCount": 0,
+            "TwFormattedAddress": "",
+            "TwWeekdayDescriptions": [],
+            "accessibilityOptions": [],
+            "googleMapsUri": "",
+            "websiteUri": "",
+            "photos": [],
+            "types": [],
         }
         if (index!=null) {
             to = data.places[index]
@@ -874,22 +874,22 @@
 
     function filterInfoFromFavorite(data, index) {
         const listInfo = {
-            "id": null,
-            "internationalPhoneNumber": null,
+            "id": "",
+            "internationalPhoneNumber": "",
             "location": null,
-            "country": null,
-            "administrative_area_level_1": null,
-            "TwDisplayName": null,
-            "primaryType": null,
-            "rating": null,
-            "userRatingCount": null,
-            "TwFormattedAddress": null,
-            "TwWeekdayDescriptions": null,
-            "accessibilityOptions": null,
-            "googleMapsUri": null,
-            "websiteUri": null,
-            "photos": null,
-            "types": null,
+            "country": "",
+            "administrative_area_level_1": "",
+            "TwDisplayName": "",
+            "primaryType": "",
+            "rating": 0.0,
+            "userRatingCount": 0,
+            "TwFormattedAddress": "",
+            "TwWeekdayDescriptions": [],
+            "accessibilityOptions": [],
+            "googleMapsUri": "",
+            "websiteUri": "",
+            "photos": [],
+            "types": [],
         }
         if (index!=null) {
             to = data[index]
@@ -1595,7 +1595,6 @@
 
     async function generateRegionButton(country) {
         let regionNode = document.getElementById("region-select-btn");
-        // fetch country list
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         headers.append("Authorization", `Bearer ${localStorage.getItem("tabelogo_token")}`);

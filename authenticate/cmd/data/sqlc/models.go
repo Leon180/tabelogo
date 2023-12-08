@@ -5,7 +5,6 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +12,7 @@ import (
 
 type Favorite struct {
 	FavoriteID int64     `json:"favorite_id"`
+	IsFavorite bool      `json:"is_favorite"`
 	UserID     int64     `json:"user_id"`
 	GoogleID   string    `json:"google_id"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -20,24 +20,24 @@ type Favorite struct {
 }
 
 type Place struct {
-	GoogleID                 string         `json:"google_id"`
-	TwDisplayName            string         `json:"tw_display_name"`
-	TwFormattedAddress       string         `json:"tw_formatted_address"`
-	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
-	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
-	Country                  sql.NullString `json:"country"`
-	GoogleMapUri             string         `json:"google_map_uri"`
-	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
-	Lat                      string         `json:"lat"`
-	Lng                      string         `json:"lng"`
-	PrimaryType              sql.NullString `json:"primary_type"`
-	Rating                   sql.NullString `json:"rating"`
-	Types                    []string       `json:"types"`
-	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
-	WebsiteUri               sql.NullString `json:"website_uri"`
-	PlaceVersion             int32          `json:"place_version"`
-	CreatedAt                time.Time      `json:"created_at"`
-	UpdatedAt                time.Time      `json:"updated_at"`
+	GoogleID                 string    `json:"google_id"`
+	TwDisplayName            string    `json:"tw_display_name"`
+	TwFormattedAddress       string    `json:"tw_formatted_address"`
+	TwWeekdayDescriptions    []string  `json:"tw_weekday_descriptions"`
+	AdministrativeAreaLevel1 string    `json:"administrative_area_level_1"`
+	Country                  string    `json:"country"`
+	GoogleMapUri             string    `json:"google_map_uri"`
+	InternationalPhoneNumber string    `json:"international_phone_number"`
+	Lat                      string    `json:"lat"`
+	Lng                      string    `json:"lng"`
+	PrimaryType              string    `json:"primary_type"`
+	Rating                   string    `json:"rating"`
+	Types                    []string  `json:"types"`
+	UserRatingCount          int32     `json:"user_rating_count"`
+	WebsiteUri               string    `json:"website_uri"`
+	PlaceVersion             int32     `json:"place_version"`
+	CreatedAt                time.Time `json:"created_at"`
+	UpdatedAt                time.Time `json:"updated_at"`
 }
 
 type Session struct {

@@ -20,7 +20,7 @@ func declareRandomQueue(ch *amqp.Channel) (amqp.Queue, error) {
 	return ch.QueueDeclare(
 		"",    // name? no name means it could be anything
 		false, // durable? no, because we want it to be deleted when we're done
-		false, // delete when unused?  no, because we want it to be deleted when we're done
+		false, // delete when unused?  no, 
 		true,  // exclusive?
 		false, // no-wait?
 		nil,   // arguments?

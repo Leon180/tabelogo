@@ -6,7 +6,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -17,16 +16,17 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePlace(ctx context.Context, arg DeletePlaceParams) error
-	GetCountryList(ctx context.Context, userID int64) ([]sql.NullString, error)
+	GetCountryList(ctx context.Context, userID int64) ([]string, error)
 	GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error)
 	GetPlaceByGoogleId(ctx context.Context, googleID string) (Place, error)
-	GetRegionList(ctx context.Context, arg GetRegionListParams) ([]sql.NullString, error)
+	GetRegionList(ctx context.Context, arg GetRegionListParams) ([]string, error)
 	GetSession(ctx context.Context, sessionID uuid.UUID) (Session, error)
 	GetUser(ctx context.Context, email string) (User, error)
 	ListFavoritesByCountrAndRegion(ctx context.Context, arg ListFavoritesByCountrAndRegionParams) ([]ListFavoritesByCountrAndRegionRow, error)
 	ListFavoritesByCountry(ctx context.Context, arg ListFavoritesByCountryParams) ([]ListFavoritesByCountryRow, error)
 	ListFavoritesByCreateTime(ctx context.Context, arg ListFavoritesByCreateTimeParams) ([]ListFavoritesByCreateTimeRow, error)
 	RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error
+	ToggleFavorite(ctx context.Context, arg ToggleFavoriteParams) (Favorite, error)
 	UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place, error)
 }
 

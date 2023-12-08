@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/lib/pq"
@@ -20,7 +19,7 @@ INSERT INTO favorites (
 ) VALUES (
     $1, 
     $2
-) RETURNING favorite_id, user_id, google_id, created_at, updated_at
+) RETURNING favorite_id, is_favorite, user_id, google_id, created_at, updated_at
 `
 
 type CreateFavoriteParams struct {
@@ -33,6 +32,7 @@ func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) 
 	var i Favorite
 	err := row.Scan(
 		&i.FavoriteID,
+		&i.IsFavorite,
 		&i.UserID,
 		&i.GoogleID,
 		&i.CreatedAt,
@@ -43,19 +43,19 @@ func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) 
 
 const getCountryList = `-- name: GetCountryList :many
 SELECT DISTINCT country FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE user_id = $1
+WHERE favorites.user_id = $1 AND favorites.is_favorite = true
 ORDER BY country ASC
 `
 
-func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]sql.NullString, error) {
+func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]string, error) {
 	rows, err := q.db.QueryContext(ctx, getCountryList, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []string
 	for rows.Next() {
-		var country sql.NullString
+		var country string
 		if err := rows.Scan(&country); err != nil {
 			return nil, err
 		}
@@ -71,8 +71,8 @@ func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]sql.NullS
 }
 
 const getFavorite = `-- name: GetFavorite :one
-SELECT favorite_id, user_id, google_id, created_at, updated_at FROM favorites
-WHERE user_id = $1 AND google_id = $2
+SELECT favorite_id, is_favorite, user_id, google_id, created_at, updated_at FROM favorites
+WHERE user_id = $1 AND google_id = $2 AND is_favorite = true
 `
 
 type GetFavoriteParams struct {
@@ -85,6 +85,7 @@ func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favor
 	var i Favorite
 	err := row.Scan(
 		&i.FavoriteID,
+		&i.IsFavorite,
 		&i.UserID,
 		&i.GoogleID,
 		&i.CreatedAt,
@@ -95,24 +96,24 @@ func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favor
 
 const getRegionList = `-- name: GetRegionList :many
 SELECT DISTINCT administrative_area_level_1 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE user_id = $1 AND country = $2
+WHERE favorites.user_id = $1 AND places.country = $2 AND favorites.is_favorite = true
 ORDER BY administrative_area_level_1 ASC
 `
 
 type GetRegionListParams struct {
-	UserID  int64          `json:"user_id"`
-	Country sql.NullString `json:"country"`
+	UserID  int64  `json:"user_id"`
+	Country string `json:"country"`
 }
 
-func (q *Queries) GetRegionList(ctx context.Context, arg GetRegionListParams) ([]sql.NullString, error) {
+func (q *Queries) GetRegionList(ctx context.Context, arg GetRegionListParams) ([]string, error) {
 	rows, err := q.db.QueryContext(ctx, getRegionList, arg.UserID, arg.Country)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullString
+	var items []string
 	for rows.Next() {
-		var administrative_area_level_1 sql.NullString
+		var administrative_area_level_1 string
 		if err := rows.Scan(&administrative_area_level_1); err != nil {
 			return nil, err
 		}
@@ -143,44 +144,38 @@ SELECT
     rating,
     types,
     user_rating_count,
-    website_uri,
-    favorites.created_at,
-    favorites.updated_at,
-    favorite_id
+    website_uri
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE user_id = $1 AND country = $2 AND administrative_area_level_1 = $3
+WHERE favorites.user_id = $1 AND places.country = $2 AND places.administrative_area_level_1 = $3 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $4
 OFFSET $5
 `
 
 type ListFavoritesByCountrAndRegionParams struct {
-	UserID                   int64          `json:"user_id"`
-	Country                  sql.NullString `json:"country"`
-	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
-	Limit                    int32          `json:"limit"`
-	Offset                   int32          `json:"offset"`
+	UserID                   int64  `json:"user_id"`
+	Country                  string `json:"country"`
+	AdministrativeAreaLevel1 string `json:"administrative_area_level_1"`
+	Limit                    int32  `json:"limit"`
+	Offset                   int32  `json:"offset"`
 }
 
 type ListFavoritesByCountrAndRegionRow struct {
-	GoogleID                 string         `json:"google_id"`
-	TwDisplayName            string         `json:"tw_display_name"`
-	TwFormattedAddress       string         `json:"tw_formatted_address"`
-	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
-	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
-	Country                  sql.NullString `json:"country"`
-	GoogleMapUri             string         `json:"google_map_uri"`
-	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
-	Lat                      string         `json:"lat"`
-	Lng                      string         `json:"lng"`
-	PrimaryType              sql.NullString `json:"primary_type"`
-	Rating                   sql.NullString `json:"rating"`
-	Types                    []string       `json:"types"`
-	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
-	WebsiteUri               sql.NullString `json:"website_uri"`
-	CreatedAt                time.Time      `json:"created_at"`
-	UpdatedAt                time.Time      `json:"updated_at"`
-	FavoriteID               int64          `json:"favorite_id"`
+	GoogleID                 string   `json:"google_id"`
+	TwDisplayName            string   `json:"tw_display_name"`
+	TwFormattedAddress       string   `json:"tw_formatted_address"`
+	TwWeekdayDescriptions    []string `json:"tw_weekday_descriptions"`
+	AdministrativeAreaLevel1 string   `json:"administrative_area_level_1"`
+	Country                  string   `json:"country"`
+	GoogleMapUri             string   `json:"google_map_uri"`
+	InternationalPhoneNumber string   `json:"international_phone_number"`
+	Lat                      string   `json:"lat"`
+	Lng                      string   `json:"lng"`
+	PrimaryType              string   `json:"primary_type"`
+	Rating                   string   `json:"rating"`
+	Types                    []string `json:"types"`
+	UserRatingCount          int32    `json:"user_rating_count"`
+	WebsiteUri               string   `json:"website_uri"`
 }
 
 func (q *Queries) ListFavoritesByCountrAndRegion(ctx context.Context, arg ListFavoritesByCountrAndRegionParams) ([]ListFavoritesByCountrAndRegionRow, error) {
@@ -214,9 +209,6 @@ func (q *Queries) ListFavoritesByCountrAndRegion(ctx context.Context, arg ListFa
 			pq.Array(&i.Types),
 			&i.UserRatingCount,
 			&i.WebsiteUri,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.FavoriteID,
 		); err != nil {
 			return nil, err
 		}
@@ -247,43 +239,37 @@ SELECT
     rating,
     types,
     user_rating_count,
-    website_uri,
-    favorites.created_at,
-    favorites.updated_at,
-    favorite_id
+    website_uri
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE user_id = $1 AND country = $2
+WHERE favorites.user_id = $1 AND places.country = $2 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $3
 OFFSET $4
 `
 
 type ListFavoritesByCountryParams struct {
-	UserID  int64          `json:"user_id"`
-	Country sql.NullString `json:"country"`
-	Limit   int32          `json:"limit"`
-	Offset  int32          `json:"offset"`
+	UserID  int64  `json:"user_id"`
+	Country string `json:"country"`
+	Limit   int32  `json:"limit"`
+	Offset  int32  `json:"offset"`
 }
 
 type ListFavoritesByCountryRow struct {
-	GoogleID                 string         `json:"google_id"`
-	TwDisplayName            string         `json:"tw_display_name"`
-	TwFormattedAddress       string         `json:"tw_formatted_address"`
-	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
-	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
-	Country                  sql.NullString `json:"country"`
-	GoogleMapUri             string         `json:"google_map_uri"`
-	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
-	Lat                      string         `json:"lat"`
-	Lng                      string         `json:"lng"`
-	PrimaryType              sql.NullString `json:"primary_type"`
-	Rating                   sql.NullString `json:"rating"`
-	Types                    []string       `json:"types"`
-	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
-	WebsiteUri               sql.NullString `json:"website_uri"`
-	CreatedAt                time.Time      `json:"created_at"`
-	UpdatedAt                time.Time      `json:"updated_at"`
-	FavoriteID               int64          `json:"favorite_id"`
+	GoogleID                 string   `json:"google_id"`
+	TwDisplayName            string   `json:"tw_display_name"`
+	TwFormattedAddress       string   `json:"tw_formatted_address"`
+	TwWeekdayDescriptions    []string `json:"tw_weekday_descriptions"`
+	AdministrativeAreaLevel1 string   `json:"administrative_area_level_1"`
+	Country                  string   `json:"country"`
+	GoogleMapUri             string   `json:"google_map_uri"`
+	InternationalPhoneNumber string   `json:"international_phone_number"`
+	Lat                      string   `json:"lat"`
+	Lng                      string   `json:"lng"`
+	PrimaryType              string   `json:"primary_type"`
+	Rating                   string   `json:"rating"`
+	Types                    []string `json:"types"`
+	UserRatingCount          int32    `json:"user_rating_count"`
+	WebsiteUri               string   `json:"website_uri"`
 }
 
 func (q *Queries) ListFavoritesByCountry(ctx context.Context, arg ListFavoritesByCountryParams) ([]ListFavoritesByCountryRow, error) {
@@ -316,9 +302,6 @@ func (q *Queries) ListFavoritesByCountry(ctx context.Context, arg ListFavoritesB
 			pq.Array(&i.Types),
 			&i.UserRatingCount,
 			&i.WebsiteUri,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.FavoriteID,
 		); err != nil {
 			return nil, err
 		}
@@ -354,7 +337,7 @@ SELECT
     favorites.updated_at,
     favorite_id
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE user_id = $1
+WHERE favorites.user_id = $1 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $2
 OFFSET $3
@@ -367,24 +350,24 @@ type ListFavoritesByCreateTimeParams struct {
 }
 
 type ListFavoritesByCreateTimeRow struct {
-	GoogleID                 string         `json:"google_id"`
-	TwDisplayName            string         `json:"tw_display_name"`
-	TwFormattedAddress       string         `json:"tw_formatted_address"`
-	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
-	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
-	Country                  sql.NullString `json:"country"`
-	GoogleMapUri             string         `json:"google_map_uri"`
-	InternationalPhoneNumber sql.NullString `json:"international_phone_number"`
-	Lat                      string         `json:"lat"`
-	Lng                      string         `json:"lng"`
-	PrimaryType              sql.NullString `json:"primary_type"`
-	Rating                   sql.NullString `json:"rating"`
-	Types                    []string       `json:"types"`
-	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
-	WebsiteUri               sql.NullString `json:"website_uri"`
-	CreatedAt                time.Time      `json:"created_at"`
-	UpdatedAt                time.Time      `json:"updated_at"`
-	FavoriteID               int64          `json:"favorite_id"`
+	GoogleID                 string    `json:"google_id"`
+	TwDisplayName            string    `json:"tw_display_name"`
+	TwFormattedAddress       string    `json:"tw_formatted_address"`
+	TwWeekdayDescriptions    []string  `json:"tw_weekday_descriptions"`
+	AdministrativeAreaLevel1 string    `json:"administrative_area_level_1"`
+	Country                  string    `json:"country"`
+	GoogleMapUri             string    `json:"google_map_uri"`
+	InternationalPhoneNumber string    `json:"international_phone_number"`
+	Lat                      string    `json:"lat"`
+	Lng                      string    `json:"lng"`
+	PrimaryType              string    `json:"primary_type"`
+	Rating                   string    `json:"rating"`
+	Types                    []string  `json:"types"`
+	UserRatingCount          int32     `json:"user_rating_count"`
+	WebsiteUri               string    `json:"website_uri"`
+	CreatedAt                time.Time `json:"created_at"`
+	UpdatedAt                time.Time `json:"updated_at"`
+	FavoriteID               int64     `json:"favorite_id"`
 }
 
 func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavoritesByCreateTimeParams) ([]ListFavoritesByCreateTimeRow, error) {
@@ -431,7 +414,7 @@ func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavorit
 
 const removeFavorite = `-- name: RemoveFavorite :exec
 DELETE FROM favorites
-WHERE user_id = $1 AND google_id = $2
+WHERE user_id = $1 AND google_id = $2 AND is_favorite = true
 `
 
 type RemoveFavoriteParams struct {
@@ -442,4 +425,35 @@ type RemoveFavoriteParams struct {
 func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
 	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.GoogleID)
 	return err
+}
+
+const toggleFavorite = `-- name: ToggleFavorite :one
+INSERT INTO favorites (
+    user_id,
+    google_id
+) VALUES (
+    $1, 
+    $2
+) ON CONFLICT (user_id, google_id) DO 
+UPDATE SET is_favorite = NOT favorites.is_favorite, updated_at = NOW()
+RETURNING favorite_id, is_favorite, user_id, google_id, created_at, updated_at
+`
+
+type ToggleFavoriteParams struct {
+	UserID   int64  `json:"user_id"`
+	GoogleID string `json:"google_id"`
+}
+
+func (q *Queries) ToggleFavorite(ctx context.Context, arg ToggleFavoriteParams) (Favorite, error) {
+	row := q.db.QueryRowContext(ctx, toggleFavorite, arg.UserID, arg.GoogleID)
+	var i Favorite
+	err := row.Scan(
+		&i.FavoriteID,
+		&i.IsFavorite,
+		&i.UserID,
+		&i.GoogleID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
