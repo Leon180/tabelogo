@@ -122,38 +122,106 @@ services:
     volumes:
       - ./db-data/rabbitmq/:/var/lib/rabbitmq/
   
-  redis-master:
-    image: 'redis:7.0.14-alpine'
+  redis-master-session:
+    image: 'redis/redis-stack-server:latest'
     ports:
       - "6379:6379"
-    volumes:
-      - ./db-data/redis/:/data/
 
-  redis-slave:
-    image: 'redis:7.0.14-alpine'
+  redis-slave-session:
+    image: 'redis/redis-stack-server:latest'
     ports:
       - "6380:6379"
     links:
-      - redis-master
-    command: redis-server --slaveof redis-master 6379
+      - redis-master-session
+    command: redis-server --slaveof redis-master-session 6379
   
-  redis-sentinel-1:
+  redis-sentinel-session-1:
     build:
       context: ./redis/sentinel
       dockerfile: sentinel.dockerfile
     links:
-      - redis-master
+      - redis-master-session
   
-  redis-sentinel-2:
+  redis-sentinel-session-2:
     build:
       context: ./redis/sentinel
       dockerfile: sentinel.dockerfile
     links:
-      - redis-master
+      - redis-master-session
   
-  redis-sentinel-3:
+  redis-sentinel-session-3:
     build:
       context: ./redis/sentinel
       dockerfile: sentinel.dockerfile
     links:
-      - redis-master
+      - redis-master-session
+  
+  redis-master-place:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6381:6379"
+
+  redis-slave-place:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6382:6379"
+    links:
+      - redis-master-place
+    command: redis-server --slaveof redis-master-place 6379
+  
+  redis-sentinel-place-1:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-place
+  
+  redis-sentinel-place-2:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-place
+  
+  redis-sentinel-place-3:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-place
+  
+  redis-master-tabelogo:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6383:6379"
+    volumes:
+      - ./db-data/redis/:/data/
+
+  redis-slave-tabelogo:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6384:6379"
+    links:
+      - redis-master-tabelogo
+    command: redis-server --slaveof redis-master-tabelogo 6379
+  
+  redis-sentinel-tabelogo-1:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-tabelogo
+  
+  redis-sentinel-tabelogo-2:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-tabelogo
+  
+  redis-sentinel-tabelogo-3:
+    build:
+      context: ./redis/sentinel
+      dockerfile: sentinel.dockerfile
+    links:
+      - redis-master-tabelogo

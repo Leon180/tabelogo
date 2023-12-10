@@ -10,25 +10,26 @@ import (
 )
 
 type Server struct {
-	config     Config
-	router     *gin.Engine
-	store      db.Store
-	rabbitMQ   *amqp.Connection
-	tokenMaker token.Maker
+	config        Config
+	tokenMaker    token.Maker
+	router        *gin.Engine
+	store         db.Store
+	rabbitMQ      *amqp.Connection
+	redisInstance RedisInstance
 }
 
-func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection) (*Server, error) {
+func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection, redisInstance RedisInstance) (*Server, error) {
 
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, err
 	}
-
 	server := &Server{
-		config:     config,
-		tokenMaker: tokenMaker,
-		store:      store,
-		rabbitMQ:   rabbitConn,
+		config:        config,
+		tokenMaker:    tokenMaker,
+		store:         store,
+		rabbitMQ:      rabbitConn,
+		redisInstance: redisInstance,
 	}
 	router := gin.Default()
 	// CORS configuration
@@ -49,7 +50,7 @@ func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection) (*Ser
 	authRoutes.POST("/get_fav_countries", server.GetFavoritesCountry)
 	authRoutes.POST("/get_fav_regions", server.GetFavoritesRegion)
 	authRoutes.POST("/check_update_fav", server.CheckAndUpdateFavorite)
-	authRoutes.POST("/get_user", server.GetUser)
+	authRoutes.POST("/get_user", server.GetSession)
 	// authRoutes.POST("/delete", server.DeletePlace)
 	// authRoutes.POST("/get", server.GetPlace)
 	server.router = router

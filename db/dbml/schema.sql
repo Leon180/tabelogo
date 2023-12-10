@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-12-08T14:35:35.908Z
+-- Generated at: 2023-12-10T12:37:47.880Z
 
 CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
@@ -33,12 +33,12 @@ CREATE TABLE "places" (
 );
 
 CREATE TABLE "favorites" (
-  "favorite_id" bigserial PRIMARY KEY,
   "is_favorite" boolean NOT NULL DEFAULT true,
-  "user_id" bigserial NOT NULL,
+  "user_email" varchar NOT NULL,
   "google_id" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "updated_at" timestamptz NOT NULL DEFAULT (now())
+  "updated_at" timestamptz NOT NULL DEFAULT (now()),
+  PRIMARY KEY ("user_email", "google_id")
 );
 
 CREATE TABLE "sessions" (
@@ -56,13 +56,9 @@ CREATE INDEX ON "users" ("email");
 
 CREATE INDEX ON "places" ("google_id");
 
-CREATE INDEX ON "favorites" ("user_id");
-
-CREATE INDEX ON "favorites" ("google_id");
-
 CREATE INDEX ON "sessions" ("session_id");
 
-ALTER TABLE "favorites" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("user_id");
+ALTER TABLE "favorites" ADD FOREIGN KEY ("user_email") REFERENCES "users" ("email");
 
 ALTER TABLE "favorites" ADD FOREIGN KEY ("google_id") REFERENCES "places" ("google_id");
 

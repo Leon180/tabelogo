@@ -7,6 +7,7 @@ package db
 import (
 	"context"
 
+
 	"github.com/google/uuid"
 )
 
@@ -16,7 +17,7 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePlace(ctx context.Context, arg DeletePlaceParams) error
-	GetCountryList(ctx context.Context, userID int64) ([]string, error)
+	GetCountryList(ctx context.Context, userEmail string) ([]string, error)
 	GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error)
 	GetPlaceByGoogleId(ctx context.Context, googleID string) (Place, error)
 	GetRegionList(ctx context.Context, arg GetRegionListParams) ([]string, error)

@@ -143,26 +143,28 @@ func (q *Queries) GetPlaceByGoogleId(ctx context.Context, googleID string) (Plac
 
 const updatePlace = `-- name: UpdatePlace :one
 UPDATE places SET
-    tw_display_name = COALESCE($1, tw_display_name),
-    tw_formatted_address = COALESCE($2, tw_formatted_address),
-    tw_weekday_descriptions = COALESCE($3, tw_weekday_descriptions),
-    administrative_area_level_1 = COALESCE($4, administrative_area_level_1),
-    country = COALESCE($5, country),
-    google_map_uri = COALESCE($6, google_map_uri),
-    international_phone_number = COALESCE($7, international_phone_number),
-    lat = COALESCE($8, lat),
-    lng = COALESCE($9, lng),
-    primary_type = COALESCE($10, primary_type),
-    rating = COALESCE($11, rating),
-    types = COALESCE($12, types),
-    user_rating_count = COALESCE($13, user_rating_count),
-    website_uri = COALESCE($14, website_uri),
+    google_id = COALESCE($1, google_id),
+    tw_display_name = COALESCE($2, tw_display_name),
+    tw_formatted_address = COALESCE($3, tw_formatted_address),
+    tw_weekday_descriptions = COALESCE($4, tw_weekday_descriptions),
+    administrative_area_level_1 = COALESCE($5, administrative_area_level_1),
+    country = COALESCE($6, country),
+    google_map_uri = COALESCE($7, google_map_uri),
+    international_phone_number = COALESCE($8, international_phone_number),
+    lat = COALESCE($9, lat),
+    lng = COALESCE($10, lng),
+    primary_type = COALESCE($11, primary_type),
+    rating = COALESCE($12, rating),
+    types = COALESCE($13, types),
+    user_rating_count = COALESCE($14, user_rating_count),
+    website_uri = COALESCE($15, website_uri),
     place_version = (place_version + 1)
-WHERE google_id = $15 AND place_version = $16
+WHERE google_id = $1 AND place_version = $16
 RETURNING google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
 `
 
 type UpdatePlaceParams struct {
+	GoogleID                 sql.NullString `json:"google_id"`
 	TwDisplayName            sql.NullString `json:"tw_display_name"`
 	TwFormattedAddress       sql.NullString `json:"tw_formatted_address"`
 	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
@@ -177,12 +179,12 @@ type UpdatePlaceParams struct {
 	Types                    []string       `json:"types"`
 	UserRatingCount          sql.NullInt32  `json:"user_rating_count"`
 	WebsiteUri               sql.NullString `json:"website_uri"`
-	GoogleID                 string         `json:"google_id"`
 	PlaceVersion             int32          `json:"place_version"`
 }
 
 func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place, error) {
 	row := q.db.QueryRowContext(ctx, updatePlace,
+		arg.GoogleID,
 		arg.TwDisplayName,
 		arg.TwFormattedAddress,
 		pq.Array(arg.TwWeekdayDescriptions),
@@ -197,7 +199,6 @@ func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place
 		pq.Array(arg.Types),
 		arg.UserRatingCount,
 		arg.WebsiteUri,
-		arg.GoogleID,
 		arg.PlaceVersion,
 	)
 	var i Place

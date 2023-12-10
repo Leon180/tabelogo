@@ -12,6 +12,10 @@ type Config struct {
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	RefreshDuration      time.Duration `mapstructure:"REFRESH_DURATION"`
+	RabbitMQConnect      string        `mapstructure:"RABBITMQ_CONNECT"`
+	RedisConnectSession  string        `mapstructure:"REDIS_CONNECT_SESSION"`
+	RedisConnectPlace    string        `mapstructure:"REDIS_CONNECT_PLACE"`
+	RedisConnectTabelogo string        `mapstructure:"REDIS_CONNECT_TABELOGO"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

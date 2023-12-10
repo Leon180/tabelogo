@@ -11,9 +11,8 @@ import (
 )
 
 type Favorite struct {
-	FavoriteID int64     `json:"favorite_id"`
 	IsFavorite bool      `json:"is_favorite"`
-	UserID     int64     `json:"user_id"`
+	UserEmail  string    `json:"user_email"`
 	GoogleID   string    `json:"google_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`

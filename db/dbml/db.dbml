@@ -39,16 +39,15 @@ Table places {
 }
 
 Table favorites {
-  favorite_id bigserial [primary key]
   is_favorite boolean [not null, default:  true]
-  user_id bigserial [not null, ref: > users.user_id]
+  user_email varchar [not null, ref: > users.email]
   google_id varchar [not null, ref: > places.google_id]
   created_at timestamptz [not null, default: `now()`]
   updated_at timestamptz [not null, default: `now()`]
   Indexes {
-    user_id
-    google_id
+    (user_email, google_id) [unique, pk]
   }
+  
 }
 
 Table sessions {

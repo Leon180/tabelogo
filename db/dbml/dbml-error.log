@@ -160,3 +160,30 @@ SyntaxError: Expected "-", "`", "false", "null", "true", [0-9], comment, string,
     at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
 {"start":{"offset":1395,"line":43,"column":43},"end":{"offset":1396,"line":43,"column":44}}
 
+2023-12-10T12:35:33.446Z
+SyntaxError: You have a syntax error at "db.dbml" line 47 column 3. Expected "note", "note:", "}", comment, indexes, valid name, or whitespace but "(" found.
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:45:13
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+    at Object.dbml2sql (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/index.js:19:23)
+    at Object.<anonymous> (/opt/homebrew/lib/node_modules/@dbml/cli/bin/dbml2sql.js:4:19)
+    at Module._compile (node:internal/modules/cjs/loader:1241:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
+    at Module.load (node:internal/modules/cjs/loader:1091:32)
+    at Module._load (node:internal/modules/cjs/loader:938:12)
+
+ROOT_ERROR:
+SyntaxError: Expected "note", "note:", "}", comment, indexes, valid name, or whitespace but "(" found.
+    at peg$buildStructuredError (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:1091:12)
+    at Object.peg$parse [as parse] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/dbmlParser.js:6866:11)
+    at Function.parseDBMLToJSON (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:49:37)
+    at Function.parse (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/parse/Parser.js:76:32)
+    at Object._export [as export] (/opt/homebrew/lib/node_modules/@dbml/cli/node_modules/@dbml/core/lib/export/index.js:11:37)
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:69
+    at /opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:42:23
+    at Array.forEach (<anonymous>)
+    at generate (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/utils.js:39:14)
+    at exportHandler (/opt/homebrew/lib/node_modules/@dbml/cli/lib/cli/export.js:28:27)
+{"start":{"offset":1582,"line":47,"column":3},"end":{"offset":1583,"line":47,"column":4}}
+

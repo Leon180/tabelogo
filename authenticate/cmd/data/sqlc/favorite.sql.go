@@ -14,26 +14,25 @@ import (
 
 const createFavorite = `-- name: CreateFavorite :one
 INSERT INTO favorites (
-    user_id,
+    user_email,
     google_id
 ) VALUES (
     $1, 
     $2
-) RETURNING favorite_id, is_favorite, user_id, google_id, created_at, updated_at
+) RETURNING is_favorite, user_email, google_id, created_at, updated_at
 `
 
 type CreateFavoriteParams struct {
-	UserID   int64  `json:"user_id"`
-	GoogleID string `json:"google_id"`
+	UserEmail string `json:"user_email"`
+	GoogleID  string `json:"google_id"`
 }
 
 func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, createFavorite, arg.UserID, arg.GoogleID)
+	row := q.db.QueryRowContext(ctx, createFavorite, arg.UserEmail, arg.GoogleID)
 	var i Favorite
 	err := row.Scan(
-		&i.FavoriteID,
 		&i.IsFavorite,
-		&i.UserID,
+		&i.UserEmail,
 		&i.GoogleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -43,12 +42,12 @@ func (q *Queries) CreateFavorite(ctx context.Context, arg CreateFavoriteParams) 
 
 const getCountryList = `-- name: GetCountryList :many
 SELECT DISTINCT country FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE favorites.user_id = $1 AND favorites.is_favorite = true
+WHERE favorites.user_email = $1 AND favorites.is_favorite = true
 ORDER BY country ASC
 `
 
-func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getCountryList, userID)
+func (q *Queries) GetCountryList(ctx context.Context, userEmail string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getCountryList, userEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -71,22 +70,21 @@ func (q *Queries) GetCountryList(ctx context.Context, userID int64) ([]string, e
 }
 
 const getFavorite = `-- name: GetFavorite :one
-SELECT favorite_id, is_favorite, user_id, google_id, created_at, updated_at FROM favorites
-WHERE user_id = $1 AND google_id = $2 AND is_favorite = true
+SELECT is_favorite, user_email, google_id, created_at, updated_at FROM favorites
+WHERE user_email = $1 AND google_id = $2 AND is_favorite = true
 `
 
 type GetFavoriteParams struct {
-	UserID   int64  `json:"user_id"`
-	GoogleID string `json:"google_id"`
+	UserEmail string `json:"user_email"`
+	GoogleID  string `json:"google_id"`
 }
 
 func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, getFavorite, arg.UserID, arg.GoogleID)
+	row := q.db.QueryRowContext(ctx, getFavorite, arg.UserEmail, arg.GoogleID)
 	var i Favorite
 	err := row.Scan(
-		&i.FavoriteID,
 		&i.IsFavorite,
-		&i.UserID,
+		&i.UserEmail,
 		&i.GoogleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -96,17 +94,17 @@ func (q *Queries) GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favor
 
 const getRegionList = `-- name: GetRegionList :many
 SELECT DISTINCT administrative_area_level_1 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE favorites.user_id = $1 AND places.country = $2 AND favorites.is_favorite = true
+WHERE favorites.user_email = $1 AND places.country = $2 AND favorites.is_favorite = true
 ORDER BY administrative_area_level_1 ASC
 `
 
 type GetRegionListParams struct {
-	UserID  int64  `json:"user_id"`
-	Country string `json:"country"`
+	UserEmail string `json:"user_email"`
+	Country   string `json:"country"`
 }
 
 func (q *Queries) GetRegionList(ctx context.Context, arg GetRegionListParams) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getRegionList, arg.UserID, arg.Country)
+	rows, err := q.db.QueryContext(ctx, getRegionList, arg.UserEmail, arg.Country)
 	if err != nil {
 		return nil, err
 	}
@@ -146,14 +144,14 @@ SELECT
     user_rating_count,
     website_uri
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE favorites.user_id = $1 AND places.country = $2 AND places.administrative_area_level_1 = $3 AND favorites.is_favorite = true
+WHERE favorites.user_email = $1 AND places.country = $2 AND places.administrative_area_level_1 = $3 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $4
 OFFSET $5
 `
 
 type ListFavoritesByCountrAndRegionParams struct {
-	UserID                   int64  `json:"user_id"`
+	UserEmail                string `json:"user_email"`
 	Country                  string `json:"country"`
 	AdministrativeAreaLevel1 string `json:"administrative_area_level_1"`
 	Limit                    int32  `json:"limit"`
@@ -180,7 +178,7 @@ type ListFavoritesByCountrAndRegionRow struct {
 
 func (q *Queries) ListFavoritesByCountrAndRegion(ctx context.Context, arg ListFavoritesByCountrAndRegionParams) ([]ListFavoritesByCountrAndRegionRow, error) {
 	rows, err := q.db.QueryContext(ctx, listFavoritesByCountrAndRegion,
-		arg.UserID,
+		arg.UserEmail,
 		arg.Country,
 		arg.AdministrativeAreaLevel1,
 		arg.Limit,
@@ -241,17 +239,17 @@ SELECT
     user_rating_count,
     website_uri
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE favorites.user_id = $1 AND places.country = $2 AND favorites.is_favorite = true
+WHERE favorites.user_email = $1 AND places.country = $2 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $3
 OFFSET $4
 `
 
 type ListFavoritesByCountryParams struct {
-	UserID  int64  `json:"user_id"`
-	Country string `json:"country"`
-	Limit   int32  `json:"limit"`
-	Offset  int32  `json:"offset"`
+	UserEmail string `json:"user_email"`
+	Country   string `json:"country"`
+	Limit     int32  `json:"limit"`
+	Offset    int32  `json:"offset"`
 }
 
 type ListFavoritesByCountryRow struct {
@@ -274,7 +272,7 @@ type ListFavoritesByCountryRow struct {
 
 func (q *Queries) ListFavoritesByCountry(ctx context.Context, arg ListFavoritesByCountryParams) ([]ListFavoritesByCountryRow, error) {
 	rows, err := q.db.QueryContext(ctx, listFavoritesByCountry,
-		arg.UserID,
+		arg.UserEmail,
 		arg.Country,
 		arg.Limit,
 		arg.Offset,
@@ -334,19 +332,18 @@ SELECT
     user_rating_count,
     website_uri,
     favorites.created_at,
-    favorites.updated_at,
-    favorite_id
+    favorites.updated_at
 FROM favorites JOIN places ON favorites.google_id = places.google_id
-WHERE favorites.user_id = $1 AND favorites.is_favorite = true
+WHERE favorites.user_email = $1 AND favorites.is_favorite = true
 ORDER BY favorites.created_at ASC
 LIMIT $2
 OFFSET $3
 `
 
 type ListFavoritesByCreateTimeParams struct {
-	UserID int64 `json:"user_id"`
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	UserEmail string `json:"user_email"`
+	Limit     int32  `json:"limit"`
+	Offset    int32  `json:"offset"`
 }
 
 type ListFavoritesByCreateTimeRow struct {
@@ -367,11 +364,10 @@ type ListFavoritesByCreateTimeRow struct {
 	WebsiteUri               string    `json:"website_uri"`
 	CreatedAt                time.Time `json:"created_at"`
 	UpdatedAt                time.Time `json:"updated_at"`
-	FavoriteID               int64     `json:"favorite_id"`
 }
 
 func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavoritesByCreateTimeParams) ([]ListFavoritesByCreateTimeRow, error) {
-	rows, err := q.db.QueryContext(ctx, listFavoritesByCreateTime, arg.UserID, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listFavoritesByCreateTime, arg.UserEmail, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +393,6 @@ func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavorit
 			&i.WebsiteUri,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.FavoriteID,
 		); err != nil {
 			return nil, err
 		}
@@ -414,43 +409,42 @@ func (q *Queries) ListFavoritesByCreateTime(ctx context.Context, arg ListFavorit
 
 const removeFavorite = `-- name: RemoveFavorite :exec
 DELETE FROM favorites
-WHERE user_id = $1 AND google_id = $2 AND is_favorite = true
+WHERE user_email = $1 AND google_id = $2 AND is_favorite = true
 `
 
 type RemoveFavoriteParams struct {
-	UserID   int64  `json:"user_id"`
-	GoogleID string `json:"google_id"`
+	UserEmail string `json:"user_email"`
+	GoogleID  string `json:"google_id"`
 }
 
 func (q *Queries) RemoveFavorite(ctx context.Context, arg RemoveFavoriteParams) error {
-	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserID, arg.GoogleID)
+	_, err := q.db.ExecContext(ctx, removeFavorite, arg.UserEmail, arg.GoogleID)
 	return err
 }
 
 const toggleFavorite = `-- name: ToggleFavorite :one
 INSERT INTO favorites (
-    user_id,
+    user_email,
     google_id
 ) VALUES (
     $1, 
     $2
-) ON CONFLICT (user_id, google_id) DO 
+) ON CONFLICT (user_email, google_id) DO 
 UPDATE SET is_favorite = NOT favorites.is_favorite, updated_at = NOW()
-RETURNING favorite_id, is_favorite, user_id, google_id, created_at, updated_at
+RETURNING is_favorite, user_email, google_id, created_at, updated_at
 `
 
 type ToggleFavoriteParams struct {
-	UserID   int64  `json:"user_id"`
-	GoogleID string `json:"google_id"`
+	UserEmail string `json:"user_email"`
+	GoogleID  string `json:"google_id"`
 }
 
 func (q *Queries) ToggleFavorite(ctx context.Context, arg ToggleFavoriteParams) (Favorite, error) {
-	row := q.db.QueryRowContext(ctx, toggleFavorite, arg.UserID, arg.GoogleID)
+	row := q.db.QueryRowContext(ctx, toggleFavorite, arg.UserEmail, arg.GoogleID)
 	var i Favorite
 	err := row.Scan(
-		&i.FavoriteID,
 		&i.IsFavorite,
-		&i.UserID,
+		&i.UserEmail,
 		&i.GoogleID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
