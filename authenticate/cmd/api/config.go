@@ -15,7 +15,6 @@ type Config struct {
 	RabbitMQConnect      string        `mapstructure:"RABBITMQ_CONNECT"`
 	RedisConnectSession  string        `mapstructure:"REDIS_CONNECT_SESSION"`
 	RedisConnectPlace    string        `mapstructure:"REDIS_CONNECT_PLACE"`
-	RedisConnectTabelogo string        `mapstructure:"REDIS_CONNECT_TABELOGO"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

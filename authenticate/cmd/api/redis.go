@@ -15,14 +15,12 @@ import (
 )
 
 type RedisInstance struct {
-	Session  *redis.Client
-	Place    *redis.Client
-	Tabelogo *redis.Client
+	Session *redis.Client
+	Place   *redis.Client
 }
 
-// 3 kind of redis cache:
-// 1. cache for user
-
+// 2 kind of redis cache:
+// 1. cache for session
 func (s *Server) GetSessionInRedisOrDatabase(c *gin.Context, authPayload *token.Payload) (db.Session, error) {
 	// get user sessio  in redis
 	session, err := s.getSessionInRedis(c, authPayload.Email)
@@ -175,14 +173,10 @@ func (s *Server) getPlaceInRedis(ctx *gin.Context, googleId string) (db.Place, e
 	return place[0], nil
 }
 
-func (s *Server) deletePlaceInRedis(ctx *gin.Context, googleId string) error {
-	err := s.redisInstance.Session.Del(ctx, googleId).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// 3. cache for tabelogo
-// func (s *Server) checkTabelogoInRedis(tabelogo string) db.Tabelogo {}
-// func (s *Server) saveTabelogoInRedis(tabelogo string) db.Tabelogo    {}
+// func (s *Server) deletePlaceInRedis(ctx *gin.Context, googleId string) error {
+// 	err := s.redisInstance.Session.Del(ctx, googleId).Err()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }

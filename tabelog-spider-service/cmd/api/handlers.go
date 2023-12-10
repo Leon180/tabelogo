@@ -10,6 +10,7 @@ import (
 )
 
 type LinkSpiderRequest struct {
+	GoogleID  string `json:"google_id" binding:"required"`
 	Area      string `json:"area" binding:"required"`
 	PlaceName string `json:"place_name" binding:"required"`
 }
@@ -134,13 +135,15 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	}
 	wg.Wait()
 	c.JSON(http.StatusOK, gin.H{
-		"result": tabelogInfoCollection,
+		"gooogle_id": req.GoogleID,
+		"result":     tabelogInfoCollection,
 	})
 }
 
 type TabelogPhotoRequest struct {
-	Link string `json:"link" binding:"required"`
-	Name string `json:"name" binding:"required"`
+	GoogleID string `json:"google_id" binding:"required"`
+	Link     string `json:"link" binding:"required"`
+	Name     string `json:"name" binding:"required"`
 }
 
 type TabelogPhoto struct {
@@ -195,6 +198,7 @@ func (s *Server) TabelogPhotoSpider(c *gin.Context) {
 		Photo: imgList,
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"result": resp,
+		"gooogle_id": req.GoogleID,
+		"result":     resp,
 	})
 }

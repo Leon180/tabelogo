@@ -43,12 +43,10 @@ func main() {
 	// connect to redis
 	redisSession := connectToRedis(config.RedisConnectSession)
 	redisPlace := connectToRedis(config.RedisConnectPlace)
-	redisTabelogo := connectToRedis(config.RedisConnectTabelogo)
 
 	server, err := NewServer(config, store, rabbitConn, RedisInstance{
-		Session:  redisSession,
-		Place:    redisPlace,
-		Tabelogo: redisTabelogo,
+		Session: redisSession,
+		Place:   redisPlace,
 	})
 	if err != nil {
 		panic(err)

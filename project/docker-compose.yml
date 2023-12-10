@@ -126,6 +126,8 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - "6379:6379"
+    volumes:
+      - ./db-data/redis/master-session:/data/
 
   redis-slave-session:
     image: 'redis/redis-stack-server:latest'
@@ -134,6 +136,8 @@ services:
     links:
       - redis-master-session
     command: redis-server --slaveof redis-master-session 6379
+    volumes:
+      - ./db-data/redis/slave-session:/data/
   
   redis-sentinel-session-1:
     build:
@@ -160,6 +164,8 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - "6381:6379"
+    volumes:
+      - ./db-data/redis/master-place:/data/
 
   redis-slave-place:
     image: 'redis/redis-stack-server:latest'
@@ -168,6 +174,8 @@ services:
     links:
       - redis-master-place
     command: redis-server --slaveof redis-master-place 6379
+    volumes:
+      - ./db-data/redis/slave-place:/data/
   
   redis-sentinel-place-1:
     build:
@@ -195,7 +203,7 @@ services:
     ports:
       - "6383:6379"
     volumes:
-      - ./db-data/redis/:/data/
+      - ./db-data/redis/master-tabelogo/:/data/
 
   redis-slave-tabelogo:
     image: 'redis/redis-stack-server:latest'
@@ -204,6 +212,8 @@ services:
     links:
       - redis-master-tabelogo
     command: redis-server --slaveof redis-master-tabelogo 6379
+    volumes:
+      - ./db-data/redis/slave-tabelogo/:/data/
   
   redis-sentinel-tabelogo-1:
     build:

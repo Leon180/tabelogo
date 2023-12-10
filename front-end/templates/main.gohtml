@@ -667,6 +667,7 @@
                         let response = await fetch(quickSearchLink, body)
                         let JPInfo = await response.json()
                         const TBpayload = {
+                            google_id: Info.id,
                             area: Info.administrative_area_level_1.toLowerCase(),
                             place_name: JPInfo.displayName.text,
                         }
@@ -744,7 +745,7 @@
         }
         HTML += `</div>`
 
-        if (len(Info.TwWeekdayDescriptions)) {
+        if (Info.TwWeekdayDescriptions.length > 0) {
             HTML += `<div style="font-size: 14px;">Open Time</div>`
             for (let i = 0; i < Info.TwWeekdayDescriptions.length; i++) {
                 HTML += `<div style="font-size: 14px;">${Info.TwWeekdayDescriptions[i]}</div>`
@@ -1068,7 +1069,7 @@
         HTML +=`
             <div class="flex" style="font-size: 12px;">
                 <a href="${data.Link}" target=”_blank” style="font-size: 12px;">Tabelog</a>
-                <div data-tabe-link="${data.Link}" data-tabe-name="${data.Name}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
+                <div data-tabe-link="${data.Link}" data-tabe-name="${data.Name}" data-tabe-googleid="${data.id}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
             </div>`
         HTML += `</div>`
         list.innerHTML = HTML
@@ -1084,9 +1085,11 @@
             btn.addEventListener("click", async function(){
                 const tabeName = btn.dataset.tabeName
                 const tabeLink = btn.dataset.tabeLink
+                const tabeGoogleID = btn.dataset.tabeGoogleid
                 const headers = new Headers();
                 headers.append("Content-Type", "application/json");
                 const imgPayload = {
+                    google_id: tabeGoogleID,
                     link: tabeLink,
                     name: tabeName,
                 }
