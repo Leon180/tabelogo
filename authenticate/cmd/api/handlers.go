@@ -5,6 +5,7 @@ import (
 	"authenticate/token"
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -25,21 +26,6 @@ type UserResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-// if error, return errorResponse:
-//
-//	{
-//		"error": "error message"
-//	}
-//
-// if no error, return UserResponse:
-//
-//	{
-//		"user": {
-//			"user_id": 1,
-//
-//			...
-//
-//	}
 func (server *Server) Regist(c *gin.Context) {
 	var request CreateUserRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -86,28 +72,6 @@ type LoginResponse struct {
 	User                  UserResponse `json:"user"`
 }
 
-// if error, return errorResponse:
-//
-//	{
-//		"error": "error message"
-//	}
-//
-// if no error, return LoginResponse:
-//
-//	{
-//		"session": {
-//			"session_id": "uuid",
-//			"access_token": "string",
-//			"access_token_expires_at": "time",
-//			"refresh_token": "string",
-//			"refresh_token_expires_at": "time",
-//			"user": {
-//				"user_id": 1,
-//
-//				...
-//
-//			}
-//		}
 func (server *Server) Login(c *gin.Context) {
 	var request LoginRequest
 	var user db.User
@@ -117,6 +81,7 @@ func (server *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// get user in database
 	user, err = server.store.GetUser(c, request.Email)
 	if err != nil {
 		if err == sql.ErrNoRows { // user not found
@@ -126,24 +91,22 @@ func (server *Server) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	// check password
 	if err := ComparePassword(user.HashedPassword, request.Password); err != nil {
-		// auth log
+		// if password not match, log event and return
 		go server.logEventViaRabbit("unauthenticated", fmt.Sprintf("user %s log in failed: mistype password, from IP: %s, UserAgent: %s", user.Email, c.ClientIP(), c.Request.UserAgent()), "log.ERROR")
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
-	// generate paseto token
+	// generate access token
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.AccessTokenDuration)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	// generate refresh token
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(
-		user.Email,
-		server.config.RefreshTokenDuration,
-	)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(user.Email, server.config.RefreshTokenDuration)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -181,7 +144,6 @@ func (server *Server) Login(c *gin.Context) {
 		RefreshTokenExpiresAt: refreshPayload.ExpiresAt,
 		User:                  NewUserResponse(user),
 	}
-
 	c.JSON(http.StatusOK, gin.H{"session": resp})
 }
 
@@ -194,20 +156,6 @@ type RenewAccessTokenResponse struct {
 	AccessTokenExpiresAt time.Time `json:"access_token_expires_at"`
 }
 
-// if error, return errorResponse:
-//
-//	{
-//		"error": "error message"
-//	}
-//
-// if no error, return RenewAccessTokenResponse:
-//
-//	{
-//		"renew": {
-//			"access_token": "string",
-//			"access_token_expires_at": "time"
-//		}
-//	}
 func (server *Server) RenewAccessToken(c *gin.Context) {
 	var request RenewAccessTokenRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -215,31 +163,25 @@ func (server *Server) RenewAccessToken(c *gin.Context) {
 		return
 	}
 
+	// verify refresh token
 	refreshPayload, err := server.tokenMaker.VerifyToken(request.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
-	// get user in redis
-	session, err := server.getSessionInRedis(c, refreshPayload.Email)
+	// get user in redis or database
+	session, err := server.GetSessionInRedisOrDatabase(c, refreshPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	// if empty session, get user in database
-	if session == (db.Session{}) {
-		session, err = server.store.GetSession(c, refreshPayload.ID)
-		if err != nil {
-			if err == sql.ErrNoRows { // user not found
-				c.JSON(http.StatusNotFound, errorResponse(err))
-				return
-			}
-			c.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-	}
 
+	// check session status
 	if session.IsBlocked {
 		err = server.deleteSessionInRedis(c, session.Email)
 		if err != nil {
@@ -277,13 +219,14 @@ func (server *Server) RenewAccessToken(c *gin.Context) {
 		return
 	}
 
+	// generate new access token
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(session.Email, server.config.AccessTokenDuration)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	// set user in redis
+	// set session in redis
 	err = server.setSessionInRedisWithExpiry(c, session, server.config.AccessTokenDuration)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -322,6 +265,11 @@ type SaveFavoriteResponse struct {
 	TwDisplayName string `json:"tw_display_name"`
 }
 
+// 1. check if user exists, if not, return
+// 2-1. check place in redis or db, if not, create place in db and set place in redis
+// 2-2. if place exists in redis or db, use the place to toggle favorite
+// 3. toggle favorite
+// 4. return response
 func (server *Server) ToggleFavorite(c *gin.Context) {
 	var request SaveFavoriteRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -333,66 +281,18 @@ func (server *Server) ToggleFavorite(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	// todo: check place in redis
-	// place, err := s.checkPlaceInRedis(c, request.GoogleID)
-	// if err != nil { // redis server error
-	// 	c.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-	// if place!=nil { // place exists in redis
-	// 	c.JSON(http.StatusOK, gin.H{"Place": place})
-	// 	return
-	// }
-	// else: place not exists in redis, then check place in database
-	// check if place exists, if yes, update it; if not, create one
-	// check if place exists, if not, create one
-	arg := db.CreatePlaceParams{
-		GoogleID:              request.GoogleID,
-		TwDisplayName:         request.TwDisplayName,
-		TwFormattedAddress:    request.TwFormattedAddress,
-		TwWeekdayDescriptions: pq.StringArray(request.TwWeekdayDescriptions),
-		GoogleMapUri:          request.GoogleMapUri,
-		Lat:                   request.Lat,
-		Lng:                   request.Lng,
-		Types:                 pq.StringArray(request.Types),
-	}
-	if len(request.AdministrativeAreaLevel1) != 0 {
-		arg.AdministrativeAreaLevel1 = request.AdministrativeAreaLevel1
-	}
-	if len(request.Country) != 0 {
-		arg.Country = request.Country
-	}
-	if len(request.InternationalPhoneNumber) != 0 {
-		arg.InternationalPhoneNumber = request.InternationalPhoneNumber
-	}
-	if len(request.PrimaryType) != 0 {
-		arg.PrimaryType = request.PrimaryType
-	}
-	if len(request.Rating) != 0 {
-		arg.Rating = request.Rating
-	}
-	if request.UserRatingCount != 0 {
-		arg.UserRatingCount = request.UserRatingCount
-	}
-	if len(request.WebsiteUri) != 0 {
-		arg.WebsiteUri = request.WebsiteUri
-	}
-	place, err := server.store.GetPlaceByGoogleId(c, request.GoogleID)
+	place, _, err := server.GetPlaceInRedisOrDatabaseAndCreateIfNotExist(c, request)
 	if err != nil {
-		if err == sql.ErrNoRows { // place not found
-			place, err = server.store.CreatePlace(c, arg)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, errorResponse(err))
-				return
-			}
-		} else {
-			c.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
 	// toggle favorite
@@ -405,12 +305,7 @@ func (server *Server) ToggleFavorite(c *gin.Context) {
 		return
 	}
 
-	// todo: save place in redis
-	// err = s.savePlaceInRedis(c, place)
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "Place": place})
-	// 	return
-	// }
+	// return response
 	if fav.IsFavorite {
 		c.JSON(http.StatusOK, gin.H{"User": session.Email, "action": "add", "Place": place})
 	}
@@ -432,10 +327,15 @@ func (server *Server) GetListFavorites(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
+	// get favorites
 	favs, err := server.store.ListFavoritesByCreateTime(c, db.ListFavoritesByCreateTimeParams{
 		UserEmail: session.Email,
 		Limit:     request.Limit,
@@ -446,6 +346,7 @@ func (server *Server) GetListFavorites(c *gin.Context) {
 		return
 	}
 
+	// return response
 	if len(favs) == 0 {
 		c.JSON(http.StatusOK, gin.H{"User": session.Email, "Favorites": []string{}})
 	} else {
@@ -470,6 +371,10 @@ func (server *Server) GetListFavoritesByCountry(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -510,6 +415,10 @@ func (server *Server) GetListFavoritesByCountryAndRegion(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -538,6 +447,10 @@ func (server *Server) GetFavoritesCountry(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -570,6 +483,10 @@ func (server *Server) GetFavoritesRegion(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -591,6 +508,10 @@ func (server *Server) GetSession(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -609,165 +530,128 @@ func (server *Server) CheckAndUpdateFavorite(c *gin.Context) {
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	session, err := server.GetSessionInRedisOrDatabase(c, authPayload)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	// todo: check place in redis
-	// place = s.checkPlaceInRedis(c, request.GoogleID)
-	// if place!=nil { // place exists in redis
-	// 	c.JSON(http.StatusOK, gin.H{"isFavorite": true, "User": NewUserResponse(user), "Place": place})
-	// 	return
-	// }
-	// else: place not exists in redis, then check place in database
-	arg := db.CreatePlaceParams{
-		GoogleID:              request.GoogleID,
-		TwDisplayName:         request.TwDisplayName,
-		TwFormattedAddress:    request.TwFormattedAddress,
-		TwWeekdayDescriptions: pq.StringArray(request.TwWeekdayDescriptions),
-		GoogleMapUri:          request.GoogleMapUri,
-		Lat:                   request.Lat,
-		Lng:                   request.Lng,
-		Types:                 pq.StringArray(request.Types),
-	}
-	if len(request.AdministrativeAreaLevel1) != 0 {
-		arg.AdministrativeAreaLevel1 = request.AdministrativeAreaLevel1
-	}
-	if len(request.Country) != 0 {
-		arg.Country = request.Country
-	}
-	if len(request.InternationalPhoneNumber) != 0 {
-		arg.InternationalPhoneNumber = request.InternationalPhoneNumber
-	}
-	if len(request.PrimaryType) != 0 {
-		arg.PrimaryType = request.PrimaryType
-	}
-	if len(request.Rating) != 0 {
-		arg.Rating = request.Rating
-	}
-	if request.UserRatingCount != 0 {
-		arg.UserRatingCount = request.UserRatingCount
-	}
-	if len(request.WebsiteUri) != 0 {
-		arg.WebsiteUri = request.WebsiteUri
-	}
-	place, err := server.store.GetPlaceByGoogleId(c, request.GoogleID)
+	place, hasCreated, err := server.GetPlaceInRedisOrDatabaseAndCreateIfNotExist(c, request)
 	if err != nil {
-		if err == sql.ErrNoRows { // place not found
-			place, err = server.store.CreatePlace(c, arg)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, errorResponse(err))
-				return
-			}
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	// if not created, then update place
+	if !hasCreated {
+		// update place
+		updateArg := db.UpdatePlaceParams{
+			PlaceVersion: place.PlaceVersion,
+		}
+		if len(request.GoogleID) != 0 {
+			updateArg.GoogleID = sql.NullString{String: request.GoogleID, Valid: true}
 		} else {
+			updateArg.GoogleID = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.TwDisplayName) != 0 {
+			updateArg.TwDisplayName = sql.NullString{String: request.TwDisplayName, Valid: true}
+		} else {
+			updateArg.TwDisplayName = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.TwFormattedAddress) != 0 {
+			updateArg.TwFormattedAddress = sql.NullString{String: request.TwFormattedAddress, Valid: true}
+		} else {
+			updateArg.TwFormattedAddress = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.TwWeekdayDescriptions) != 0 {
+			updateArg.TwWeekdayDescriptions = pq.StringArray(request.TwWeekdayDescriptions)
+		} else {
+			updateArg.TwWeekdayDescriptions = pq.StringArray{}
+		}
+		if len(request.GoogleMapUri) != 0 {
+			updateArg.GoogleMapUri = sql.NullString{String: request.GoogleMapUri, Valid: true}
+		} else {
+			updateArg.GoogleMapUri = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.Lat) != 0 {
+			updateArg.Lat = sql.NullString{String: request.Lat, Valid: true}
+		} else {
+			updateArg.Lat = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.Lng) != 0 {
+			updateArg.Lng = sql.NullString{String: request.Lng, Valid: true}
+		} else {
+			updateArg.Lng = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.Types) != 0 {
+			updateArg.Types = pq.StringArray(request.Types)
+		} else {
+			updateArg.Types = pq.StringArray{}
+		}
+		if len(request.AdministrativeAreaLevel1) != 0 {
+			updateArg.AdministrativeAreaLevel1 = sql.NullString{String: request.AdministrativeAreaLevel1, Valid: true}
+		} else {
+			updateArg.AdministrativeAreaLevel1 = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.Country) != 0 {
+			updateArg.Country = sql.NullString{String: request.Country, Valid: true}
+		} else {
+			updateArg.Country = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.InternationalPhoneNumber) != 0 {
+			updateArg.InternationalPhoneNumber = sql.NullString{String: request.InternationalPhoneNumber, Valid: true}
+		} else {
+			updateArg.InternationalPhoneNumber = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.PrimaryType) != 0 {
+			updateArg.PrimaryType = sql.NullString{String: request.PrimaryType, Valid: true}
+		} else {
+			updateArg.PrimaryType = sql.NullString{String: "", Valid: false}
+		}
+		if len(request.Rating) != 0 {
+			updateArg.Rating = sql.NullString{String: request.Rating, Valid: true}
+		} else {
+			updateArg.Rating = sql.NullString{String: "", Valid: false}
+		}
+		if request.UserRatingCount != 0 {
+			updateArg.UserRatingCount = sql.NullInt32{Int32: request.UserRatingCount, Valid: true}
+		} else {
+			updateArg.UserRatingCount = sql.NullInt32{Int32: 0, Valid: false}
+		}
+		if len(request.WebsiteUri) != 0 {
+			updateArg.WebsiteUri = sql.NullString{String: request.WebsiteUri, Valid: true}
+		} else {
+			updateArg.WebsiteUri = sql.NullString{String: "", Valid: false}
+		}
+
+		place, err = server.store.UpdatePlace(c, updateArg)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		// set place in redis with expiry
+		err = server.setPlaceInRedisWithExpiry(c, place, 10*time.Minute+time.Duration(rand.Intn(5))*time.Minute)
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
 	}
-	// update place
-	updateArg := db.UpdatePlaceParams{
-		PlaceVersion: place.PlaceVersion,
-	}
-	if len(request.GoogleID) != 0 {
-		updateArg.GoogleID = sql.NullString{String: request.GoogleID, Valid: true}
-	} else {
-		updateArg.GoogleID = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.TwDisplayName) != 0 {
-		updateArg.TwDisplayName = sql.NullString{String: request.TwDisplayName, Valid: true}
-	} else {
-		updateArg.TwDisplayName = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.TwFormattedAddress) != 0 {
-		updateArg.TwFormattedAddress = sql.NullString{String: request.TwFormattedAddress, Valid: true}
-	} else {
-		updateArg.TwFormattedAddress = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.TwWeekdayDescriptions) != 0 {
-		updateArg.TwWeekdayDescriptions = pq.StringArray(request.TwWeekdayDescriptions)
-	} else {
-		updateArg.TwWeekdayDescriptions = pq.StringArray{}
-	}
-	if len(request.GoogleMapUri) != 0 {
-		updateArg.GoogleMapUri = sql.NullString{String: request.GoogleMapUri, Valid: true}
-	} else {
-		updateArg.GoogleMapUri = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.Lat) != 0 {
-		updateArg.Lat = sql.NullString{String: request.Lat, Valid: true}
-	} else {
-		updateArg.Lat = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.Lng) != 0 {
-		updateArg.Lng = sql.NullString{String: request.Lng, Valid: true}
-	} else {
-		updateArg.Lng = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.Types) != 0 {
-		updateArg.Types = pq.StringArray(request.Types)
-	} else {
-		updateArg.Types = pq.StringArray{}
-	}
-	if len(request.AdministrativeAreaLevel1) != 0 {
-		updateArg.AdministrativeAreaLevel1 = sql.NullString{String: request.AdministrativeAreaLevel1, Valid: true}
-	} else {
-		updateArg.AdministrativeAreaLevel1 = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.Country) != 0 {
-		updateArg.Country = sql.NullString{String: request.Country, Valid: true}
-	} else {
-		updateArg.Country = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.InternationalPhoneNumber) != 0 {
-		updateArg.InternationalPhoneNumber = sql.NullString{String: request.InternationalPhoneNumber, Valid: true}
-	} else {
-		updateArg.InternationalPhoneNumber = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.PrimaryType) != 0 {
-		updateArg.PrimaryType = sql.NullString{String: request.PrimaryType, Valid: true}
-	} else {
-		updateArg.PrimaryType = sql.NullString{String: "", Valid: false}
-	}
-	if len(request.Rating) != 0 {
-		updateArg.Rating = sql.NullString{String: request.Rating, Valid: true}
-	} else {
-		updateArg.Rating = sql.NullString{String: "", Valid: false}
-	}
-	if request.UserRatingCount != 0 {
-		updateArg.UserRatingCount = sql.NullInt32{Int32: request.UserRatingCount, Valid: true}
-	} else {
-		updateArg.UserRatingCount = sql.NullInt32{Int32: 0, Valid: false}
-	}
-	if len(request.WebsiteUri) != 0 {
-		updateArg.WebsiteUri = sql.NullString{String: request.WebsiteUri, Valid: true}
-	} else {
-		updateArg.WebsiteUri = sql.NullString{String: "", Valid: false}
-	}
-	fmt.Println(updateArg)
 
-	updatePlace, err := server.store.UpdatePlace(c, updateArg)
-	fmt.Println(place)
-	if err != nil && err != sql.ErrNoRows {
-		c.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	} else {
-		// if updatePlace is empty, then place is not updated since place version is not matched
-		// redefine updatePlace to place
-		updatePlace = place
-	}
 	// check if favorite exists,
 	fav, err := server.store.GetFavorite(c, db.GetFavoriteParams{
 		UserEmail: session.Email,
-		GoogleID:  updatePlace.GoogleID,
+		GoogleID:  place.GoogleID,
 	})
 	if err != nil {
 		if err == sql.ErrNoRows { // favorite not found
-			c.JSON(http.StatusOK, gin.H{"isFavorite": false, "User": session.Email, "Place": updatePlace})
+			c.JSON(http.StatusOK, gin.H{"isFavorite": false, "User": session.Email, "Place": place})
 		} else {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"isFavorite": true, "User": session.Email, "Favorite": fav, "Place": updatePlace})
+	c.JSON(http.StatusOK, gin.H{"isFavorite": true, "User": session.Email, "Favorite": fav, "Place": place})
 }
