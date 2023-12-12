@@ -1,6 +1,6 @@
 -- SQL dump generated using DBML (dbml-lang.org)
 -- Database: PostgreSQL
--- Generated at: 2023-12-10T12:37:47.880Z
+-- Generated at: 2023-12-11T15:37:33.246Z
 
 CREATE TABLE "users" (
   "user_id" bigserial PRIMARY KEY,
@@ -14,6 +14,7 @@ CREATE TABLE "users" (
 CREATE TABLE "places" (
   "google_id" varchar PRIMARY KEY NOT NULL,
   "tw_display_name" varchar NOT NULL,
+  "jp_display_name" varchar NOT NULL DEFAULT '',
   "tw_formatted_address" varchar NOT NULL,
   "tw_weekday_descriptions" varchar[] NOT NULL DEFAULT '{}',
   "administrative_area_level_1" varchar NOT NULL DEFAULT '',

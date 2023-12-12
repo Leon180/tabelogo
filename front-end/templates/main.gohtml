@@ -282,7 +282,7 @@
                     `)
                     return
                 }
-                const listInfo = filterInfo(selectedPlace.TW)
+                const listInfo = selectedPlace.TW
                 selectedInfoShow(listInfo)
                 
             })
@@ -434,7 +434,7 @@
                             `)
                             return
                         }
-                        const listInfo = filterInfo(selectedPlace.TW)
+                        const listInfo = selectedPlace.TW
                         selectedInfoShow(listInfo)
                     })                    
                 }
@@ -457,12 +457,23 @@
         }
         try {
             let response = await fetch(quickSearchLink, body)
-            let data = await response.json()
-            if (!data.hasOwnProperty("error") && needMark) {
-                markPlace(map, data.location.latitude, data.location.longitude)
+            let resjson = await response.json()
+            let data = resjson.result
+            if (resjson.source=="google") {
+                if (!data.hasOwnProperty("error") && needMark) {
+                    markPlace(map, data.location.latitude, data.location.longitude)
+                    obj[objParam] = filterInfo(data)
+                } else if (data.hasOwnProperty("error")) {
+                    obj[objParam] = {
+                        "error": data.error,
+                    }
+                }
+            } else if (resjson.source=="redis"){
+                if (needMark) {
+                    markPlace(map, data.lat, data.lng)
+                    obj[objParam] = filterInfoRedis(data)
+                }
             }
-            obj[objParam] = data
-
         } catch (error) {
             console.log(error)
         }
@@ -559,17 +570,27 @@
         }
         // save param for backend
         saveParam.google_id = saveParam.id
+        delete saveParam.id
         saveParam.tw_display_name = saveParam.TwDisplayName
+        delete saveParam.TwDisplayName
         saveParam.tw_formatted_address = saveParam.TwFormattedAddress
+        delete saveParam.TwFormattedAddress
         saveParam.tw_weekday_descriptions = saveParam.TwWeekdayDescriptions
+        delete saveParam.TwWeekdayDescriptions
         saveParam.international_phone_number = saveParam.internationalPhoneNumber
+        delete saveParam.internationalPhoneNumber
         saveParam.google_map_uri = saveParam.googleMapsUri
+        delete saveParam.googleMapsUri
         saveParam.website_uri = saveParam.websiteUri
+        delete saveParam.websiteUri
         saveParam.primary_type = saveParam.primaryType
+        delete saveParam.primaryType
         saveParam.user_rating_count = saveParam.userRatingCount
+        delete saveParam.userRatingCount
         saveParam.lat = saveParam.location.latitude.toString()
         saveParam.lng = saveParam.location.longitude.toString()
         saveParam.rating = saveParam.rating.toString()
+        console.log("generateInfobutton's saveparam", saveParam)
         const body = {
             method: 'POST',
             body: JSON.stringify(saveParam),
@@ -644,7 +665,7 @@
         centf = setMapCenterToLocate(map, Info.location.latitude, Info.location.longitude);
         center.addEventListener("click", centf)
         // tabelogo
-        if (Info.types.includes("restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
+        if (Info.types.includes("restaurant", "ramen_restaurant", "food", "bakery", "cafe")&&Info.country=="JP") {
             const tabelogo = document.createElement('div');
             tabelogo.className = "btn py-1";
             tabelogo.innerHTML = "Tabelogo";
@@ -665,11 +686,22 @@
                     }
                     try {
                         let response = await fetch(quickSearchLink, body)
-                        let JPInfo = await response.json()
+                        let resjson = await response.json()
+                        let data = resjson.result
+                        console.log(resjson.source, data)
+                        let google_id
+                        let place_name
+                        if (resjson.source=="google") {
+                            google_id = data.id
+                            place_name = data.displayName.text
+                        } else if (resjson.source=="redis"){
+                            google_id = data.google_id
+                            place_name = data.jp_display_name
+                        }
                         const TBpayload = {
-                            google_id: Info.id,
+                            google_id: google_id,
                             area: Info.administrative_area_level_1.toLowerCase(),
-                            place_name: JPInfo.displayName.text,
+                            place_name: place_name,
                         }
                         let TabelogoResponse = await fetch(tabelogoLink, {
                             method: 'POST',
@@ -873,6 +905,79 @@
         return listInfo
     }
 
+    function filterInfoRedis(to) {
+        const listInfo = {
+            "id": "",
+            "internationalPhoneNumber": "",
+            "location": null,
+            "country": "",
+            "administrative_area_level_1": "",
+            "TwDisplayName": "",
+            "primaryType": "",
+            "rating": 0.0,
+            "userRatingCount": 0,
+            "TwFormattedAddress": "",
+            "TwWeekdayDescriptions": [],
+            "accessibilityOptions": [],
+            "googleMapsUri": "",
+            "websiteUri": "",
+            "photos": [],
+            "types": [],
+        }
+        if (to.hasOwnProperty("google_id")) {
+            listInfo.id = to.google_id
+        }
+        if (to.hasOwnProperty("international_phone_number")) {
+            listInfo.internationalPhoneNumber = to.international_phone_number
+        }
+        if (to.hasOwnProperty("country")) {
+            listInfo.country = to.country
+        }
+        if (to.hasOwnProperty("administrative_area_level_1")) {
+            listInfo.administrative_area_level_1 = to.administrative_area_level_1
+        }
+        if (to.hasOwnProperty("lat") && to.hasOwnProperty("lng")) {
+            listInfo.location = {
+                "latitude": parseFloat(to.lat),
+                "longitude": parseFloat(to.lng),
+            }
+        }
+        if (to.hasOwnProperty("tw_display_name")) {
+            listInfo.TwDisplayName = to.tw_display_name
+        }
+        if (to.hasOwnProperty("primary_type")) {
+            listInfo.primaryType = to.primary_type
+        }
+        if (to.hasOwnProperty("rating")) {
+            listInfo.rating = to.rating
+        }
+        if (to.hasOwnProperty("user_rating_count")) {
+            listInfo.userRatingCount = to.user_rating_count
+        }
+        if (to.hasOwnProperty("tw_formatted_address")) {
+            listInfo.TwFormattedAddress = to.tw_formatted_address
+        }
+        if (to.hasOwnProperty("tw_weekday_descriptions")) {
+            listInfo.TwWeekdayDescriptions = to.tw_weekday_descriptions
+        }
+        if (to.hasOwnProperty("accessibility_options")) {
+            listInfo.accessibilityOptions = to.accessibility_options
+        }
+        if (to.hasOwnProperty("google_map_uri")) {
+            listInfo.googleMapsUri = to.google_map_uri
+        }
+        if (to.hasOwnProperty("website_uri")) {
+            listInfo.websiteUri = to.website_uri
+        }
+        if (to.hasOwnProperty("photos")){
+            listInfo.photos = to.photos
+        }
+        if (to.hasOwnProperty("types")){
+            listInfo.types = to.types
+        }
+        return listInfo
+    }
+
     function filterInfoFromFavorite(data, index) {
         const listInfo = {
             "id": "",
@@ -901,14 +1006,14 @@
         if (to.hasOwnProperty("google_id")) {
             listInfo.id = to.google_id
         }
-        if (to.hasOwnProperty("international_phone_number") && to.international_phone_number.hasOwnProperty("String")) {
-            listInfo.internationalPhoneNumber = to.international_phone_number.String
+        if (to.hasOwnProperty("international_phone_number")) {
+            listInfo.internationalPhoneNumber = to.international_phone_number
         }
-        if (to.hasOwnProperty("country") && to.country.hasOwnProperty("String")) {
-            listInfo.country = to.country.String
+        if (to.hasOwnProperty("country")) {
+            listInfo.country = to.country
         }
-        if (to.hasOwnProperty("administrative_area_level_1") && to.administrative_area_level_1.hasOwnProperty("String")) {
-            listInfo.administrative_area_level_1 = to.administrative_area_level_1.String
+        if (to.hasOwnProperty("administrative_area_level_1")) {
+            listInfo.administrative_area_level_1 = to.administrative_area_level_1
         }
         listInfo.location = {
             "latitude": parseFloat(to.lat),
@@ -917,14 +1022,14 @@
         if (to.hasOwnProperty("tw_display_name")) {
             listInfo.TwDisplayName = to.tw_display_name
         }
-        if (to.hasOwnProperty("primary_type") && to.primary_type.hasOwnProperty("String")) {
-            listInfo.primaryType = to.primary_type.String
+        if (to.hasOwnProperty("primary_type")) {
+            listInfo.primaryType = to.primary_type
         }
-        if (to.hasOwnProperty("rating") && to.rating.hasOwnProperty("String")) {
-            listInfo.rating = to.rating.String
+        if (to.hasOwnProperty("rating")) {
+            listInfo.rating = to.rating
         }
-        if (to.hasOwnProperty("user_rating_count")&& to.user_rating_count.hasOwnProperty("Int32")) {
-            listInfo.userRatingCount = to.user_rating_count.Int32
+        if (to.hasOwnProperty("user_rating_count")) {
+            listInfo.userRatingCount = to.user_rating_count
         }
         if (to.hasOwnProperty("tw_formatted_address")) {
             listInfo.TwFormattedAddress = to.tw_formatted_address
@@ -935,8 +1040,8 @@
         if (to.hasOwnProperty("google_map_uri")) {
             listInfo.googleMapsUri = to.google_map_uri
         }
-        if (to.hasOwnProperty("website_uri") && to.website_uri.hasOwnProperty("String")) {
-            listInfo.websiteUri = to.website_uri.String
+        if (to.hasOwnProperty("website_uri")) {
+            listInfo.websiteUri = to.website_uri
         }
         if (to.hasOwnProperty("types")){
             listInfo.types = to.types
@@ -1037,13 +1142,13 @@
         divc.className = "scrollspy-example text-center";
         divc.tabIndex = "0";
         returnDataArr.forEach((data)=>{
-            divc.appendChild(generateToastMainListInfo(data))
+            divc.appendChild(generateToastMainListInfo(data, googleId))
         })
         col.appendChild(divc)
         return col
     }
 
-    function generateToastMainListInfo(data) {
+    function generateToastMainListInfo(data, googleId) {
         const list = document.createElement('div');
         list.className = "mb-4";
         // photo will be appendChild after id:photo-parent-${data.Link}
@@ -1069,7 +1174,7 @@
         HTML +=`
             <div class="flex" style="font-size: 12px;">
                 <a href="${data.Link}" target=”_blank” style="font-size: 12px;">Tabelog</a>
-                <div data-tabe-link="${data.Link}" data-tabe-name="${data.Name}" data-tabe-googleid="${data.id}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
+                <div data-tabe-link="${data.Link}" data-tabe-name="${data.Name}" data-tabe-googleid="${googleId}" class="btn py-0 my-0 tabelogo-photo-btn" style="font-size: 12px;">Tabephoto</div>
             </div>`
         HTML += `</div>`
         list.innerHTML = HTML
@@ -1345,7 +1450,6 @@
             })
             favoriteInfoWindows = []
             // show loading
-            {{/* generateFavoriteListLoading() */}}
             let response = await fetch(`${brokerUrl}/${method}`, body)
             let responseJSON = await response.json()
             if (responseJSON.hasOwnProperty("error")) {
@@ -1477,7 +1581,9 @@
         const div = document.createElement('div');
         for (let i=0; i<data.length; i++) {
             try {
+                console.log(data)
                 let listInfo = filterInfoFromFavorite(data, i)
+                console.log(listInfo)
                 const centerSaveTabe = await generateInfoButton(null, listInfo, null, "favorites-list")
                 div.appendChild(centerSaveTabe)
                 listnode = generateInfoNode(listInfo)
@@ -1564,12 +1670,12 @@
             dropdownNode.className = "dropdown-menu";
             responseJSON.Countries.forEach((c)=>{
                 const li = document.createElement('li');
-                li.innerHTML = `<button class="dropdown-item" type="button">${c.String}</button>`
+                li.innerHTML = `<button class="dropdown-item" type="button">${c}</button>`
                 li.addEventListener("click", async function(){
                     favRegion = null
-                    favCountry = c.String
+                    favCountry = c
                     await favoriteListShow()
-                    generateRegionButton(c.String)
+                    generateRegionButton(c)
                 })
                 dropdownNode.appendChild(li)
             })
@@ -1626,9 +1732,9 @@
             dropdownNode.className = "dropdown-menu";
             responseJSON.Regions.forEach((r)=>{
                 const li = document.createElement('li');
-                li.innerHTML = `<button class="dropdown-item" type="button">${r.String}</button>`
+                li.innerHTML = `<button class="dropdown-item" type="button">${r}</button>`
                 li.addEventListener("click", async function(){
-                    favRegion = r.String
+                    favRegion = r
                     await favoriteListShow()
                 })
                 dropdownNode.appendChild(li)

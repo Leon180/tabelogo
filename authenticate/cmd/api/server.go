@@ -15,10 +15,10 @@ type Server struct {
 	router        *gin.Engine
 	store         db.Store
 	rabbitMQ      *amqp.Connection
-	redisInstance RedisInstance
+	redisInstance CacheInstance
 }
 
-func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection, redisInstance RedisInstance) (*Server, error) {
+func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection, redisInstance CacheInstance) (*Server, error) {
 
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
@@ -41,6 +41,8 @@ func NewServer(config Config, store db.Store, rabbitConn *amqp.Connection, redis
 	router.POST("/regist", server.Regist)
 	router.POST("/login", server.Login)
 	router.POST("/renew_access", server.RenewAccessToken)
+	router.POST("/find_place", server.FindPlaceInCache)
+	router.POST("/set_jp_name", server.SetJPDisplayNameInCacheAndDataBase)
 	// authGroup
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 	authRoutes.POST("/favorite", server.ToggleFavorite)

@@ -17,6 +17,7 @@ Table users {
 Table places {
   google_id varchar [primary key, not null] // google return place_id for place detail
   tw_display_name varchar [not null]
+  jp_display_name varchar [not null, default: '']
   tw_formatted_address varchar [not null]
   tw_weekday_descriptions "varchar[]" [not null, default: '{}']
   administrative_area_level_1 varchar [not null, default: '']

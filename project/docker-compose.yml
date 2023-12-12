@@ -35,6 +35,8 @@ services:
       context: ./../google-map
       dockerfile: google-map.dockerfile
     restart: always
+    links:
+      - authenticate-service
     deploy:
       mode: replicated
       replicas: 1

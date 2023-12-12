@@ -21,6 +21,7 @@ type Favorite struct {
 type Place struct {
 	GoogleID                 string    `json:"google_id"`
 	TwDisplayName            string    `json:"tw_display_name"`
+	JpDisplayName            string    `json:"jp_display_name"`
 	TwFormattedAddress       string    `json:"tw_formatted_address"`
 	TwWeekdayDescriptions    []string  `json:"tw_weekday_descriptions"`
 	AdministrativeAreaLevel1 string    `json:"administrative_area_level_1"`

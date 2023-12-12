@@ -16,6 +16,11 @@ type QuickSearchRequest struct {
 	LanguageCode string `json:"language_code" binding:"required"`
 }
 
+type QuickSearchResponse struct {
+	Source string      `json:"source"`
+	Result interface{} `json:"result"`
+}
+
 func (s *Server) Hello(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Hello World!",
@@ -29,8 +34,59 @@ func (s *Server) QuickSearch(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	// post google api
+	// post auth service
+	body := bytes.NewBuffer(
+		[]byte(`
+		{
+			"place_id":"` + req.PlaceID + `"
+		}
+		`),
+	)
 	request, err := http.NewRequest(
+		"POST",
+		`http://authenticate-service/find_place`,
+		body,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer response.Body.Close()
+
+	var resp interface{}
+	json.NewDecoder(response.Body).Decode(&resp)
+	fmt.Println(resp)
+	if _, isE := resp.(map[string]interface{})["error"]; isE {
+		c.JSON(http.StatusInternalServerError, resp)
+		return
+	}
+	if f, isE := resp.(map[string]interface{})["found"]; isE && f == true {
+		// if ja, then must met tabelogo's format
+		if req.LanguageCode != "ja" {
+			c.JSON(http.StatusOK, QuickSearchResponse{
+				Source: "redis",
+				Result: resp.(map[string]interface{})["place"],
+			})
+			return
+		} else {
+			if resp.(map[string]interface{})["place"].(map[string]interface{})["jp_display_name"] != "" {
+				c.JSON(http.StatusOK, QuickSearchResponse{
+					Source: "redis",
+					Result: resp.(map[string]interface{})["place"],
+				})
+				return
+			}
+		}
+	}
+
+	// post google api
+	googleRequest, err := http.NewRequest(
 		"GET",
 		`https://places.googleapis.com/v1/places/`+req.PlaceID+`?fields=`+req.APIMask+`&key=`+s.config.GoogleMapAPIKey+`&languageCode=`+req.LanguageCode,
 		nil,
@@ -40,18 +96,50 @@ func (s *Server) QuickSearch(c *gin.Context) {
 		return
 	}
 
-	client := &http.Client{}
-	response, err := client.Do(request)
+	googleClient := &http.Client{}
+	googleResponse, err := googleClient.Do(googleRequest)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	defer response.Body.Close()
-
+	fmt.Println(googleResponse)
+	defer googleResponse.Body.Close()
 	// return response from tabelog spider service
-	var resp interface{}
-	json.NewDecoder(response.Body).Decode(&resp)
-	c.JSON(http.StatusOK, resp)
+	var googleRsp interface{}
+	json.NewDecoder(googleResponse.Body).Decode(&googleRsp)
+
+	// redis set jp display name if ja language
+	if req.LanguageCode == "ja" {
+		body := bytes.NewBuffer(
+			[]byte(`
+			{
+				"place_id":"` + req.PlaceID + `",
+				"jp_display_name":"` + googleRsp.(map[string]interface{})["displayName"].(map[string]interface{})["text"].(string) + `"
+			}
+			`),
+		)
+		request, err := http.NewRequest(
+			"POST",
+			`http://authenticate-service/set_jp_name`,
+			body,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		client := &http.Client{}
+		response, err := client.Do(request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		defer response.Body.Close()
+	}
+
+	c.JSON(http.StatusOK, QuickSearchResponse{
+		Source: "google",
+		Result: googleRsp,
+	})
 }
 
 type AdvanceSearchRequest struct {

@@ -28,6 +28,7 @@ WHERE google_id = $1 LIMIT 1;
 UPDATE places SET
     google_id = COALESCE(sqlc.narg(google_id), google_id),
     tw_display_name = COALESCE(sqlc.narg(tw_display_name), tw_display_name),
+    jp_display_name = COALESCE(sqlc.narg(jp_display_name), jp_display_name),
     tw_formatted_address = COALESCE(sqlc.narg(tw_formatted_address), tw_formatted_address),
     tw_weekday_descriptions = COALESCE(sqlc.narg(tw_weekday_descriptions), tw_weekday_descriptions),
     administrative_area_level_1 = COALESCE(sqlc.narg(administrative_area_level_1), administrative_area_level_1),

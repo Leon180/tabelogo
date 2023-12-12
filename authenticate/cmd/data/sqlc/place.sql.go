@@ -32,7 +32,7 @@ INSERT INTO places (
   place_version
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 1
-) RETURNING google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
+) RETURNING google_id, tw_display_name, jp_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
 `
 
 type CreatePlaceParams struct {
@@ -75,6 +75,7 @@ func (q *Queries) CreatePlace(ctx context.Context, arg CreatePlaceParams) (Place
 	err := row.Scan(
 		&i.GoogleID,
 		&i.TwDisplayName,
+		&i.JpDisplayName,
 		&i.TwFormattedAddress,
 		pq.Array(&i.TwWeekdayDescriptions),
 		&i.AdministrativeAreaLevel1,
@@ -111,7 +112,7 @@ func (q *Queries) DeletePlace(ctx context.Context, arg DeletePlaceParams) error 
 }
 
 const getPlaceByGoogleId = `-- name: GetPlaceByGoogleId :one
-SELECT google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at FROM places
+SELECT google_id, tw_display_name, jp_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at FROM places
 WHERE google_id = $1 LIMIT 1
 `
 
@@ -121,6 +122,7 @@ func (q *Queries) GetPlaceByGoogleId(ctx context.Context, googleID string) (Plac
 	err := row.Scan(
 		&i.GoogleID,
 		&i.TwDisplayName,
+		&i.JpDisplayName,
 		&i.TwFormattedAddress,
 		pq.Array(&i.TwWeekdayDescriptions),
 		&i.AdministrativeAreaLevel1,
@@ -145,27 +147,29 @@ const updatePlace = `-- name: UpdatePlace :one
 UPDATE places SET
     google_id = COALESCE($1, google_id),
     tw_display_name = COALESCE($2, tw_display_name),
-    tw_formatted_address = COALESCE($3, tw_formatted_address),
-    tw_weekday_descriptions = COALESCE($4, tw_weekday_descriptions),
-    administrative_area_level_1 = COALESCE($5, administrative_area_level_1),
-    country = COALESCE($6, country),
-    google_map_uri = COALESCE($7, google_map_uri),
-    international_phone_number = COALESCE($8, international_phone_number),
-    lat = COALESCE($9, lat),
-    lng = COALESCE($10, lng),
-    primary_type = COALESCE($11, primary_type),
-    rating = COALESCE($12, rating),
-    types = COALESCE($13, types),
-    user_rating_count = COALESCE($14, user_rating_count),
-    website_uri = COALESCE($15, website_uri),
+    jp_display_name = COALESCE($3, jp_display_name),
+    tw_formatted_address = COALESCE($4, tw_formatted_address),
+    tw_weekday_descriptions = COALESCE($5, tw_weekday_descriptions),
+    administrative_area_level_1 = COALESCE($6, administrative_area_level_1),
+    country = COALESCE($7, country),
+    google_map_uri = COALESCE($8, google_map_uri),
+    international_phone_number = COALESCE($9, international_phone_number),
+    lat = COALESCE($10, lat),
+    lng = COALESCE($11, lng),
+    primary_type = COALESCE($12, primary_type),
+    rating = COALESCE($13, rating),
+    types = COALESCE($14, types),
+    user_rating_count = COALESCE($15, user_rating_count),
+    website_uri = COALESCE($16, website_uri),
     place_version = (place_version + 1)
-WHERE google_id = $1 AND place_version = $16
-RETURNING google_id, tw_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
+WHERE google_id = $1 AND place_version = $17
+RETURNING google_id, tw_display_name, jp_display_name, tw_formatted_address, tw_weekday_descriptions, administrative_area_level_1, country, google_map_uri, international_phone_number, lat, lng, primary_type, rating, types, user_rating_count, website_uri, place_version, created_at, updated_at
 `
 
 type UpdatePlaceParams struct {
 	GoogleID                 sql.NullString `json:"google_id"`
 	TwDisplayName            sql.NullString `json:"tw_display_name"`
+	JpDisplayName            sql.NullString `json:"jp_display_name"`
 	TwFormattedAddress       sql.NullString `json:"tw_formatted_address"`
 	TwWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
 	AdministrativeAreaLevel1 sql.NullString `json:"administrative_area_level_1"`
@@ -186,6 +190,7 @@ func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place
 	row := q.db.QueryRowContext(ctx, updatePlace,
 		arg.GoogleID,
 		arg.TwDisplayName,
+		arg.JpDisplayName,
 		arg.TwFormattedAddress,
 		pq.Array(arg.TwWeekdayDescriptions),
 		arg.AdministrativeAreaLevel1,
@@ -205,6 +210,7 @@ func (q *Queries) UpdatePlace(ctx context.Context, arg UpdatePlaceParams) (Place
 	err := row.Scan(
 		&i.GoogleID,
 		&i.TwDisplayName,
+		&i.JpDisplayName,
 		&i.TwFormattedAddress,
 		pq.Array(&i.TwWeekdayDescriptions),
 		&i.AdministrativeAreaLevel1,

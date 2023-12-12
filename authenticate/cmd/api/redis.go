@@ -14,30 +14,32 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type RedisInstance struct {
+type CacheInstance struct {
 	Session *redis.Client
 	Place   *redis.Client
 }
 
 // 2 kind of redis cache:
 // 1. cache for session
-func (s *Server) GetSessionInRedisOrDatabase(c *gin.Context, authPayload *token.Payload) (db.Session, error) {
+func (s *Server) GetSessionInCacheOrDatabase(c *gin.Context, authPayload *token.Payload) (db.Session, string, error) {
 	// get user sessio  in redis
-	session, err := s.getSessionInRedis(c, authPayload.Email)
+	session, err := s.getSessionInCache(c, authPayload.Email)
+	// if error, return error
 	if err != nil {
-		return db.Session{}, err
+		return db.Session{}, "error", err
 	}
 	// if empty session, get session in database
 	if session == (db.Session{}) {
 		session, err = s.store.GetSession(c, authPayload.ID)
 		if err != nil {
-			return session, err
+			return db.Session{}, "error", err
 		}
+		return session, "database", nil
 	}
-	return session, nil
+	return session, "cache", nil
 }
 
-func (s *Server) setSessionInRedisWithExpiry(ctx *gin.Context, data db.Session, expiry time.Duration) error {
+func (s *Server) setSessionInCacheWithExpiry(ctx *gin.Context, data db.Session, expiry time.Duration) error {
 	_, err := s.redisInstance.Session.JSONSet(ctx, data.Email, "$", data).Result()
 	if err != nil {
 		return err
@@ -46,17 +48,20 @@ func (s *Server) setSessionInRedisWithExpiry(ctx *gin.Context, data db.Session, 
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (s *Server) getSessionInRedis(ctx *gin.Context, email string) (db.Session, error) {
+func (s *Server) getSessionInCache(ctx *gin.Context, email string) (db.Session, error) {
 	var session []db.Session
 	st, err := s.redisInstance.Session.JSONGet(ctx, email, "$").Result()
 	if err != nil {
+		if err == redis.Nil {
+			return db.Session{}, nil
+		}
 		return db.Session{}, err
 	}
 	if st == "" || st == "null" {
+		s.redisInstance.Session.Del(ctx, email)
 		return db.Session{}, nil
 	}
 	err = json.Unmarshal([]byte(st), &session)
@@ -66,7 +71,7 @@ func (s *Server) getSessionInRedis(ctx *gin.Context, email string) (db.Session, 
 	return session[0], nil
 }
 
-func (s *Server) deleteSessionInRedis(ctx *gin.Context, email string) error {
+func (s *Server) deleteSessionInCache(ctx *gin.Context, email string) error {
 	err := s.redisInstance.Session.Del(ctx, email).Err()
 	if err != nil {
 		return err
@@ -77,11 +82,11 @@ func (s *Server) deleteSessionInRedis(ctx *gin.Context, email string) error {
 // 2. cache for place
 // if place not exists in redis, then check place in database
 // if both not exists, then create place in database and set place in redis, and return with a bool value: true
-func (s *Server) GetPlaceInRedisOrDatabaseAndCreateIfNotExist(c *gin.Context, request SaveFavoriteRequest) (db.Place, bool, error) {
+func (s *Server) GetPlaceInCacheOrDatabaseAndCreateIfNotExist(c *gin.Context, request SaveFavoriteRequest) (db.Place, string, error) {
 	// check place in redis
-	place, err := s.getPlaceInRedis(c, request.GoogleID)
+	place, err := s.getPlaceInCache(c, request.GoogleID)
 	if err != nil {
-		return db.Place{}, false, err
+		return db.Place{}, "error", err
 	}
 	// place not exists in redis, then check place in database
 	if reflect.DeepEqual(place, db.Place{}) {
@@ -123,29 +128,25 @@ func (s *Server) GetPlaceInRedisOrDatabaseAndCreateIfNotExist(c *gin.Context, re
 				// create place
 				place, err = s.store.CreatePlace(c, arg)
 				if err != nil {
-					return db.Place{}, false, err // create place failed
+					return db.Place{}, "error", err // create place failed
 				}
 				// set place in redis with expiry
-				err = s.setPlaceInRedisWithExpiry(c, place, 10*time.Minute+time.Duration(rand.Intn(5))*time.Minute)
+				err = s.setPlaceInCacheWithExpiry(c, place, 10*time.Minute+time.Duration(rand.Intn(5))*time.Minute)
 				if err != nil {
-					return place, true, err
+					return place, "database_create", err
 				}
-				return place, true, nil
+				return place, "database_create", nil
 			} else {
-				return db.Place{}, false, err
+				return db.Place{}, "error", err
 			}
 		}
-		// place exists in database, set place in redis with expiry
-		err = s.setPlaceInRedisWithExpiry(c, place, 10*time.Minute+time.Duration(rand.Intn(5))*time.Minute)
-		if err != nil {
-			return place, false, err
-		}
-		return place, false, nil
+		// place exists in database and not in redis, handler will update place in db and redis
+		return place, "database_exist_cache_not_exist", nil
 	}
-	return place, false, nil
+	return place, "cache_exist", nil
 }
 
-func (s *Server) setPlaceInRedisWithExpiry(ctx *gin.Context, data db.Place, expiry time.Duration) error {
+func (s *Server) setPlaceInCacheWithExpiry(ctx *gin.Context, data db.Place, expiry time.Duration) error {
 	_, err := s.redisInstance.Place.JSONSet(ctx, data.GoogleID, "$", data).Result()
 	if err != nil {
 		return err
@@ -157,13 +158,17 @@ func (s *Server) setPlaceInRedisWithExpiry(ctx *gin.Context, data db.Place, expi
 	return nil
 }
 
-func (s *Server) getPlaceInRedis(ctx *gin.Context, googleId string) (db.Place, error) {
+func (s *Server) getPlaceInCache(ctx *gin.Context, googleId string) (db.Place, error) {
 	var place []db.Place
 	st, err := s.redisInstance.Place.JSONGet(ctx, googleId, "$").Result()
 	if err != nil {
+		if err == redis.Nil {
+			return db.Place{}, nil
+		}
 		return db.Place{}, err
 	}
 	if st == "" || st == "null" {
+		s.redisInstance.Place.Del(ctx, googleId)
 		return db.Place{}, nil
 	}
 	err = json.Unmarshal([]byte(st), &place)
@@ -172,11 +177,3 @@ func (s *Server) getPlaceInRedis(ctx *gin.Context, googleId string) (db.Place, e
 	}
 	return place[0], nil
 }
-
-// func (s *Server) deletePlaceInRedis(ctx *gin.Context, googleId string) error {
-// 	err := s.redisInstance.Session.Del(ctx, googleId).Err()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

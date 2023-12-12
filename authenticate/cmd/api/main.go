@@ -44,7 +44,7 @@ func main() {
 	redisSession := connectToRedis(config.RedisConnectSession)
 	redisPlace := connectToRedis(config.RedisConnectPlace)
 
-	server, err := NewServer(config, store, rabbitConn, RedisInstance{
+	server, err := NewServer(config, store, rabbitConn, CacheInstance{
 		Session: redisSession,
 		Place:   redisPlace,
 	})
