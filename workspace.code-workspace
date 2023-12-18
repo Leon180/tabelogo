@@ -29,6 +29,9 @@
 		},
 		{
 			"path": "listener-service"
+		},
+		{
+			"path": "images"
 		}
 	],
 	"settings": {
