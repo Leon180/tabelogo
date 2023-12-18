@@ -4,8 +4,12 @@
 2. 允許使用位置後可以點擊地圖獲得地點資訊（位置資訊不會儲存在資料庫）
 3. 儲存地點
 4. 如果地點為日本餐廳, 會有一個特別按鈕：tabelogo, 點擊後等待一段時間會出現該地點近似名稱的tabelog店家資訊
-5. quick search: 使用google map autocomplete實現, 輸入文字後會顯示相關結果
+   ![alt text](https://raw.githubusercontent.com/Leon180/tabelogo/main/images/tabelogo.png)
+6. quick search: 使用google map autocomplete實現, 輸入文字後會顯示相關結果
+   ![alt text](https://raw.githubusercontent.com/Leon180/tabelogo/main/images/quick_search.png)
 7. advance search： 根據條件產出最多二十筆搜尋結果
+   ![alt text](https://raw.githubusercontent.com/Leon180/tabelogo/main/images/advance_search.png)
+   
 
 ## 預計開發
 1. 信箱驗證功能
