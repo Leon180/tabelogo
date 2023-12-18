@@ -5,8 +5,10 @@ import (
 )
 
 type Config struct {
-	BrokerURL  string `mapstructure:"BROKER_URL"`
-	WebsiteURL string `mapstructure:"WEBSITE_URL"`
+	BrokerURL            string `mapstructure:"BROKER_URL"`
+	WebsiteURL           string `mapstructure:"WEBSITE_URL"`
+	BrokerURLDeployment  string `mapstructure:"BROKER_URL_DEPLOYMENT"`
+	WebsiteURLDeployment string `mapstructure:"WEBSITE_URL_DEPLOYMENT"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

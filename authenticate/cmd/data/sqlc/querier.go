@@ -16,6 +16,7 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePlace(ctx context.Context, arg DeletePlaceParams) error
+	DeleteSession(ctx context.Context, sessionID uuid.UUID) error
 	GetCountryList(ctx context.Context, userEmail string) ([]string, error)
 	GetFavorite(ctx context.Context, arg GetFavoriteParams) (Favorite, error)
 	GetPlaceByGoogleId(ctx context.Context, googleID string) (Place, error)

@@ -1,0 +1,203 @@
+version: '3'
+
+services:
+
+  caddy:
+    image: 'leon180/tabelogo-caddy:1.0.0'
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+
+  front-end:
+    image: 'leon180/tabelogo-front-end:1.0.0'
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  broker-service:
+    image: 'leon180/tabelogo-broker:1.0.0'
+    ports:
+      - "8080:8080"
+    links:
+      - authenticate-service
+      - google-map-service
+      - tabelog-spider-service
+      - logger-service
+      - mail-service
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  authenticate-service:
+    image: 'leon180/tabelogo-authenticate-service:1.0.0'
+    links: 
+      - logger-service
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  google-map-service:
+    image: 'leon180/tabelogo-google-map:1.0.0'
+    links:
+      - authenticate-service
+    deploy:
+      mode: replicated
+      replicas: 1
+  
+  postgres:
+    image: 'postgres:14.0'
+    ports:
+      - "5432:5432"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tabelogo
+    volumes:
+      - ./db-data/postgres/:/var/lib/postgresql/data/
+
+  tabelog-spider-service:
+    image: 'leon180/tabelogo-spider-service:1.0.1'
+    deploy:
+      mode: replicated
+      replicas: 1
+  
+  logger-service:
+    image: 'leon180/tabelogo-logger-service:1.0.0'
+    deploy:
+      mode: replicated
+      replicas: 1
+    links:
+      - mongo
+
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: jt79100
+    volumes:
+      - ./db-data/mongo/:/data/db/
+  
+  # mail-service:
+  #   image: 'leon180/tabelogo-mail-service:1.0.0'
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   links:
+  #     - mailhog
+
+  # mailhog:
+  #   image: 'jcalonso/mailhog:latest'
+  #   ports:
+  #     - "8025:8025"
+
+  listener-service:
+    image: 'leon180/tabelogo-listener-service:1.0.0'
+    deploy:
+      mode: replicated
+      replicas: 1
+    links:
+      - rabbitmq
+
+  rabbitmq:
+    restart: always
+    image: 'rabbitmq:3.9-alpine'
+    ports:
+      - "5672:5672"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - ./db-data/rabbitmq/:/var/lib/rabbitmq/
+  
+  redis-master-session:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./db-data/redis/master-session:/data/
+
+  # redis-slave-session:
+  #   image: 'redis/redis-stack-server:latest'
+  #   ports:
+  #     - "6380:6379"
+  #   links:
+  #     - redis-master-session
+  #   command: redis-server --slaveof redis-master-session 6379
+  #   volumes:
+  #     - ./db-data/redis/slave-session:/data/
+  
+  # redis-sentinel-session-1:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-session.dockerfile
+  #   links:
+  #     - redis-master-session
+  
+  # redis-sentinel-session-2:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-session.dockerfile
+  #   links:
+  #     - redis-master-session
+  
+  # redis-sentinel-session-3:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-session.dockerfile
+  #   links:
+  #     - redis-master-session
+  
+  redis-master-place:
+    image: 'redis/redis-stack-server:latest'
+    ports:
+      - "6381:6379"
+    volumes:
+      - ./db-data/redis/master-place:/data/
+
+  # redis-slave-place:
+  #   image: 'redis/redis-stack-server:latest'
+  #   ports:
+  #     - "6382:6379"
+  #   links:
+  #     - redis-master-place
+  #   command: redis-server --slaveof redis-master-place 6379
+  #   volumes:
+  #     - ./db-data/redis/slave-place:/data/
+  
+  # redis-sentinel-place-1:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-place.dockerfile
+  #   links:
+  #     - redis-master-place
+  
+  # redis-sentinel-place-2:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-place.dockerfile
+  #   links:
+  #     - redis-master-place
+  
+  # redis-sentinel-place-3:
+  #   build:
+  #     context: ./redis/sentinel
+  #     dockerfile: sentinel-place.dockerfile
+  #   links:
+  #     - redis-master-place
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:

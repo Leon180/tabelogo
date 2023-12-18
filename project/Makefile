@@ -5,6 +5,15 @@ GOOGLEMAP_BINARY=googleMapApp
 LOGGER_BINARY=loggerServiceApp
 MAIL_BINARY=mailServiceApp
 LISTENER_BINARY=listenerApp
+FRONT_BINARY=frontEndApp
+BROKER_BINARY_X86=brokerAppX86
+TABELOGSPIDER_BINARY_X86=tabelogspiderAppX86
+AUTHENTICATE_BINARY_X86=authenticateAppX86
+GOOGLEMAP_BINARY_X86=googleMapAppX86
+LOGGER_BINARY_X86=loggerServiceAppX86
+MAIL_BINARY_X86=mailServiceAppX86
+LISTENER_BINARY_X86=listenerAppX86
+FRONT_BINARY_X86=frontEndAppX86
 
 ## up: start docker compose
 up:
@@ -32,10 +41,20 @@ build_broker:
 	cd ../broker && env GOOS=linux CGO_ENABLED=0 go build -o ${BROKER_BINARY} ./cmd/api
 	@echo "Done!"
 
+build_broker_x86:
+	@echo "Building broker binary..."
+	cd ../broker && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${BROKER_BINARY_X86} ./cmd/api
+	@echo "Done!"
+
 ## build_authenticate: build authenticate binary
 build_authenticate:
 	@echo "Building authenticate binary..."
 	cd ../authenticate && env GOOS=linux CGO_ENABLED=0 go build -o ${AUTHENTICATE_BINARY} ./cmd/api
+	@echo "Done!"
+
+build_authenticate_x86:
+	@echo "Building authenticate binary..."
+	cd ../authenticate && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${AUTHENTICATE_BINARY_X86} ./cmd/api
 	@echo "Done!"
 
 ## build_googlemap: build googlemap binary
@@ -44,16 +63,31 @@ build_google-map:
 	cd ../google-map && env GOOS=linux CGO_ENABLED=0 go build -o ${GOOGLEMAP_BINARY} ./cmd/api
 	@echo "Done!"
 
+build_google-map_x86:
+	@echo "Building google-map binary..."
+	cd ../google-map && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${GOOGLEMAP_BINARY_X86} ./cmd/api
+	@echo "Done!"
+
 ## build_tabelogspider: build tabelogspider binary
 build_tabelogspider:
 	@echo "Building tabelogspider binary..."
 	cd ../tabelog-spider-service && env GOOS=linux CGO_ENABLED=0 go build -o ${TABELOGSPIDER_BINARY} ./cmd/api
 	@echo "Done!"
 
+build_tabelogspider_x86:
+	@echo "Building tabelogspider binary..."
+	cd ../tabelog-spider-service && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${TABELOGSPIDER_BINARY_X86} ./cmd/api
+	@echo "Done!"
+
 ## build logger: build logger binary
 build_logger:
 	@echo "Building logger binary..."
 	cd ../logger-service && env GOOS=linux CGO_ENABLED=0 go build -o ${LOGGER_BINARY} ./cmd/api
+	@echo "Done!"
+
+build_logger_x86:
+	@echo "Building logger binary..."
+	cd ../logger-service && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${LOGGER_BINARY_X86} ./cmd/api
 	@echo "Done!"
 
 ## build mail: build mail binary
@@ -66,6 +100,21 @@ build_mail:
 build_listener:
 	@echo "Building listener binary..."
 	cd ../listener-service && env GOOS=linux CGO_ENABLED=0 go build -o ${LISTENER_BINARY} .
+	@echo "Done!"
+
+build_listener_x86:
+	@echo "Building listener binary..."
+	cd ../listener-service && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${LISTENER_BINARY_X86} .
+	@echo "Done!"
+
+build_front:
+	@echo "Building front-end..."
+	cd ../front-end && env GOOS=linux CGO_ENABLED=0 go build -o ${FRONT_BINARY} .
+	@echo "Done!"
+
+build_front_x86:
+	@echo "Building front-end..."
+	cd ../front-end && env GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o ${FRONT_BINARY_X86} .
 	@echo "Done!"
 
 ## start front-end

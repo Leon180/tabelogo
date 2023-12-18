@@ -65,8 +65,8 @@ func renderFrontEnd(w http.ResponseWriter, t string, config Config) {
 		WebsiteURL string
 	}
 
-	data.BrokerURL = config.BrokerURL
-	data.WebsiteURL = config.WebsiteURL
+	data.BrokerURL = config.BrokerURLDeployment
+	data.WebsiteURL = config.WebsiteURLDeployment
 
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -6,14 +6,11 @@ import (
 )
 
 type Server struct {
-	router        *gin.Engine
-	redisInstance RedisInstance
+	router *gin.Engine
 }
 
-func NewServer(redisInstance RedisInstance) *Server {
-	server := &Server{
-		redisInstance: redisInstance,
-	}
+func NewServer() *Server {
+	server := &Server{}
 	router := gin.Default()
 	// CORS configuration
 	router.Use(cors.New(CORSConfig()))

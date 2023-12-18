@@ -13,18 +13,9 @@ const (
 )
 
 func main() {
-	config, err := LoadConfig(".")
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	// connect to redis
-	redisTabelogo := connectToRedis(config.RedisConnectTabelogo)
-
-	server := NewServer(RedisInstance{
-		Tabelogo: redisTabelogo,
-	})
-	err = server.Run(":" + webPort)
+	server := NewServer()
+	err := server.Run(":" + webPort)
 	if err != nil {
 		panic(err)
 	}

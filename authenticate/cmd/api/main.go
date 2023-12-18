@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// connect to postgres
-	conn, err := connectToDB(config.DSN)
+	conn, err := connectToDB(config.DSNTest)
 	if err != nil {
 		log.Fatal(err)
 	}
