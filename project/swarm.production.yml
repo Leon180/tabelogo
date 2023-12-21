@@ -58,8 +58,8 @@ services:
       mode: replicated
       replicas: 1
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: leon180
+      POSTGRES_PASSWORD: k29294046
       POSTGRES_DB: tabelogo
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
