@@ -1,1 +1,3 @@
-note.txt.DS_Store
+note.txt
+.DS_Store
+*/.DS_Store
