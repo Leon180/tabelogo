@@ -1,2 +1,5 @@
 *.env
 db-data/*
+k8s/*
+k8s-redis/*
+.DS_Store
