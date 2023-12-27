@@ -33,7 +33,9 @@ func New(mongo *mongo.Client) Models {
 }
 
 func (l *LogEntry) InsertOne(entry LogEntry) error {
+	// get collection logs
 	collection := client.Database("logs").Collection("logs")
+	// insert one log entry
 	_, err := collection.InsertOne(context.TODO(), LogEntry{
 		Name:      entry.Name,
 		Data:      entry.Data,
@@ -48,9 +50,12 @@ func (l *LogEntry) InsertOne(entry LogEntry) error {
 }
 
 func (l *LogEntry) FindAll() ([]*LogEntry, error) {
+	// context to set timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	// get collection logs
 	collection := client.Database("logs").Collection("logs")
+	// find all log entries and sort by created_at in descending order
 	opts := options.Find()
 	opts.SetSort(bson.D{{"created_at", -1}})
 	cursor, err := collection.Find(context.TODO(), bson.D{}, opts)
@@ -58,6 +63,7 @@ func (l *LogEntry) FindAll() ([]*LogEntry, error) {
 		log.Println("Error getting log entries", err)
 		return nil, err
 	}
+	// close cursor after function ends with timeout context (the context will be canceled when the function ends or times out)
 	defer cursor.Close(ctx)
 
 	var entries []*LogEntry

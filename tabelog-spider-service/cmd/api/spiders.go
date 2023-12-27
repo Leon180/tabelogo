@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -158,19 +157,15 @@ func (s *TabelogListContentSpider) Collect() error {
 	// container1 for ul
 	c.OnHTML(s.ListContentSelector.ParentContainerSelector, func(element *colly.HTMLElement) {
 		// container2 for li
-		fmt.Println(element)
 		if s.ListCondition(element) {
 			element.ForEach(s.ListContentSelector.ContentSelector.ContainerSelector, func(i int, element *colly.HTMLElement) {
 				// for all must collect in the li
-				fmt.Println(element)
 				data := map[string][]string{}
 				for key, value := range s.ListContentSelector.ContentSelector.ChildSelector {
 					if key == "img" {
-						fmt.Println(element.ChildAttr(value, "src"))
 						data[key] = append(data[key], element.ChildAttr(value, "src"))
 					} else {
 						data[key] = append(data[key], element.ChildText(value))
-						fmt.Println(element.ChildText(value))
 					}
 				}
 				s.ListContentCollection = append(s.ListContentCollection, data)
