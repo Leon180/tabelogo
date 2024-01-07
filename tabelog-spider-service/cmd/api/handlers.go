@@ -68,11 +68,9 @@ func (s *Server) TabelogSpider(c *gin.Context) {
 	tabelogInfoCollection := make([]TabelogInfo, len(lCollection))
 	var wg sync.WaitGroup
 	wg.Add(len(lCollection))
-	fmt.Println(lCollection)
 	for index, link := range lCollection {
 		go func(link string, index int) {
 			defer wg.Done()
-			fmt.Println(link)
 			tbcRequest := TabelogContentSpider{
 				Url: link,
 				ContentSelector: ContentSelector{

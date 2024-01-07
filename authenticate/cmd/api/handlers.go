@@ -28,36 +28,38 @@ type UserResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (server *Server) Regist(c *gin.Context) {
+func (server *Server) Regist(ctx *gin.Context) {
 	var request CreateUserRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, errorResponse(err))
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	hashedPassword, err := HashedPassword(request.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	arg := db.CreateUserParams{
 		Email:          request.Email,
 		HashedPassword: hashedPassword,
 	}
-	user, err := server.store.CreateUser(c, arg)
+	user, err := server.store.CreateUser(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
 			case "unique_violation": // duplicate email
-				c.JSON(http.StatusConflict, errorResponse(err))
+				ctx.JSON(http.StatusConflict, errorResponse(err))
 				return
 			}
 		}
-		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	go server.logEventViaRabbit("authenticated", fmt.Sprintf("user %s regist", user.Email), "log.INFO")
+	if server.rabbitMQ != nil {
+		go server.logEventViaRabbit("authenticated", fmt.Sprintf("user %s regist", user.Email), "log.INFO")
+	}
 
-	c.JSON(http.StatusOK, gin.H{"user": NewUserResponse(user)})
+	ctx.JSON(http.StatusOK, gin.H{"user": NewUserResponse(user)})
 }
 
 type LoginRequest struct {

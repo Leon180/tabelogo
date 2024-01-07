@@ -189,7 +189,6 @@ func (s *Server) AdvanceSearch(c *gin.Context) {
 		}
 		`),
 	)
-	fmt.Println(bBuffer)
 	// post google api
 	request, err := http.NewRequest(
 		"POST",
