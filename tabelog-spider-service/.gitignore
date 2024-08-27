@@ -1,2 +1,8 @@
 *.env
 .DS_Store
+go.sum
+go.mod
+*.dockerfile
+tabelogspiderApp
+tabelogspiderAppX86
+./log/*

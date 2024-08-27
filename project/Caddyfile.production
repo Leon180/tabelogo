@@ -3,6 +3,7 @@
 }
 
 (static) {
+	# https://fariszr.com/en/set-cache-header-caddy-files/
 	@static {
 		file
 		path *.ico *.css *.js *.gif *.jpg *.jpeg *.png *.svg *.woff *.json
@@ -12,7 +13,7 @@
 
 (security) {
 	header {
-		# enable HSTS
+		# enable HSTS(To ensure always using HTTPS)
 		Strict-Transport-Security max-age=31536000;
 		# disable clients from sniffing the media type
 		X-Content-Type-Options nosniff
@@ -30,6 +31,7 @@ swarm.tabelogo.com {
 
 broker.tabelogo.com {
 	reverse_proxy http://broker-service:8080 {
+		# header down set header while data sent from backend
 		header_down Access-Control-Allow-Origin *
 		header_down Access-Control-Allow-Methods *
 		header_down Access-Control-Allow-Headers *
