@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
+	"google-map/model/enum"
 	"os"
 	"strings"
-	"tabelog-spider/model/enum"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -13,6 +13,7 @@ import (
 )
 
 type Config struct {
+	GoogleMapAPIKey      string `mapstructure:"GOOGLE_MAP_API_KEY"`
 	MaxSize              int    `mapstructure:"MAX_SIZE"`
 	MaxAge               int    `mapstructure:"MAX_AGE"`
 	MaxBackups           int    `mapstructure:"MAX_BACKUPS"`
@@ -70,7 +71,7 @@ type LogConfig struct {
 
 func (c Config) GenLogConfig() LogConfig {
 	return LogConfig{
-		FileName:   fmt.Sprintf("./log/tabeloo-spider-service-%s.log", strings.ToLower(c.Environment)),
+		FileName:   fmt.Sprintf("./log/tabelogo-google-search-service-%s.log", strings.ToLower(c.Environment)),
 		Level:      zapcore.DebugLevel,
 		MaxSize:    c.MaxSize,
 		MaxAge:     c.MaxAge,

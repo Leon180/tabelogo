@@ -11,10 +11,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GetTabelogInfoHandle struct{}
+type GetTabelogInfoHandle struct {
+	getTabelogInfoService  service.GetTabelogInfoHandler
+	getTabelogPhotoService service.GetTabelogPhotoHandler
+}
 
-func NewGetTabelogInfoHandle() GetTabelogInfoHandle {
-	return GetTabelogInfoHandle{}
+func NewGetTabelogInfoHandle(
+	getTabelogInfoService service.GetTabelogInfoHandler,
+	getTabelogPhotoService service.GetTabelogPhotoHandler,
+) GetTabelogInfoHandle {
+	return GetTabelogInfoHandle{
+		getTabelogInfoService:  getTabelogInfoService,
+		getTabelogPhotoService: getTabelogPhotoService,
+	}
 }
 
 func (handle GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
@@ -25,7 +34,7 @@ func (handle GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	if err = c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 	}
-	tablogoInfo, err := service.NewGetTabelogInfoHandler().GetTabelogInfo(c, entitymodel.GetTabelogInfoParam{
+	tablogoInfo, err := handle.getTabelogInfoService.GetTabelogInfo(c, entitymodel.GetTabelogInfoParam{
 		Area:          req.Area,
 		PlaceName:     req.PlaceName,
 		MaxLinkAmount: req.MaxResultAmount,
@@ -44,7 +53,7 @@ func (handle GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
 	if err = c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 	}
-	tablogoPhoto, err := service.NewGetTabelogPhotoHandler().GetTabelogPhoto(c, req.Link)
+	tablogoPhoto, err := handle.getTabelogPhotoService.GetTabelogPhoto(c, req.Link)
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 	}

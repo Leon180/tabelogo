@@ -2,14 +2,14 @@ package main
 
 import (
 	"bytes"
+	"google-map/config"
+	"google-map/controller"
+	"google-map/model/enum"
+	"google-map/service"
+	"google-map/utility"
 	"io"
 	"log"
 	"slices"
-	"tabelog-spider/config"
-	"tabelog-spider/controller"
-	"tabelog-spider/model/enum"
-	"tabelog-spider/service"
-	"tabelog-spider/utility"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -41,7 +41,7 @@ func main() {
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
 	)
-	setRoute(engine)
+	setRoute(engine, cfg)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)
 	}
@@ -67,10 +67,10 @@ func LogRequest() gin.HandlerFunc {
 	}
 }
 
-func setRoute(engine *gin.Engine) {
+func setRoute(engine *gin.Engine, config config.Config) {
 	defaultRouter := engine.Group(engine.BasePath())
-	baseRouter := defaultRouter.Group("/tabelogo-spider/api/v1")
-	getTabelogInfoHandle := controller.NewGetTabelogInfoHandle(service.NewGetTabelogInfoHandler(), service.NewGetTabelogPhotoHandler())
-	baseRouter.GET("/getTabelogInfo", getTabelogInfoHandle.GetTabelogInfo)
-	baseRouter.GET("/getTabelogPhoto", getTabelogInfoHandle.GetTabelogPhoto)
+	baseRouter := defaultRouter.Group("/tabelogo-google-search/api/v1")
+	googlePlaceSearchHandle := controller.NewGooglePlaceSearchHandle(service.NewGooglePlaceSearchHandler(), config)
+	baseRouter.GET("/quickSearch", googlePlaceSearchHandle.QuickSearch)
+	baseRouter.GET("/advanceSearch", googlePlaceSearchHandle.AdvanceSearch)
 }
