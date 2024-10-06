@@ -9,6 +9,7 @@ import (
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 var (
@@ -32,6 +33,11 @@ type LogRecord struct {
 	logRecordDay     int
 	logFileName      string
 	lumberJackLogger *lumberjack.Logger
+}
+
+type GormLogger struct {
+	zap *zap.Logger
+	gormlogger.Config
 }
 
 func (l *LogRecord) RotateIfNeed() {
@@ -100,4 +106,11 @@ func InitLogger(logCfg config.LogConfig) {
 		}),
 	)
 	SugarLogger = Logger.Sugar()
+}
+
+func NewGormZapLogger(zap *zap.Logger) *GormLogger {
+	return &GormLogger{
+		zap:    zap,
+		Config: gormlogger.Config{IgnoreRecordNotFoundError: true},
+	}
 }

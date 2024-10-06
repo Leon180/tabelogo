@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	UserID         int64
+	ID             string
 	Nickname       string
 	Email          string
 	HashedPassword string
@@ -19,7 +19,6 @@ type UserSlice []User
 type Session struct {
 	ID           string    `gorm:"primaryKey" json:"id"`
 	UserID       string    `gorm:"not null" json:"user_id"`
-	SessionID    string    `gorm:"not null" json:"session_id"`
 	RefreshToken string    `json:"refresh_token"`
 	UserAgent    string    `json:"user_agent"`
 	ClientIp     string    `json:"client_ip"`

@@ -1,8 +1,11 @@
 package entitymodel
 
-import "time"
+import (
+	"time"
+)
 
 type Favorite struct {
+	ID         string    `json:"id"`
 	IsFavorite bool      `json:"is_favorite"`
 	UserID     string    `json:"user_id"`
 	PlaceID    string    `json:"place_id"`
@@ -12,9 +15,44 @@ type Favorite struct {
 
 type FavoriteSlice []Favorite
 
-type FavoriteUser struct {
-	Favorite
-	User User `json:"user"`
+type PlaceFavoriteUsers struct {
+	Place Place     `json:"place"`
+	Users UserSlice `json:"users"`
 }
 
-type FavoriteUserSlice []FavoriteUser
+type PlaceFavoriteUsersSlice []PlaceFavoriteUsers
+
+type UserFavoritePlaces struct {
+	User   User       `json:"user"`
+	Places PlaceSlice `json:"places"`
+}
+
+func (entity UserFavoritePlaces) GetUserFavoritePlaceAdministrativeAreaLevel1s() []string {
+	administrativeAreaLevel1 := make([]string, 0, len(entity.Places))
+	m := make(map[string]interface{})
+
+	for _, v := range entity.Places {
+		if _, ok := m[v.AdministrativeAreaLevel1]; !ok {
+			m[v.AdministrativeAreaLevel1] = nil
+			administrativeAreaLevel1 = append(administrativeAreaLevel1, v.AdministrativeAreaLevel1)
+		}
+	}
+
+	return administrativeAreaLevel1
+}
+
+func (entity UserFavoritePlaces) GetUserFavoritePlaceCountries() []string {
+	countries := make([]string, 0, len(entity.Places))
+	m := make(map[string]interface{})
+
+	for _, v := range entity.Places {
+		if _, ok := m[v.Country]; !ok {
+			m[v.Country] = nil
+			countries = append(countries, v.Country)
+		}
+	}
+
+	return countries
+}
+
+type UserFavoritePlacesSlice []UserFavoritePlaces

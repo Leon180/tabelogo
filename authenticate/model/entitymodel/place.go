@@ -2,8 +2,6 @@ package entitymodel
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type Place struct {
@@ -27,10 +25,6 @@ type Place struct {
 	PlaceVersion             int32
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
-	DeletedAt                gorm.DeletedAt
 }
 
-type PlaceFavoritesUsersInfo struct {
-	Place
-	FavoriteUsers FavoriteUserSlice
-}
+type PlaceSlice []Place

@@ -1,4 +1,4 @@
-package migrate
+package postgresqldbMigrate
 
 import (
 	"log"
@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-var migrationsV2 = []*gormigrate.Migration{}
+var migrationsV2 = []*gormigrate.Migration{
+	v202410051742, // add user, session, place and favorite table
+}
 
 var migrateOptionsV2 = &gormigrate.Options{
 	TableName:                 "go_migrations",

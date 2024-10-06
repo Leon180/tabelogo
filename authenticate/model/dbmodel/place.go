@@ -4,7 +4,6 @@ import (
 	"authenticate/model/entitymodel"
 	"time"
 
-	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -55,44 +54,4 @@ func (db Place) ToEntityModel() entitymodel.Place {
 		CreatedAt:                db.CreatedAt,
 		UpdatedAt:                db.UpdatedAt,
 	}
-}
-
-type PlacePreloadFavoritesUsers struct {
-	Place
-	FavoritePreloadUsers FavoritePreloadUserSlice `gorm:"foreignKey:PlaceID;references:ID"`
-}
-
-func (db PlacePreloadFavoritesUsers) TableName() string {
-	return "place"
-}
-
-func (db PlacePreloadFavoritesUsers) ToEntityModel() entitymodel.PlaceFavoritesUsersInfo {
-	return entitymodel.PlaceFavoritesUsersInfo{
-		Place:         db.Place.ToEntityModel(),
-		FavoriteUsers: db.FavoritePreloadUsers.ToEntityModel(),
-	}
-}
-
-type FavoritePreloadUser struct {
-	Favorite
-	User User `gorm:"foreignKey:ID;references:UserID"`
-}
-
-func (db FavoritePreloadUser) TableName() string {
-	return "favorite"
-}
-
-func (db FavoritePreloadUser) ToEntityModel() entitymodel.FavoriteUser {
-	return entitymodel.FavoriteUser{
-		Favorite: db.Favorite.ToEntityModel(),
-		User:     db.User.ToEntityModel(),
-	}
-}
-
-type FavoritePreloadUserSlice []FavoritePreloadUser
-
-func (db FavoritePreloadUserSlice) ToEntityModel() entitymodel.FavoriteUserSlice {
-	return lo.Map(db, func(item FavoritePreloadUser, _ int) entitymodel.FavoriteUser {
-		return item.ToEntityModel()
-	})
 }

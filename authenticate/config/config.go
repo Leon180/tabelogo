@@ -13,30 +13,33 @@ import (
 )
 
 type Config struct {
-	GoogleMapAPIKey      string        `mapstructure:"GOOGLE_MAP_API_KEY"`
-	MaxSize              int           `mapstructure:"MAX_SIZE"`
-	MaxAge               int           `mapstructure:"MAX_AGE"`
-	MaxBackups           int           `mapstructure:"MAX_BACKUPS"`
-	Compress             bool          `mapstructure:"COMPRESS"`
-	UseRedis             bool          `mapstructure:"USE_REDIS"`
-	Environment          string        `mapstructure:"-"`
-	CORSMaxAge           int           `mapstructure:"CORS_MAX_AGE"`
-	CORSAllowAllOrigins  bool          `mapstructure:"CORS_ALLOW_ALL_ORIGINS"`
-	CORSAllowCredentials bool          `mapstructure:"CORS_ALLOW_CREDENTIALS"`
-	ConnWebPort          string        `mapstructure:"CONN_WEB_PORT"`
-	ConnMaxCollectLinks  int           `mapstructure:"CONN_MAX_COLLECT_LINKS"`
-	CORSAllowMethods     string        `mapstructure:"CORS_ALLOW_METHODS"`
-	CORSAllowHeaders     string        `mapstructure:"CORS_ALLOW_HEADERS"`
-	CORSExposeHeaders    string        `mapstructure:"CORS_EXPOSE_HEADERS"`
-	DSNTest              string        `mapstructure:"DSN_TEST"`
-	DSNDeployment        string        `mapstructure:"DSN_DEPLOYMENT"`
-	RABBITMQConnect      string        `mapstructure:"RABBITMQ_CONNECT"`
-	RedisConnectSession  string        `mapstructure:"REDIS_CONNECT_SESSION"`
-	RedisConnectPlace    string        `mapstructure:"REDIS_CONNECT_PLACE"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
-	RefreshDuration      time.Duration `mapstructure:"REFRESH_DURATION"`
+	GoogleMapAPIKey                            string        `mapstructure:"GOOGLE_MAP_API_KEY"`
+	MaxSize                                    int           `mapstructure:"MAX_SIZE"`
+	MaxAge                                     int           `mapstructure:"MAX_AGE"`
+	MaxBackups                                 int           `mapstructure:"MAX_BACKUPS"`
+	Compress                                   bool          `mapstructure:"COMPRESS"`
+	UseRedis                                   bool          `mapstructure:"USE_REDIS"`
+	Environment                                string        `mapstructure:"-"`
+	CORSMaxAge                                 int           `mapstructure:"CORS_MAX_AGE"`
+	CORSAllowAllOrigins                        bool          `mapstructure:"CORS_ALLOW_ALL_ORIGINS"`
+	CORSAllowCredentials                       bool          `mapstructure:"CORS_ALLOW_CREDENTIALS"`
+	ConnWebPort                                string        `mapstructure:"CONN_WEB_PORT"`
+	ConnMaxCollectLinks                        int           `mapstructure:"CONN_MAX_COLLECT_LINKS"`
+	CORSAllowMethods                           string        `mapstructure:"CORS_ALLOW_METHODS"`
+	CORSAllowHeaders                           string        `mapstructure:"CORS_ALLOW_HEADERS"`
+	CORSExposeHeaders                          string        `mapstructure:"CORS_EXPOSE_HEADERS"`
+	RABBITMQConnect                            string        `mapstructure:"RABBITMQ_CONNECT"`
+	RedisConnectHost                           string        `mapstructure:"REDIS_CONNECT_HOST"`
+	TokenSymmetricKey                          string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration                        time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration                       time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	RefreshDuration                            time.Duration `mapstructure:"REFRESH_DURATION"`
+	DSNTest                                    string        `mapstructure:"DSN_TEST"`
+	DSNDeployment                              string        `mapstructure:"DSN_DEPLOYMENT"`
+	DBMaxIdle                                  int           `mapstructure:"DB_MAX_IDLE"`
+	DBMaxOpen                                  int           `mapstructure:"DB_MAX_OPEN"`
+	DBMaxLifetimeMinute                        int           `mapstructure:"DB_MAX_LIFETIME_MINUTE"`
+	DBDisableForeignKeyConstraintWhenMigrating bool          `mapstructure:"DB_DISABLE_FOREIGN_KEY_CONSTRAINT_WHEN_MIGRATING"`
 }
 
 func LoadConfig(config *Config, path string) error {

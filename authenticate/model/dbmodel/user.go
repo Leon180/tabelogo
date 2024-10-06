@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	UserID         int64          `gorm:"primaryKey" json:"user_id"`
+	ID             string         `gorm:"primaryKey" json:"user_id"`
 	Nickname       string         `gorm:"not null" json:"nickname"`
 	Email          string         `gorm:"not null" json:"email"`
 	HashedPassword string         `gorm:"not null" json:"hashed_password"`
@@ -20,7 +20,7 @@ type User struct {
 
 func (db User) ToEntityModel() entitymodel.User {
 	return entitymodel.User{
-		UserID:         db.UserID,
+		ID:             db.ID,
 		Nickname:       db.Nickname,
 		Email:          db.Email,
 		HashedPassword: db.HashedPassword,
@@ -30,10 +30,19 @@ func (db User) ToEntityModel() entitymodel.User {
 	}
 }
 
+type UserSlice []User
+
+func (db UserSlice) ToEntityModel() entitymodel.UserSlice {
+	entityModel := make(entitymodel.UserSlice, len(db))
+	for i, user := range db {
+		entityModel[i] = user.ToEntityModel()
+	}
+	return entityModel
+}
+
 type Session struct {
 	ID           string         `gorm:"primaryKey" json:"id"`
 	UserID       string         `gorm:"not null" json:"user_id"`
-	SessionID    string         `gorm:"not null" json:"session_id"`
 	RefreshToken string         `json:"refresh_token"`
 	UserAgent    string         `json:"user_agent"`
 	ClientIp     string         `json:"client_ip"`
@@ -47,7 +56,6 @@ func (db Session) ToEntityModel() entitymodel.Session {
 	return entitymodel.Session{
 		ID:           db.ID,
 		UserID:       db.UserID,
-		SessionID:    db.SessionID,
 		RefreshToken: db.RefreshToken,
 		UserAgent:    db.UserAgent,
 		ClientIp:     db.ClientIp,
