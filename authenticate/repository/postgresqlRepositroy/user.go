@@ -10,15 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewUserHandle(db *gorm.DB) repository.UserHandler {
-	return UserHandle{db: db}
+func NewUserHandler(db *gorm.DB) repository.UserHandler {
+	return &UserHandle{db: db}
 }
 
 type UserHandle struct {
 	db *gorm.DB
 }
 
-func (handle UserHandle) CreateUser(ctx context.Context, user entitymodel.User) error {
+func (handle *UserHandle) CreateUser(ctx context.Context, user entitymodel.User) error {
 	dbModel := dbmodel.User{
 		ID:             user.ID,
 		Nickname:       user.Nickname,
@@ -38,7 +38,7 @@ func (handle UserHandle) CreateUser(ctx context.Context, user entitymodel.User) 
 	return nil
 }
 
-func (handle UserHandle) GetUserByEmail(ctx context.Context, email string) (entitymodel.User, error) {
+func (handle *UserHandle) GetUserByEmail(ctx context.Context, email string) (entitymodel.User, error) {
 	var user dbmodel.User
 
 	if err := handle.db.WithContext(ctx).
@@ -51,7 +51,7 @@ func (handle UserHandle) GetUserByEmail(ctx context.Context, email string) (enti
 	return user.ToEntityModel(), nil
 }
 
-func (handle UserHandle) UpdateUser(ctx context.Context, userID string, updates map[string]interface{}) error {
+func (handle *UserHandle) UpdateUser(ctx context.Context, userID string, updates map[string]interface{}) error {
 	if err := handle.db.WithContext(ctx).
 		Model(&dbmodel.User{}).
 		Where("id = ?", userID).
@@ -62,7 +62,7 @@ func (handle UserHandle) UpdateUser(ctx context.Context, userID string, updates 
 	return nil
 }
 
-func (handle UserHandle) DeleteUser(ctx context.Context, userID string) error {
+func (handle *UserHandle) DeleteUser(ctx context.Context, userID string) error {
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", userID).
 		Delete(&dbmodel.User{}).Error; err != nil {
@@ -70,4 +70,42 @@ func (handle UserHandle) DeleteUser(ctx context.Context, userID string) error {
 		return err
 	}
 	return nil
+}
+
+func NewUserWithTransactionHandler(db *gorm.DB) repository.UserWithTransactionHandler {
+	return &UserWithTransactionHandle{
+		db:         db,
+		UserHandle: UserHandle{db: db},
+	}
+}
+
+type UserWithTransactionHandle struct {
+	db *gorm.DB
+	UserHandle
+}
+
+func (handle *UserWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return handle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(tx)
+	})
+}
+
+func NewUserAndSessionWithTransactionHandler(db *gorm.DB) repository.UserAndSessionWithTransactionHandler {
+	return &UserAndSessionWithTransactionHandle{
+		db:            db,
+		UserHandle:    UserHandle{db: db},
+		SessionHandle: SessionHandle{db: db},
+	}
+}
+
+type UserAndSessionWithTransactionHandle struct {
+	db *gorm.DB
+	UserHandle
+	SessionHandle
+}
+
+func (handle *UserAndSessionWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return handle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(tx)
+	})
 }

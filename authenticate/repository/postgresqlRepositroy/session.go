@@ -11,23 +11,25 @@ import (
 )
 
 func NewSessionHandle(db *gorm.DB) repository.SessionHandler {
-	return SessionHandle{db: db}
+	return &SessionHandle{db: db}
 }
 
 type SessionHandle struct {
 	db *gorm.DB
 }
 
-func (handle SessionHandle) CreateSession(ctx context.Context, session entitymodel.Session) error {
+func (handle *SessionHandle) CreateSession(ctx context.Context, session entitymodel.Session) error {
 	dbModel := dbmodel.Session{
-		ID:           session.ID,
-		UserID:       session.UserID,
-		RefreshToken: session.RefreshToken,
-		UserAgent:    session.UserAgent,
-		ClientIp:     session.ClientIp,
-		IsBlocked:    session.IsBlocked,
-		ExpiresAt:    session.ExpiresAt,
-		CreatedAt:    session.CreatedAt,
+		ID:                    session.ID,
+		UserID:                session.UserID,
+		AccessToken:           session.AccessToken,
+		RefreshToken:          session.RefreshToken,
+		UserAgent:             session.UserAgent,
+		ClientIP:              session.ClientIP,
+		IsBlocked:             session.IsBlocked,
+		AccessTokenExpiresAt:  session.AccessTokenExpiresAt,
+		RefreshTokenExpiresAt: session.RefreshTokenExpiresAt,
+		CreatedAt:             session.CreatedAt,
 	}
 
 	if err := handle.db.WithContext(ctx).
@@ -39,7 +41,7 @@ func (handle SessionHandle) CreateSession(ctx context.Context, session entitymod
 	return nil
 }
 
-func (handle SessionHandle) GetSessionByID(ctx context.Context, sessionID string) (entitymodel.Session, error) {
+func (handle *SessionHandle) GetSessionByID(ctx context.Context, sessionID string) (entitymodel.Session, error) {
 	var session dbmodel.Session
 
 	if err := handle.db.WithContext(ctx).
@@ -52,7 +54,7 @@ func (handle SessionHandle) GetSessionByID(ctx context.Context, sessionID string
 	return session.ToEntityModel(), nil
 }
 
-func (handle SessionHandle) GetSessionByUserID(ctx context.Context, userID string) (entitymodel.Session, error) {
+func (handle *SessionHandle) GetSessionByUserID(ctx context.Context, userID string) (entitymodel.Session, error) {
 	var session dbmodel.Session
 
 	if err := handle.db.WithContext(ctx).
@@ -65,7 +67,7 @@ func (handle SessionHandle) GetSessionByUserID(ctx context.Context, userID strin
 	return session.ToEntityModel(), nil
 }
 
-func (handle SessionHandle) UpdateSession(ctx context.Context, sessionID string, updates map[string]interface{}) error {
+func (handle *SessionHandle) UpdateSession(ctx context.Context, sessionID string, updates map[string]interface{}) error {
 	if err := handle.db.WithContext(ctx).
 		Model(&dbmodel.Session{}).
 		Where("id = ?", sessionID).
@@ -77,7 +79,7 @@ func (handle SessionHandle) UpdateSession(ctx context.Context, sessionID string,
 	return nil
 }
 
-func (handle SessionHandle) DeleteSession(ctx context.Context, sessionID string) error {
+func (handle *SessionHandle) DeleteSession(ctx context.Context, sessionID string) error {
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", sessionID).
 		Delete(&dbmodel.Session{}).Error; err != nil {

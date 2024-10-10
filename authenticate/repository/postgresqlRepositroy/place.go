@@ -1,4 +1,4 @@
-package postgresqlRepositroy
+package postgresqlRepository
 
 import (
 	"authenticate/model/dbmodel"
@@ -11,14 +11,14 @@ import (
 )
 
 func NewPlaceHandle(db *gorm.DB) repository.PlaceHandler {
-	return PlaceHandle{db: db}
+	return &PlaceHandle{db: db}
 }
 
 type PlaceHandle struct {
 	db *gorm.DB
 }
 
-func (handle PlaceHandle) CreatePlace(ctx context.Context, place entitymodel.Place) error {
+func (handle *PlaceHandle) CreatePlace(ctx context.Context, place entitymodel.Place) error {
 	dbModel := dbmodel.Place{
 		ID:                       place.ID,
 		GoogleID:                 place.GoogleID,
@@ -51,7 +51,7 @@ func (handle PlaceHandle) CreatePlace(ctx context.Context, place entitymodel.Pla
 	return nil
 }
 
-func (handle PlaceHandle) GetPlaceByGoogleID(ctx context.Context, googleID string) (entitymodel.Place, error) {
+func (handle *PlaceHandle) GetPlaceByGoogleID(ctx context.Context, googleID string) (entitymodel.Place, error) {
 	var place dbmodel.Place
 	if err := handle.db.WithContext(ctx).
 		Where("google_id = ?", googleID).
@@ -62,7 +62,7 @@ func (handle PlaceHandle) GetPlaceByGoogleID(ctx context.Context, googleID strin
 	return place.ToEntityModel(), nil
 }
 
-func (handle PlaceHandle) UpdatePlace(ctx context.Context, placeID string, updates map[string]interface{}) error {
+func (handle *PlaceHandle) UpdatePlace(ctx context.Context, placeID string, updates map[string]interface{}) error {
 	if err := handle.db.WithContext(ctx).
 		Model(&dbmodel.Place{}).
 		Where("id = ?", placeID).
@@ -73,7 +73,7 @@ func (handle PlaceHandle) UpdatePlace(ctx context.Context, placeID string, updat
 	return nil
 }
 
-func (handle PlaceHandle) DeletePlace(ctx context.Context, placeID string) error {
+func (handle *PlaceHandle) DeletePlace(ctx context.Context, placeID string) error {
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", placeID).
 		Delete(&dbmodel.Place{}).Error; err != nil {

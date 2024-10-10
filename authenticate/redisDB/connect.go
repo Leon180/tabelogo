@@ -2,14 +2,15 @@ package redisDB
 
 import (
 	"authenticate/utility"
+	"context"
 
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisSession *redis.Client
 type RedisPlace *redis.Client
 
-func ConnectToRedis(redisConn string) *redis.Client {
+func ConnectToRedis(ctx context.Context, redisConn string) *redis.Client {
 	var (
 		opts *redis.Options
 		rdb  *redis.Client
@@ -21,7 +22,7 @@ func ConnectToRedis(redisConn string) *redis.Client {
 		return nil
 	}
 	rdb = redis.NewClient(opts)
-	if err = rdb.Ping().Err(); err != nil {
+	if err = rdb.Ping(ctx).Err(); err != nil {
 		utility.SugarLogger.Fatal("Error during redis connection, error: %s", err)
 	}
 

@@ -12,14 +12,14 @@ import (
 )
 
 func NewFavoriteHandler(db *gorm.DB) repository.FavoriteHandler {
-	return FavoriteHandle{db: db}
+	return &FavoriteHandle{db: db}
 }
 
 type FavoriteHandle struct {
 	db *gorm.DB
 }
 
-func (f FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
+func (f *FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
 	dbModel := dbmodel.Favorite{
 		ID:         favorite.ID,
 		IsFavorite: favorite.IsFavorite,
@@ -36,7 +36,7 @@ func (f FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymodel
 	return nil
 }
 
-func (f FavoriteHandle) GetFavoriteByUserIDAndPlaceID(ctx context.Context, userID, placeID string) (entitymodel.Favorite, error) {
+func (f *FavoriteHandle) GetFavoriteByUserIDAndPlaceID(ctx context.Context, userID, placeID string) (entitymodel.Favorite, error) {
 	var dbModel dbmodel.Favorite
 	if err := f.db.WithContext(ctx).
 		Where("user_id = ? AND place_id = ?", userID, placeID).
@@ -47,7 +47,7 @@ func (f FavoriteHandle) GetFavoriteByUserIDAndPlaceID(ctx context.Context, userI
 	return dbModel.ToEntityModel(), nil
 }
 
-func (f FavoriteHandle) GetUserFavoritePlaces(ctx context.Context, userID string, country *string, administrativeAreaLevel1 *string, orderBy *enum.FavoriteOrderBy) (entitymodel.UserFavoritePlaces, error) {
+func (f *FavoriteHandle) GetUserFavoritePlaces(ctx context.Context, userID string, country *string, administrativeAreaLevel1 *string, orderBy *enum.FavoriteOrderBy) (entitymodel.UserFavoritePlaces, error) {
 	var dbModel dbmodel.PreloadFavoritePlaceUserSlice
 	sql := f.db.WithContext(ctx).Model(&dbmodel.PreloadFavoritePlaceUser{})
 	if country != nil {
@@ -83,7 +83,7 @@ func (f FavoriteHandle) GetUserFavoritePlaces(ctx context.Context, userID string
 	return entity[0], nil
 }
 
-func (f FavoriteHandle) ToggleFavorite(ctx context.Context, userID, placeID string) error {
+func (f *FavoriteHandle) ToggleFavorite(ctx context.Context, userID, placeID string) error {
 	if err := f.db.WithContext(ctx).
 		Model(&dbmodel.Favorite{}).
 		Where("user_id = ? AND place_id = ?", userID, placeID).

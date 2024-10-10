@@ -41,26 +41,30 @@ func (db UserSlice) ToEntityModel() entitymodel.UserSlice {
 }
 
 type Session struct {
-	ID           string         `gorm:"primaryKey" json:"id"`
-	UserID       string         `gorm:"not null" json:"user_id"`
-	RefreshToken string         `json:"refresh_token"`
-	UserAgent    string         `json:"user_agent"`
-	ClientIp     string         `json:"client_ip"`
-	IsBlocked    bool           `json:"is_blocked"`
-	ExpiresAt    time.Time      `json:"expires_at"`
-	CreatedAt    time.Time      `json:"created_at"`
-	DeletedAt    gorm.DeletedAt `json:"deleted_at"`
+	ID                    string         `gorm:"primaryKey" json:"id"`
+	UserID                string         `gorm:"not null" json:"user_id"`
+	AccessToken           string         `json:"access_token"`
+	RefreshToken          string         `json:"refresh_token"`
+	UserAgent             string         `json:"user_agent"`
+	ClientIP              string         `json:"client_ip"`
+	IsBlocked             bool           `json:"is_blocked"`
+	AccessTokenExpiresAt  time.Time      `json:"expires_at"`
+	RefreshTokenExpiresAt time.Time      `json:"refresh_token_expires_at"`
+	CreatedAt             time.Time      `json:"created_at"`
+	DeletedAt             gorm.DeletedAt `json:"deleted_at"`
 }
 
 func (db Session) ToEntityModel() entitymodel.Session {
 	return entitymodel.Session{
-		ID:           db.ID,
-		UserID:       db.UserID,
-		RefreshToken: db.RefreshToken,
-		UserAgent:    db.UserAgent,
-		ClientIp:     db.ClientIp,
-		IsBlocked:    db.IsBlocked,
-		ExpiresAt:    db.ExpiresAt,
-		CreatedAt:    db.CreatedAt,
+		ID:                    db.ID,
+		UserID:                db.UserID,
+		AccessToken:           db.AccessToken,
+		RefreshToken:          db.RefreshToken,
+		UserAgent:             db.UserAgent,
+		ClientIP:              db.ClientIP,
+		IsBlocked:             db.IsBlocked,
+		AccessTokenExpiresAt:  db.AccessTokenExpiresAt,
+		RefreshTokenExpiresAt: db.RefreshTokenExpiresAt,
+		CreatedAt:             db.CreatedAt,
 	}
 }

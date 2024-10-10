@@ -11,3 +11,14 @@ type UserHandler interface {
 	UpdateUser(ctx context.Context, userID string, updates map[string]interface{}) error
 	DeleteUser(ctx context.Context, userID string) error
 }
+
+type UserWithTransactionHandler interface {
+	WithTransaction
+	UserHandler
+}
+
+type UserAndSessionWithTransactionHandler interface {
+	WithTransaction
+	UserHandler
+	SessionHandler
+}

@@ -34,7 +34,25 @@ var (
 	RedisNilError        = &APIErr{HTTPStatus: http.StatusBadRequest, ErrorCode: enum.RedisNilError, ErrorMessage: ErrorMessageMap[enum.RedisNilError]}
 )
 
+var (
+	UserNotExistsError     = &APIErr{HTTPStatus: http.StatusConflict, ErrorCode: enum.UserNotExistsError, ErrorMessage: ErrorMessageMap[enum.UserNotExistsError]}
+	UserExistsButNotActive = &APIErr{HTTPStatus: http.StatusConflict, ErrorCode: enum.UserExistsButNotActive, ErrorMessage: ErrorMessageMap[enum.UserExistsButNotActive]}
+)
+
+var (
+	LoginUserPasswordNotMatchError = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.LoginUserPasswordNotMatchError, ErrorMessage: ErrorMessageMap[enum.LoginUserPasswordNotMatchError]}
+	SessionBlockedError            = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.SessionBlockedError, ErrorMessage: ErrorMessageMap[enum.SessionBlockedError]}
+)
+
 var ErrorMessageMap = map[enum.ErrorCode]string{
 	enum.HTTPStatusBadRequest: "Bad Request",
 	enum.RedisNilError:        "Redis Nil Error",
+
+	// user
+	enum.UserNotExistsError:     "User already exists",
+	enum.UserExistsButNotActive: "User exists but not active",
+
+	// login
+	enum.LoginUserPasswordNotMatchError: "Password not match",
+	enum.SessionBlockedError:            "Session blocked",
 }

@@ -15,3 +15,13 @@ const (
 const (
 	RedisNilError ErrorCode = 1000
 )
+
+const (
+	UserNotExistsError     ErrorCode = 2000
+	UserExistsButNotActive ErrorCode = 2001
+)
+
+const (
+	LoginUserPasswordNotMatchError ErrorCode = 3000
+	SessionBlockedError            ErrorCode = 3001
+)

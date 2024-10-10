@@ -6,8 +6,8 @@ package inject
 import (
 	"authenticate/config"
 
-	"github.com/go-redis/redis"
 	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )

@@ -22,16 +22,17 @@ import (
 	"github.com/gin-contrib/location"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 func main() {
 	var (
-		cfg         config.Config
-		engine      *gin.Engine
-		db          *gorm.DB
-		redisClient *redis.Client
+		cfg              config.Config
+		engine           *gin.Engine
+		db               *gorm.DB
+		redisClient      *redis.Client
+		controllerHandle *inject.ControllerHandle
 	)
 	if err := config.LoadConfig(&cfg, "./config"); err != nil {
 		log.Fatalf("cannot load config: %+v", err)
@@ -57,10 +58,10 @@ func main() {
 	}
 
 	// connect to redis
-	redisClient = redisDB.ConnectToRedis(cfg.RedisConnectHost)
+	redisClient = redisDB.ConnectToRedis(context.Background(), cfg.RedisConnectHost)
 
 	// inject
-	controllerHandle := inject.InitControllerHandle(db, cfg, utility.Logger, redisClient)
+	controllerHandle = inject.InitControllerHandle(db, cfg, utility.Logger, redisClient)
 
 	// graceful shutdown setup
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
