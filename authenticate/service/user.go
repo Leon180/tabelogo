@@ -221,29 +221,116 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 	return session, nil
 }
 
-type CreateFavoriteServiceHandler interface {
-	CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error
+type RenewAccessTokenServiceHandler interface {
+	RenewAccessToken(ctx context.Context, refreshToken string) (entitymodel.Session, error)
 }
 
-func NewCreateFavoriteServiceHandler(
+func NewRenewAccessTokenServiceHandler(
+	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler,
+	tokenMaker token.Maker,
+	SessionWithTransactionRedis redisDB.SessionWithTransactionHandler,
+	config *config.Config,
+) RenewAccessTokenServiceHandler {
+	return &RenewAccessTokenServiceHandle{
+		userAndSessionWithTransactionRepository: userAndSessionWithTransactionRepository,
+		tokenMaker:                              tokenMaker,
+		SessionWithTransactionRedis:             SessionWithTransactionRedis,
+		config:                                  config,
+	}
+}
+
+func (handle *RenewAccessTokenServiceHandle) RenewAccessToken(ctx context.Context, refreshToken string) (entitymodel.Session, error) {
+	var (
+		sessionWithUser entitymodel.SessionPreloadUser
+		err             error
+		regenSession    bool
+	)
+
+	if err = handle.userAndSessionWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+		// get exist session with user
+		sessionWithUser, err = handle.userAndSessionWithTransactionRepository.GetSessionWithUserByRefreshToken(ctx, refreshToken)
+		if err != nil {
+			return err
+		}
+		// check if user exists
+		if !sessionWithUser.IsExist() {
+			return errors.UserNotExistsError
+		}
+		// check if user is active
+		if !sessionWithUser.User.IsActive() {
+			return errors.UserExistsButNotActive
+		}
+
+		// if session expired, return error
+		if sessionWithUser.IsRefreshTokenExpired() {
+			return errors.SessionExpiredError
+		}
+
+		// if session is blocked, return error
+		if sessionWithUser.Blocked() {
+			return errors.SessionBlockedError
+		}
+
+		// if session can be updated, update session
+		if (sessionWithUser.IsAccessTokenExpired() && !sessionWithUser.IsRefreshTokenExpired()) ||
+			!sessionWithUser.IsAccessTokenExpired() {
+			sessionWithUser.AccessTokenExpiresAt = sessionWithUser.AccessTokenExpiresAt.Add(handle.config.RefreshTokenDuration)
+			updates := sessionWithUser.GetUpdates()
+			if err = handle.userAndSessionWithTransactionRepository.UpdateSession(ctx, sessionWithUser.Session.ID, updates); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return entitymodel.Session{}, err
+	}
+
+	expiry := time.Until(sessionWithUser.AccessTokenExpiresAt)
+	// if exist session, reset exist session in redis
+	if !regenSession {
+		if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, &expiry); err != nil {
+			return entitymodel.Session{}, err
+		}
+		return sessionWithUser.Session, nil
+	}
+	// else set session in redis
+	if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, &expiry); err != nil {
+		return entitymodel.Session{}, err
+	}
+
+	return sessionWithUser.Session, nil
+}
+
+type RenewAccessTokenServiceHandle struct {
+	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler
+	tokenMaker                              token.Maker
+	SessionWithTransactionRedis             redisDB.SessionWithTransactionHandler
+	config                                  *config.Config
+}
+
+type SaveFavoriteServiceHandler interface {
+	SaveFavorite(ctx context.Context, favorite entitymodel.Favorite) error
+}
+
+func NewSaveFavoriteServiceHandler(
 	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler,
 	redisPlace redisDB.PlaceWithTransactionHandler,
 	config *config.Config,
-) CreateFavoriteServiceHandler {
-	return &CreateFavoriteServiceHandle{
+) SaveFavoriteServiceHandler {
+	return &SaveFavoriteServiceHandle{
 		userAndPlaceAndFavoriteWithTransactionRepository: userAndPlaceAndFavoriteWithTransactionRepository,
 		redisPlace: redisPlace,
 		config:     config,
 	}
 }
 
-type CreateFavoriteServiceHandle struct {
+type SaveFavoriteServiceHandle struct {
 	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler
 	redisPlace                                       redisDB.PlaceWithTransactionHandler
 	config                                           *config.Config
 }
 
-func (handle *CreateFavoriteServiceHandle) CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
+func (handle *SaveFavoriteServiceHandle) SaveFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
 	var (
 		err   error
 		place entitymodel.Place
@@ -258,9 +345,11 @@ func (handle *CreateFavoriteServiceHandle) CreateFavorite(ctx context.Context, f
 		return err
 	}
 
-	// if place exist in redis, directly create favorite and return
+	// if place exist in redis, directly create/update favorite and return
 	if place.IsExist() {
-		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.CreateFavorite(ctx, favorite); err != nil {
+		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+			return handle.checkExistedFavoriteAndCreateOrUpdate(ctx, favorite)
+		}); err != nil {
 			return err
 		}
 		return nil
@@ -279,82 +368,48 @@ func (handle *CreateFavoriteServiceHandle) CreateFavorite(ctx context.Context, f
 		if err = handle.redisPlace.SetPlace(ctx, place.GoogleID, place, &handle.config.PlaceRedisExpiry); err != nil {
 			return err
 		}
-		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.CreateFavorite(ctx, favorite); err != nil {
-			return err
-		}
-		return nil
+		return handle.checkExistedFavoriteAndCreateOrUpdate(ctx, favorite)
 	}); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-type UpdateFavoriteServiceHandler interface {
-	UpdateFavorite(ctx context.Context, favorite entitymodel.Favorite) error
-}
-
-func NewUpdateFavoriteServiceHandler(
-	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler,
-	redisPlace redisDB.PlaceWithTransactionHandler,
-	config *config.Config,
-) UpdateFavoriteServiceHandler {
-	return &UpdateFavoriteServiceHandle{
-		userAndPlaceAndFavoriteWithTransactionRepository: userAndPlaceAndFavoriteWithTransactionRepository,
-		redisPlace: redisPlace,
-		config:     config,
-	}
-}
-
-type UpdateFavoriteServiceHandle struct {
-	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler
-	redisPlace                                       redisDB.PlaceWithTransactionHandler
-	config                                           *config.Config
-}
-
-func (handle *UpdateFavoriteServiceHandle) UpdateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
+func (handle *SaveFavoriteServiceHandle) checkExistedFavoriteAndCreateOrUpdate(ctx context.Context, favorite entitymodel.Favorite) error {
 	var (
-		err   error
-		place entitymodel.Place
+		existedFavorite entitymodel.Favorite
+		err             error
 	)
-	// check if place is exist (redis first, then db if not exist in redis)
-	if err = handle.redisPlace.WithTransaction(ctx, func(tx *redis.Tx) error {
-		if place, err = handle.redisPlace.GetPlace(ctx, favorite.PlaceGoogleID); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	if existedFavorite, err = handle.userAndPlaceAndFavoriteWithTransactionRepository.GetFavoriteByUserIDAndPlaceGoogleID(ctx, favorite.UserID, favorite.PlaceGoogleID); err != nil {
 		return err
 	}
-
-	// if place exist in redis, directly update favorite and return (assume place in redis will be remove while remove place from db)
-	if place.IsExist() {
+	if existedFavorite.IsExist() {
+		favorite.ID = existedFavorite.ID
 		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.UpdateFavorite(ctx, favorite); err != nil {
 			return err
 		}
 		return nil
 	}
-
-	// if place not exist in redis, get place from db and check if place is exist,
-	// if exist, update favorite and set place in redis
-	// if not exist, return error
-	if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
-		if place, err = handle.userAndPlaceAndFavoriteWithTransactionRepository.GetPlaceByGoogleID(ctx, favorite.PlaceGoogleID); err != nil {
-			return err
-		}
-		if !place.IsExist() {
-			return errors.PlaceNotExistsError
-		}
-		if err = handle.redisPlace.SetPlace(ctx, place.GoogleID, place, &handle.config.PlaceRedisExpiry); err != nil {
-			return err
-		}
-		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.UpdateFavorite(ctx, favorite); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.CreateFavorite(ctx, favorite); err != nil {
 		return err
 	}
-
 	return nil
+}
+
+type GetUserFavoritesServiceHandler interface {
+	GetUserFavorites(ctx context.Context, request entitymodel.GetUserFavoritesRequest) (entitymodel.UserFavoritePlaces, error)
+}
+
+func NewGetUserFavoritesServiceHandler(
+	favoriteRepository repository.FavoriteHandler,
+) GetUserFavoritesServiceHandler {
+	return &GetUserFavoritesServiceHandle{favoriteRepository: favoriteRepository}
+}
+
+type GetUserFavoritesServiceHandle struct {
+	favoriteRepository repository.FavoriteHandler
+}
+
+func (handle *GetUserFavoritesServiceHandle) GetUserFavorites(ctx context.Context, request entitymodel.GetUserFavoritesRequest) (entitymodel.UserFavoritePlaces, error) {
+	return handle.favoriteRepository.GetUserFavoritePlaces(ctx, request.UserID, request.Country, request.AdministrativeAreaLevel1, request.OrderBy)
 }

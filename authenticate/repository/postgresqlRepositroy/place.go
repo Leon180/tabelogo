@@ -93,3 +93,17 @@ func (handle *PlaceHandle) DeletePlace(ctx context.Context, placeID string) erro
 	}
 	return nil
 }
+
+func NewPlaceWithTransactionHandler(db *gorm.DB) repository.PlaceWithTransactionHandler {
+	return &PlaceWithTransactionHandle{
+		PlaceHandle: PlaceHandle{db: db},
+	}
+}
+
+type PlaceWithTransactionHandle struct {
+	PlaceHandle
+}
+
+func (handle *PlaceWithTransactionHandle) WithTransaction(ctx context.Context, fn func(*gorm.DB) error) error {
+	return handle.PlaceHandle.db.WithContext(ctx).Transaction(fn)
+}

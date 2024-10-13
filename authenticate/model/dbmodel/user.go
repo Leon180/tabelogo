@@ -68,3 +68,19 @@ func (db Session) ToEntityModel() entitymodel.Session {
 		CreatedAt:             db.CreatedAt,
 	}
 }
+
+type SessionPreloadUser struct {
+	Session
+	User User `gorm:"foreignKey:UserID"`
+}
+
+func (db SessionPreloadUser) TableName() string {
+	return "session"
+}
+
+func (db SessionPreloadUser) ToEntityModel() entitymodel.SessionPreloadUser {
+	return entitymodel.SessionPreloadUser{
+		Session: db.Session.ToEntityModel(),
+		User:    db.User.ToEntityModel(),
+	}
+}

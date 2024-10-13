@@ -12,3 +12,8 @@ type PlaceHandler interface {
 	UpdatePlace(ctx context.Context, placeID string, updates map[string]interface{}) error
 	DeletePlace(ctx context.Context, placeID string) error
 }
+
+type PlaceWithTransactionHandler interface {
+	PlaceHandler
+	WithTransaction
+}

@@ -24,6 +24,7 @@ const (
 const (
 	LoginUserPasswordNotMatchError ErrorCode = 3000
 	SessionBlockedError            ErrorCode = 3001
+	SessionExpiredError            ErrorCode = 3002
 )
 
 const (

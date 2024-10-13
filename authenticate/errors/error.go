@@ -42,6 +42,7 @@ var (
 var (
 	LoginUserPasswordNotMatchError = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.LoginUserPasswordNotMatchError, ErrorMessage: ErrorMessageMap[enum.LoginUserPasswordNotMatchError]}
 	SessionBlockedError            = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.SessionBlockedError, ErrorMessage: ErrorMessageMap[enum.SessionBlockedError]}
+	SessionExpiredError            = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.SessionExpiredError, ErrorMessage: ErrorMessageMap[enum.SessionExpiredError]}
 )
 
 var (

@@ -1,6 +1,7 @@
 package entitymodel
 
 import (
+	"authenticate/model/enum"
 	"time"
 )
 
@@ -11,6 +12,10 @@ type Favorite struct {
 	PlaceGoogleID string    `json:"place_google_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+func (entity Favorite) IsExist() bool {
+	return entity.ID != ""
 }
 
 type FavoriteSlice []Favorite
@@ -56,3 +61,10 @@ func (entity UserFavoritePlaces) GetUserFavoritePlaceCountries() []string {
 }
 
 type UserFavoritePlacesSlice []UserFavoritePlaces
+
+type GetUserFavoritesRequest struct {
+	UserID                   string
+	Country                  *string
+	AdministrativeAreaLevel1 *string
+	OrderBy                  *enum.FavoriteOrderBy
+}

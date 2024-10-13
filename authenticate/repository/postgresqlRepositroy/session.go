@@ -67,6 +67,20 @@ func (handle *SessionHandle) GetSessionByUserID(ctx context.Context, userID stri
 	return session.ToEntityModel(), nil
 }
 
+func (handle *SessionHandle) GetSessionWithUserByRefreshToken(ctx context.Context, refreshToken string) (entitymodel.SessionPreloadUser, error) {
+	var dbModel dbmodel.SessionPreloadUser
+
+	if err := handle.db.WithContext(ctx).
+		Preload("User").
+		Where("refresh_token = ?", refreshToken).
+		Find(&dbModel).Error; err != nil {
+		utility.SugarLogger.Errorln("error getting session with user by refresh token:", err)
+		return entitymodel.SessionPreloadUser{}, err
+	}
+
+	return dbModel.ToEntityModel(), nil
+}
+
 func (handle *SessionHandle) UpdateSession(ctx context.Context, sessionID string, updates map[string]interface{}) error {
 	if err := handle.db.WithContext(ctx).
 		Model(&dbmodel.Session{}).

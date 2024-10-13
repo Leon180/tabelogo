@@ -66,3 +66,32 @@ type Request struct {
 	UserAgent string
 	ClientIP  string
 }
+
+type SessionPreloadUser struct {
+	Session
+	User User
+}
+
+func (entity SessionPreloadUser) IsUserExist() bool {
+	return entity.User.IsExist()
+}
+
+func (entity SessionPreloadUser) Blocked() bool {
+	return entity.Session.Blocked()
+}
+
+func (entity SessionPreloadUser) GetUpdates() map[string]interface{} {
+	return entity.Session.GetUpdates()
+}
+
+func (entity SessionPreloadUser) IsAccessTokenExpired() bool {
+	return entity.Session.IsAccessTokenExpired()
+}
+
+func (entity SessionPreloadUser) IsExist() bool {
+	return entity.Session.IsExist()
+}
+
+func (entity SessionPreloadUser) IsRefreshTokenExpired() bool {
+	return entity.Session.IsRefreshTokenExpired()
+}

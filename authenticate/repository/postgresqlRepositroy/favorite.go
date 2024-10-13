@@ -36,10 +36,10 @@ func (f *FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymode
 	return nil
 }
 
-func (f *FavoriteHandle) GetFavoriteByUserIDAndPlaceID(ctx context.Context, userID, placeID string) (entitymodel.Favorite, error) {
+func (f *FavoriteHandle) GetFavoriteByUserIDAndPlaceGoogleID(ctx context.Context, userID, placeGoogleID string) (entitymodel.Favorite, error) {
 	var dbModel dbmodel.Favorite
 	if err := f.db.WithContext(ctx).
-		Where("user_id = ? AND place_id = ?", userID, placeID).
+		Where("user_id = ? AND place_google_id = ?", userID, placeGoogleID).
 		Find(&dbModel).Error; err != nil {
 		utility.SugarLogger.Errorln("error getting favorite by user id and place id:", err)
 		return entitymodel.Favorite{}, err
