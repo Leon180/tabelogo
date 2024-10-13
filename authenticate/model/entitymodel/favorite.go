@@ -5,12 +5,12 @@ import (
 )
 
 type Favorite struct {
-	ID         string    `json:"id"`
-	IsFavorite bool      `json:"is_favorite"`
-	UserID     string    `json:"user_id"`
-	PlaceID    string    `json:"place_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID            string    `json:"id"`
+	IsFavorite    bool      `json:"is_favorite"`
+	UserID        string    `json:"user_id"`
+	PlaceGoogleID string    `json:"place_google_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type FavoriteSlice []Favorite

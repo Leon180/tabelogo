@@ -1,6 +1,7 @@
 package entitymodel
 
 import (
+	"strings"
 	"time"
 )
 
@@ -25,6 +26,10 @@ type Place struct {
 	PlaceVersion             int32
 	CreatedAt                time.Time
 	UpdatedAt                time.Time
+}
+
+func (entity Place) IsExist() bool {
+	return strings.TrimSpace(entity.ID) != "" && strings.TrimSpace(entity.GoogleID) != ""
 }
 
 type PlaceSlice []Place

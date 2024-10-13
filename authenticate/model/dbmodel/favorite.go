@@ -6,22 +6,22 @@ import (
 )
 
 type Favorite struct {
-	ID         string    `gorm:"primaryKey" json:"id"`
-	IsFavorite bool      `json:"is_favorite"`
-	UserID     string    `json:"user_id"`
-	PlaceID    string    `json:"place_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID            string    `gorm:"primaryKey" json:"id"`
+	IsFavorite    bool      `json:"is_favorite"`
+	UserID        string    `json:"user_id"`
+	PlaceGoogleID string    `json:"place_google_id"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func (db Favorite) ToEntityModel() entitymodel.Favorite {
 	return entitymodel.Favorite{
-		ID:         db.ID,
-		IsFavorite: db.IsFavorite,
-		UserID:     db.UserID,
-		PlaceID:    db.PlaceID,
-		CreatedAt:  db.CreatedAt,
-		UpdatedAt:  db.UpdatedAt,
+		ID:            db.ID,
+		IsFavorite:    db.IsFavorite,
+		UserID:        db.UserID,
+		PlaceGoogleID: db.PlaceGoogleID,
+		CreatedAt:     db.CreatedAt,
+		UpdatedAt:     db.UpdatedAt,
 	}
 }
 
@@ -54,14 +54,14 @@ func (db PreloadFavoritePlaceUserSlice) ToPlaceFavoriteUsersSliceEntityModel() e
 		if !v.IsFavorite {
 			continue
 		}
-		if _, ok := m[v.PlaceID]; !ok {
-			m[v.PlaceID] = i
+		if _, ok := m[v.PlaceGoogleID]; !ok {
+			m[v.PlaceGoogleID] = i
 			entityModels[i] = entitymodel.PlaceFavoriteUsers{
 				Place: v.Place.ToEntityModel(),
 				Users: []entitymodel.User{},
 			}
 		}
-		entityModels[m[v.PlaceID]].Users = append(entityModels[m[v.PlaceID]].Users, v.User.ToEntityModel())
+		entityModels[m[v.PlaceGoogleID]].Users = append(entityModels[m[v.PlaceGoogleID]].Users, v.User.ToEntityModel())
 	}
 	return entityModels
 }

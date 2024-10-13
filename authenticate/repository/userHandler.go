@@ -22,3 +22,10 @@ type UserAndSessionWithTransactionHandler interface {
 	UserHandler
 	SessionHandler
 }
+
+type UserAndPlaceAndFavoriteWithTransactionHandler interface {
+	WithTransaction
+	UserHandler
+	PlaceHandler
+	FavoriteHandler
+}

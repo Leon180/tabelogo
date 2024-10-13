@@ -21,12 +21,12 @@ type FavoriteHandle struct {
 
 func (f *FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
 	dbModel := dbmodel.Favorite{
-		ID:         favorite.ID,
-		IsFavorite: favorite.IsFavorite,
-		UserID:     favorite.UserID,
-		PlaceID:    favorite.PlaceID,
-		CreatedAt:  favorite.CreatedAt,
-		UpdatedAt:  favorite.UpdatedAt,
+		ID:            favorite.ID,
+		IsFavorite:    favorite.IsFavorite,
+		UserID:        favorite.UserID,
+		PlaceGoogleID: favorite.PlaceGoogleID,
+		CreatedAt:     favorite.CreatedAt,
+		UpdatedAt:     favorite.UpdatedAt,
 	}
 	if err := f.db.WithContext(ctx).
 		Create(&dbModel).Error; err != nil {
@@ -83,12 +83,15 @@ func (f *FavoriteHandle) GetUserFavoritePlaces(ctx context.Context, userID strin
 	return entity[0], nil
 }
 
-func (f *FavoriteHandle) ToggleFavorite(ctx context.Context, userID, placeID string) error {
+func (f *FavoriteHandle) UpdateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
 	if err := f.db.WithContext(ctx).
 		Model(&dbmodel.Favorite{}).
-		Where("user_id = ? AND place_id = ?", userID, placeID).
-		Update("is_favorite", gorm.Expr("NOT is_favorite")).Error; err != nil {
-		utility.SugarLogger.Errorln("error toggling favorite by user id and place id:", err)
+		Where("user_id = ? AND place_google_id = ?", favorite.UserID, favorite.PlaceGoogleID).
+		Updates(map[string]interface{}{
+			"is_favorite": favorite.IsFavorite,
+			"updated_at":  favorite.UpdatedAt,
+		}).Error; err != nil {
+		utility.SugarLogger.Errorln("error updating favorite by user id and place id:", err)
 		return err
 	}
 	return nil

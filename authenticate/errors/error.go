@@ -44,6 +44,10 @@ var (
 	SessionBlockedError            = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.SessionBlockedError, ErrorMessage: ErrorMessageMap[enum.SessionBlockedError]}
 )
 
+var (
+	PlaceNotExistsError = &APIErr{HTTPStatus: http.StatusNotFound, ErrorCode: enum.PlaceNotExistsError, ErrorMessage: ErrorMessageMap[enum.PlaceNotExistsError]}
+)
+
 var ErrorMessageMap = map[enum.ErrorCode]string{
 	enum.HTTPStatusBadRequest: "Bad Request",
 	enum.RedisNilError:        "Redis Nil Error",
@@ -55,4 +59,7 @@ var ErrorMessageMap = map[enum.ErrorCode]string{
 	// login
 	enum.LoginUserPasswordNotMatchError: "Password not match",
 	enum.SessionBlockedError:            "Session blocked",
+
+	// place
+	enum.PlaceNotExistsError: "Place not exists",
 }

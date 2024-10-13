@@ -11,9 +11,9 @@ import (
 )
 
 type PlaceHandler interface {
-	GetPlace(ctx context.Context, key string) (entitymodel.Place, error)
-	SetPlace(ctx context.Context, key string, place entitymodel.Place, expiry *time.Duration) error
-	DeletePlace(ctx context.Context, key string) error
+	GetPlace(ctx context.Context, placeGoogleID string) (entitymodel.Place, error)
+	SetPlace(ctx context.Context, placeGoogleID string, place entitymodel.Place, expiry *time.Duration) error
+	DeletePlace(ctx context.Context, placeGoogleID string) error
 }
 
 func NewPlaceHandler(redisClient *redis.Client) PlaceHandler {
@@ -24,9 +24,9 @@ type PlaceHandle struct {
 	redisClient *redis.Client
 }
 
-func (p *PlaceHandle) GetPlace(ctx context.Context, key string) (entitymodel.Place, error) {
+func (p *PlaceHandle) GetPlace(ctx context.Context, placeGoogleID string) (entitymodel.Place, error) {
 	var place entitymodel.Place
-	st, err := p.redisClient.JSONGet(ctx, key, "$").Result()
+	st, err := p.redisClient.JSONGet(ctx, placeGoogleID, "$").Result()
 	if err != nil {
 		if err == redis.Nil {
 			return entitymodel.Place{}, nil
@@ -41,25 +41,44 @@ func (p *PlaceHandle) GetPlace(ctx context.Context, key string) (entitymodel.Pla
 	return place, nil
 }
 
-func (p *PlaceHandle) SetPlace(ctx context.Context, key string, place entitymodel.Place, expiry *time.Duration) error {
-	if _, err := p.redisClient.JSONSet(ctx, key, "$", place).Result(); err != nil {
+func (p *PlaceHandle) SetPlace(ctx context.Context, placeGoogleID string, place entitymodel.Place, expiry *time.Duration) error {
+	if _, err := p.redisClient.JSONSet(ctx, placeGoogleID, "$", place).Result(); err != nil {
 		utility.SugarLogger.Error("error during set place, error: %s", err)
 		return err
 	}
 	if expiry == nil {
 		return nil
 	}
-	if err := p.redisClient.Expire(ctx, key, *expiry).Err(); err != nil {
+	if err := p.redisClient.Expire(ctx, placeGoogleID, *expiry).Err(); err != nil {
 		utility.SugarLogger.Error("error during set place expiry, error: %s", err)
 		return err
 	}
 	return nil
 }
 
-func (p *PlaceHandle) DeletePlace(ctx context.Context, key string) error {
-	if err := p.redisClient.Del(ctx, key).Err(); err != nil {
+func (p *PlaceHandle) DeletePlace(ctx context.Context, placeGoogleID string) error {
+	if err := p.redisClient.Del(ctx, placeGoogleID).Err(); err != nil {
 		utility.SugarLogger.Error("error during delete place, error: %s", err)
 		return err
 	}
 	return nil
+}
+
+type PlaceWithTransactionHandler interface {
+	PlaceHandler
+	WithTransaction
+}
+
+func NewPlaceWithTransactionHandler(redisClient *redis.Client) PlaceWithTransactionHandler {
+	return &PlaceWithTransactionHandle{
+		PlaceHandle: PlaceHandle{redisClient: redisClient},
+	}
+}
+
+type PlaceWithTransactionHandle struct {
+	PlaceHandle
+}
+
+func (p *PlaceWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *redis.Tx) error, keys ...string) error {
+	return p.PlaceHandle.redisClient.Watch(ctx, fn, keys...)
 }

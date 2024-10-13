@@ -25,3 +25,7 @@ const (
 	LoginUserPasswordNotMatchError ErrorCode = 3000
 	SessionBlockedError            ErrorCode = 3001
 )
+
+const (
+	PlaceNotExistsError ErrorCode = 4000
+)

@@ -71,16 +71,14 @@ type SessionWithTransactionHandler interface {
 
 func NewSessionWithTransactionHandler(redisClient *redis.Client) SessionWithTransactionHandler {
 	return &SessionWithTransactionHandle{
-		redisClient:   redisClient,
 		SessionHandle: SessionHandle{redisClient: redisClient},
 	}
 }
 
 type SessionWithTransactionHandle struct {
-	redisClient *redis.Client
 	SessionHandle
 }
 
 func (s *SessionWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *redis.Tx) error, keys ...string) error {
-	return s.redisClient.Watch(ctx, fn, keys...)
+	return s.SessionHandle.redisClient.Watch(ctx, fn, keys...)
 }

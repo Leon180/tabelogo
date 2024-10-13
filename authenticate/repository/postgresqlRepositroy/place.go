@@ -62,6 +62,17 @@ func (handle *PlaceHandle) GetPlaceByGoogleID(ctx context.Context, googleID stri
 	return place.ToEntityModel(), nil
 }
 
+func (handle *PlaceHandle) GetPlaceByID(ctx context.Context, placeID string) (entitymodel.Place, error) {
+	var place dbmodel.Place
+	if err := handle.db.WithContext(ctx).
+		Where("id = ?", placeID).
+		Find(&place).Error; err != nil {
+		utility.SugarLogger.Errorln("get place by id error", err)
+		return entitymodel.Place{}, err
+	}
+	return place.ToEntityModel(), nil
+}
+
 func (handle *PlaceHandle) UpdatePlace(ctx context.Context, placeID string, updates map[string]interface{}) error {
 	if err := handle.db.WithContext(ctx).
 		Model(&dbmodel.Place{}).

@@ -15,26 +15,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type RegistUserServiceHandelr interface {
+type RegistUserServiceHandler interface {
 	RegistUser(ctx context.Context, user entitymodel.User) (entitymodel.User, error)
 }
 
-func NewRegistUserServiceHandler(userWithTransactionRepository repository.UserWithTransactionHandler) RegistUserServiceHandelr {
-	return RegistUserServiceHandle{userWithTransactionRepository: userWithTransactionRepository}
+func NewRegistUserServiceHandler(userWithTransactionRepository repository.UserWithTransactionHandler) RegistUserServiceHandler {
+	return &RegistUserServiceHandle{userWithTransactionRepository: userWithTransactionRepository}
 }
 
 type RegistUserServiceHandle struct {
 	userWithTransactionRepository repository.UserWithTransactionHandler
 }
 
-func (s RegistUserServiceHandle) RegistUser(ctx context.Context, user entitymodel.User) (entitymodel.User, error) {
+func (handle *RegistUserServiceHandle) RegistUser(ctx context.Context, user entitymodel.User) (entitymodel.User, error) {
 	var (
 		createUser entitymodel.User
 		err        error
 	)
-	if err = s.userWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+	if err = handle.userWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
 		// check if user already exists
-		existedUser, err := s.userWithTransactionRepository.GetUserByEmail(ctx, user.Email)
+		existedUser, err := handle.userWithTransactionRepository.GetUserByEmail(ctx, user.Email)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func (s RegistUserServiceHandle) RegistUser(ctx context.Context, user entitymode
 				return errors.UserExistsButNotActive
 			}
 		}
-		if err := s.userWithTransactionRepository.CreateUser(ctx, user); err != nil {
+		if err := handle.userWithTransactionRepository.CreateUser(ctx, user); err != nil {
 			return err
 		}
 		createUser = user
@@ -56,7 +56,7 @@ func (s RegistUserServiceHandle) RegistUser(ctx context.Context, user entitymode
 	return createUser, nil
 }
 
-type LoginUserServiceHandelr interface {
+type LoginUserServiceHandler interface {
 	LoginUser(ctx context.Context, user entitymodel.User, request entitymodel.Request) (entitymodel.Session, error)
 }
 
@@ -65,7 +65,7 @@ func NewLoginUserServiceHandler(
 	tokenMaker token.Maker,
 	redisSession redisDB.SessionWithTransactionHandler,
 	config *config.Config,
-) LoginUserServiceHandelr {
+) LoginUserServiceHandler {
 	return &LoginUserServiceHandle{
 		userAndSessionWithTransactionRepository: userAndSessionWithTransactionRepository,
 		tokenMaker:                              tokenMaker,
@@ -81,7 +81,7 @@ type LoginUserServiceHandle struct {
 	config                                  *config.Config
 }
 
-func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitymodel.User, request entitymodel.Request) (entitymodel.Session, error) {
+func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitymodel.User, request entitymodel.Request) (entitymodel.Session, error) {
 	var (
 		existedUser    entitymodel.User
 		err            error
@@ -96,14 +96,14 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 	)
 
 	// get session in redis
-	if err = s.SessionWithTransactionRedis.WithTransaction(ctx, func(tx *redis.Tx) error {
-		if session, err = s.SessionWithTransactionRedis.GetSession(ctx, loginUser.Email); err != nil {
+	if err = handle.SessionWithTransactionRedis.WithTransaction(ctx, func(tx *redis.Tx) error {
+		if session, err = handle.SessionWithTransactionRedis.GetSession(ctx, loginUser.Email); err != nil {
 			return err
 		}
 		// if session not exist or expired, need update
 		if !session.IsExist() || session.IsAccessTokenExpired() {
 			needUpdate = true
-			if err = s.SessionWithTransactionRedis.DeleteSession(ctx, loginUser.Email); err != nil {
+			if err = handle.SessionWithTransactionRedis.DeleteSession(ctx, loginUser.Email); err != nil {
 				return err
 			}
 			return nil
@@ -118,9 +118,9 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 		return session, nil
 	}
 
-	if err = s.userAndSessionWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+	if err = handle.userAndSessionWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
 		// get exist user
-		existedUser, err = s.userAndSessionWithTransactionRepository.GetUserByEmail(ctx, loginUser.Email)
+		existedUser, err = handle.userAndSessionWithTransactionRepository.GetUserByEmail(ctx, loginUser.Email)
 		if err != nil {
 			return err
 		}
@@ -138,17 +138,17 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 		}
 
 		// check session in db
-		existedSession, err = s.userAndSessionWithTransactionRepository.GetSessionByUserID(ctx, session.UserID)
+		existedSession, err = handle.userAndSessionWithTransactionRepository.GetSessionByUserID(ctx, session.UserID)
 		if err != nil {
 			return err
 		}
 
 		// generate access token
-		if accessToken, accessPayload, err = s.tokenMaker.CreateToken(existedUser.Email, s.config.AccessTokenDuration); err != nil {
+		if accessToken, accessPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.AccessTokenDuration); err != nil {
 			return err
 		}
 		// generate refresh token
-		if refreshToken, refreshPayload, err = s.tokenMaker.CreateToken(existedUser.Email, s.config.RefreshTokenDuration); err != nil {
+		if refreshToken, refreshPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.RefreshTokenDuration); err != nil {
 			return err
 		}
 		session = entitymodel.Session{
@@ -167,7 +167,7 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 		// if session not exist, create session
 		if !existedSession.IsExist() {
 			regenSession = true
-			if err = s.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
+			if err = handle.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
 				return err
 			}
 			return nil
@@ -183,10 +183,10 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 		// if session can be updated, update session
 		if (existedSession.IsAccessTokenExpired() && !existedSession.IsRefreshTokenExpired()) ||
 			existedSession.IsAccessTokenExpired() {
-			existedSession.AccessTokenExpiresAt = session.AccessTokenExpiresAt.Add(s.config.RefreshTokenDuration)
+			existedSession.AccessTokenExpiresAt = session.AccessTokenExpiresAt.Add(handle.config.RefreshTokenDuration)
 			existedSession.ClientIP = request.ClientIP
 			existedSession.UserAgent = request.UserAgent
-			if err = s.userAndSessionWithTransactionRepository.UpdateSession(ctx, existedSession.ID, existedSession.GetUpdates()); err != nil {
+			if err = handle.userAndSessionWithTransactionRepository.UpdateSession(ctx, existedSession.ID, existedSession.GetUpdates()); err != nil {
 				return err
 			}
 			return nil
@@ -194,10 +194,10 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 
 		// if session is exist but expired, delete session and create new session
 		regenSession = true
-		if err = s.userAndSessionWithTransactionRepository.DeleteSession(ctx, existedSession.ID); err != nil {
+		if err = handle.userAndSessionWithTransactionRepository.DeleteSession(ctx, existedSession.ID); err != nil {
 			return err
 		}
-		if err = s.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
+		if err = handle.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
 			return err
 		}
 		return nil
@@ -208,14 +208,153 @@ func (s LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser entitym
 	expiry := time.Until(session.AccessTokenExpiresAt)
 	// if exist session, reset exist session in redis
 	if !regenSession {
-		if err = s.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, existedSession, &expiry); err != nil {
+		if err = handle.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, existedSession, &expiry); err != nil {
 			return entitymodel.Session{}, err
 		}
 		return existedSession, nil
 	}
 	// else set session in redis
-	if err = s.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, session, &expiry); err != nil {
+	if err = handle.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, session, &expiry); err != nil {
 		return entitymodel.Session{}, err
 	}
+
 	return session, nil
+}
+
+type CreateFavoriteServiceHandler interface {
+	CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error
+}
+
+func NewCreateFavoriteServiceHandler(
+	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler,
+	redisPlace redisDB.PlaceWithTransactionHandler,
+	config *config.Config,
+) CreateFavoriteServiceHandler {
+	return &CreateFavoriteServiceHandle{
+		userAndPlaceAndFavoriteWithTransactionRepository: userAndPlaceAndFavoriteWithTransactionRepository,
+		redisPlace: redisPlace,
+		config:     config,
+	}
+}
+
+type CreateFavoriteServiceHandle struct {
+	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler
+	redisPlace                                       redisDB.PlaceWithTransactionHandler
+	config                                           *config.Config
+}
+
+func (handle *CreateFavoriteServiceHandle) CreateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
+	var (
+		err   error
+		place entitymodel.Place
+	)
+	// check if place is exist (redis first, then db if not exist in redis)
+	if err = handle.redisPlace.WithTransaction(ctx, func(tx *redis.Tx) error {
+		if place, err = handle.redisPlace.GetPlace(ctx, favorite.PlaceGoogleID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// if place exist in redis, directly create favorite and return
+	if place.IsExist() {
+		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.CreateFavorite(ctx, favorite); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// if place not exist in redis, get place from db and check if place is exist,
+	// if exist, create favorite and set place in redis
+	// if not exist, return error
+	if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+		if place, err = handle.userAndPlaceAndFavoriteWithTransactionRepository.GetPlaceByGoogleID(ctx, favorite.PlaceGoogleID); err != nil {
+			return err
+		}
+		if !place.IsExist() {
+			return errors.PlaceNotExistsError
+		}
+		if err = handle.redisPlace.SetPlace(ctx, place.GoogleID, place, &handle.config.PlaceRedisExpiry); err != nil {
+			return err
+		}
+		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.CreateFavorite(ctx, favorite); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type UpdateFavoriteServiceHandler interface {
+	UpdateFavorite(ctx context.Context, favorite entitymodel.Favorite) error
+}
+
+func NewUpdateFavoriteServiceHandler(
+	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler,
+	redisPlace redisDB.PlaceWithTransactionHandler,
+	config *config.Config,
+) UpdateFavoriteServiceHandler {
+	return &UpdateFavoriteServiceHandle{
+		userAndPlaceAndFavoriteWithTransactionRepository: userAndPlaceAndFavoriteWithTransactionRepository,
+		redisPlace: redisPlace,
+		config:     config,
+	}
+}
+
+type UpdateFavoriteServiceHandle struct {
+	userAndPlaceAndFavoriteWithTransactionRepository repository.UserAndPlaceAndFavoriteWithTransactionHandler
+	redisPlace                                       redisDB.PlaceWithTransactionHandler
+	config                                           *config.Config
+}
+
+func (handle *UpdateFavoriteServiceHandle) UpdateFavorite(ctx context.Context, favorite entitymodel.Favorite) error {
+	var (
+		err   error
+		place entitymodel.Place
+	)
+	// check if place is exist (redis first, then db if not exist in redis)
+	if err = handle.redisPlace.WithTransaction(ctx, func(tx *redis.Tx) error {
+		if place, err = handle.redisPlace.GetPlace(ctx, favorite.PlaceGoogleID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// if place exist in redis, directly update favorite and return (assume place in redis will be remove while remove place from db)
+	if place.IsExist() {
+		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.UpdateFavorite(ctx, favorite); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// if place not exist in redis, get place from db and check if place is exist,
+	// if exist, update favorite and set place in redis
+	// if not exist, return error
+	if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+		if place, err = handle.userAndPlaceAndFavoriteWithTransactionRepository.GetPlaceByGoogleID(ctx, favorite.PlaceGoogleID); err != nil {
+			return err
+		}
+		if !place.IsExist() {
+			return errors.PlaceNotExistsError
+		}
+		if err = handle.redisPlace.SetPlace(ctx, place.GoogleID, place, &handle.config.PlaceRedisExpiry); err != nil {
+			return err
+		}
+		if err = handle.userAndPlaceAndFavoriteWithTransactionRepository.UpdateFavorite(ctx, favorite); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

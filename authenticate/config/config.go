@@ -40,6 +40,7 @@ type Config struct {
 	DBMaxOpen                                  int           `mapstructure:"DB_MAX_OPEN"`
 	DBMaxLifetimeMinute                        int           `mapstructure:"DB_MAX_LIFETIME_MINUTE"`
 	DBDisableForeignKeyConstraintWhenMigrating bool          `mapstructure:"DB_DISABLE_FOREIGN_KEY_CONSTRAINT_WHEN_MIGRATING"`
+	PlaceRedisExpiry                           time.Duration `mapstructure:"PLACE_REDIS_EXPIRY"`
 }
 
 func LoadConfig(config *Config, path string) error {

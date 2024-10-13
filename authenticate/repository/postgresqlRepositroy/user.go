@@ -74,38 +74,54 @@ func (handle *UserHandle) DeleteUser(ctx context.Context, userID string) error {
 
 func NewUserWithTransactionHandler(db *gorm.DB) repository.UserWithTransactionHandler {
 	return &UserWithTransactionHandle{
-		db:         db,
 		UserHandle: UserHandle{db: db},
 	}
 }
 
 type UserWithTransactionHandle struct {
-	db *gorm.DB
 	UserHandle
 }
 
 func (handle *UserWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
-	return handle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return handle.UserHandle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(tx)
 	})
 }
 
 func NewUserAndSessionWithTransactionHandler(db *gorm.DB) repository.UserAndSessionWithTransactionHandler {
 	return &UserAndSessionWithTransactionHandle{
-		db:            db,
 		UserHandle:    UserHandle{db: db},
 		SessionHandle: SessionHandle{db: db},
 	}
 }
 
 type UserAndSessionWithTransactionHandle struct {
-	db *gorm.DB
 	UserHandle
 	SessionHandle
 }
 
 func (handle *UserAndSessionWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
-	return handle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return handle.UserHandle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(tx)
+	})
+}
+
+func NewUserAndPlaceAndFavoriteWithTransactionHandler(db *gorm.DB) repository.UserAndPlaceAndFavoriteWithTransactionHandler {
+	return &UserAndPlaceAndFavoriteWithTransactionHandle{
+		UserHandle:     UserHandle{db: db},
+		PlaceHandle:    PlaceHandle{db: db},
+		FavoriteHandle: FavoriteHandle{db: db},
+	}
+}
+
+type UserAndPlaceAndFavoriteWithTransactionHandle struct {
+	UserHandle
+	PlaceHandle
+	FavoriteHandle
+}
+
+func (handle *UserAndPlaceAndFavoriteWithTransactionHandle) WithTransaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return handle.UserHandle.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(tx)
 	})
 }
