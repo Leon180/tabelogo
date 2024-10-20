@@ -5,9 +5,11 @@ import (
 )
 
 var repositoryHandleSet = wire.NewSet(
-// providePostgresqlRepository,
+	providePlaceRepository,
+	providePlaceWithTransactionRepository,
+	provideUserRepository,
+	provideUserWithTransactionRepository,
+	provideUserAndSessionWithTransactionRepository,
+	provideUserAndPlaceAndFavoriteWithTransactionRepository,
+	provideFavoriteRepository,
 )
-
-// func providePostgresqlRepository(settings config.Config, logger *zap.Logger) repository.DBRepositoryHandle {
-// 	return postgresqlrep.NewPostgresqlRepoHandler(settings, logger)
-// }

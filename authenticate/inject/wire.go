@@ -14,14 +14,17 @@ import (
 
 func InitControllerHandle(
 	db *gorm.DB,
-	config config.Config,
+	config *config.Config,
 	logger *zap.Logger,
 	redisClient *redis.Client,
+	symmetricKey string,
 ) *ControllerHandle {
 	wire.Build(
-		controllerHandleSet,
-		serviceHandleSet,
 		repositoryHandleSet,
+		redisRepositoryHandleSet,
+		tokenMakerHandleSet,
+		serviceHandleSet,
+		controllerHandleSet,
 		newControllerHandle,
 	)
 	return &ControllerHandle{}

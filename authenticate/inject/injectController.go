@@ -5,12 +5,11 @@ import (
 )
 
 var controllerHandleSet = wire.NewSet(
-// provideHealthCheckControllerHandleController,
-// provideTestControllerHandleController,
+	provideRegistUserController,
+	provideLoginUserController,
+	provideRenewAccessTokenController,
+	provideSaveFavoriteController,
+	provideGetUserFavoritesController,
+	provideSavePlaceController,
+	provideGetPlaceController,
 )
-
-// func provideTestControllerHandleController(
-// 	reportService service.ReportServiceHandler,
-// ) controller.TestControllerHandle {
-// 	return controller.NewTestControllerHandle(reportService)
-// }
