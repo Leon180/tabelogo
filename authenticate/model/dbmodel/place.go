@@ -13,7 +13,7 @@ type Place struct {
 	TWDisplayName            string         `gorm:"not null" json:"tw_display_name"`
 	JPDisplayName            string         `json:"jp_display_name"`
 	TWFormattedAddress       string         `json:"tw_formatted_address"`
-	TWWeekdayDescriptions    []string       `json:"tw_weekday_descriptions"`
+	TWWeekdayDescriptions    []string       `gorm:"type:text[]" json:"tw_weekday_descriptions"`
 	AdministrativeAreaLevel1 string         `json:"administrative_area_level_1"`
 	Country                  string         `json:"country"`
 	GoogleMapURI             string         `json:"google_map_uri"`
@@ -22,7 +22,7 @@ type Place struct {
 	Lng                      string         `json:"lng"`
 	PrimaryType              string         `json:"primary_type"`
 	Rating                   string         `json:"rating"`
-	Types                    []string       `json:"types"`
+	Types                    []string       `gorm:"type:text[]" json:"types"`
 	UserRatingCount          int32          `json:"user_rating_count"`
 	WebsiteURI               string         `json:"website_uri"`
 	PlaceVersion             int32          `json:"place_version"`

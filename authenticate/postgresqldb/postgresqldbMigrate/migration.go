@@ -1,9 +1,9 @@
 package postgresqldbMigrate
 
 import (
+	utility "authenticate/utility"
 	"log"
 
-	utility "github.com/TripressoCTS/cts-server-utility"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )

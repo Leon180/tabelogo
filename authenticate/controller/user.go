@@ -18,6 +18,14 @@ func NewRegistUserControllerHandle(registUserServiceHandler service.RegistUserSe
 	return &RegistUserControllerHandle{registUserServiceHandler: registUserServiceHandler}
 }
 
+// @Summary ユーザー登録
+// @Description ユーザー登録
+// @Tags user
+// @Accept json
+// @Param param body requestmodel.RegistUserRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/user/registUser [post]
 func (handle *RegistUserControllerHandle) RegistUser(c *gin.Context) {
 	var req requestmodel.RegistUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,6 +52,14 @@ func NewLoginUserControllerHandle(loginUserServiceHandler service.LoginUserServi
 	return &LoginUserControllerHandle{loginUserServiceHandler: loginUserServiceHandler}
 }
 
+// @Summary ログイン
+// @Description ログイン
+// @Tags user
+// @Accept json
+// @Param param body requestmodel.LoginUserRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/user/loginUser [post]
 func (handle *LoginUserControllerHandle) LoginUser(c *gin.Context) {
 	var req requestmodel.LoginUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -75,6 +91,14 @@ func NewRenewAccessTokenControllerHandle(renewAccessTokenServiceHandler service.
 	return &RenewAccessTokenControllerHandle{renewAccessTokenServiceHandler: renewAccessTokenServiceHandler}
 }
 
+// @Summary アクセストークン更新
+// @Description アクセストークン更新
+// @Tags user
+// @Accept json
+// @Param param body requestmodel.RenewAccessTokenRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/user/renewAccessToken [post]
 func (handle *RenewAccessTokenControllerHandle) RenewAccessToken(c *gin.Context) {
 	var req requestmodel.RenewAccessTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -97,6 +121,14 @@ func NewSaveFavoriteControllerHandle(saveFavoriteServiceHandler service.SaveFavo
 	return &SaveFavoriteControllerHandle{saveFavoriteServiceHandler: saveFavoriteServiceHandler}
 }
 
+// @Summary お気に入り保存
+// @Description お気に入り保存
+// @Tags user
+// @Accept json
+// @Param param body requestmodel.SaveFavoriteRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/user/saveFavorite [post]
 func (handle *SaveFavoriteControllerHandle) SaveFavorite(c *gin.Context) {
 	var req requestmodel.SaveFavoriteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -118,6 +150,14 @@ func NewGetUserFavoritesControllerHandle(getUserFavoritesServiceHandler service.
 	return &GetUserFavoritesControllerHandle{getUserFavoritesServiceHandler: getUserFavoritesServiceHandler}
 }
 
+// @Summary お気に入り取得
+// @Description お気に入り取得
+// @Tags user
+// @Accept json
+// @Param param query requestmodel.GetUserFavoritesRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/user/getUserFavorites [get]
 func (handle *GetUserFavoritesControllerHandle) GetUserFavorites(c *gin.Context) {
 	var req requestmodel.GetUserFavoritesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {

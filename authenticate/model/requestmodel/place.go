@@ -54,3 +54,4 @@ func (req SavePlaceRequest) ToEntity() entitymodel.Place {
 type GetPlaceRequest struct {
 	GoogleID string `json:"google_id"`
 }
+

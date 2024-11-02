@@ -17,6 +17,14 @@ func NewSavePlaceControllerHandle(savePlaceServiceHandler service.SavePlaceServi
 	return &SavePlaceControllerHandle{savePlaceServiceHandler: savePlaceServiceHandler}
 }
 
+// @Summary 場所保存
+// @Description 場所保存
+// @Tags place
+// @Accept json
+// @Param param body requestmodel.SavePlaceRequest true "json"
+// @Produce  json
+// @Success 200 "success"
+// @Router /api/v1/place/savePlace [post]
 func (handle *SavePlaceControllerHandle) SavePlace(c *gin.Context) {
 	var req requestmodel.SavePlaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -39,6 +47,13 @@ func NewGetPlaceControllerHandle(getPlaceServiceHandler service.GetPlaceServiceH
 	return &GetPlaceControllerHandle{getPlaceServiceHandler: getPlaceServiceHandler}
 }
 
+// @Summary 場所取得
+// @Description 場所取得
+// @Tags place
+// @Accept json
+// @Param param query requestmodel.GetPlaceRequest true "json"
+// @Produce  json
+// @Success 200 "success"
 func (handle *GetPlaceControllerHandle) GetPlace(c *gin.Context) {
 	var req requestmodel.GetPlaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

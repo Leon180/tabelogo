@@ -2,10 +2,10 @@ package postgresqldb
 
 import (
 	"authenticate/config"
+	"authenticate/utility"
 	"database/sql"
 	"time"
 
-	utility "github.com/TripressoCTS/cts-server-utility"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

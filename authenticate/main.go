@@ -12,10 +12,13 @@ import (
 	"context"
 	"io"
 	"log"
+	"net/http"
 	"os/signal"
 	"slices"
 	"syscall"
 	"time"
+
+	_ "authenticate/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
@@ -23,9 +26,25 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
+// @title           Authentication API
+// @version         1.0
+// @description     Authentication service API documentation
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  your-email@domain.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:80
+// @BasePath  /api/v1
 func main() {
 	var (
 		cfg              config.Config
@@ -61,11 +80,7 @@ func main() {
 	redisClient = redisDB.ConnectToRedis(context.Background(), cfg.RedisConnectHost)
 
 	// inject
-	controllerHandle = inject.InitControllerHandle(db, cfg, utility.Logger, redisClient)
-
-	// graceful shutdown setup
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
+	controllerHandle = inject.InitControllerHandle(db, &cfg, utility.Logger, redisClient, cfg.TokenSymmetricKey)
 
 	engine = gin.Default()
 	engine.SetTrustedProxies(nil)
@@ -78,13 +93,29 @@ func main() {
 		LogRequest(),
 	)
 	setRoute(engine, controllerHandle)
-	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
-		utility.SugarLogger.Fatal(err)
+	server := &http.Server{
+		Addr:    ":" + cfg.ConnWebPort,
+		Handler: engine,
 	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	// graceful shutdown setup
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// graceful shutdown
 	<-ctx.Done()
-	stop()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Graceful shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		utility.SugarLogger.Errorf("Error during server shutdown: %v", err)
+	}
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Shutting down gracefully")
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Server shutdown")
 }
@@ -110,9 +141,23 @@ func LogRequest() gin.HandlerFunc {
 }
 
 func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
-	// defaultRouter := engine.Group(engine.BasePath())
-	// baseRouter := defaultRouter.Group("/tabelogo-spider/api/v1")
-	// getTabelogInfoHandle := controller.NewGetTabelogInfoHandle(service.NewGetTabelogInfoHandler(), service.NewGetTabelogPhotoHandler())
-	// baseRouter.GET("/getTabelogInfo", getTabelogInfoHandle.GetTabelogInfo)
-	// baseRouter.GET("/getTabelogPhoto", getTabelogInfoHandle.GetTabelogPhoto)
+	// Swagger docs
+	// Use this URL config for swagger
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+	defaultRouter := engine.Group(engine.BasePath())
+	baseRouter := defaultRouter.Group("/authenticate/api/v1")
+	placeRouter := baseRouter.Group("/place")
+	{
+		placeRouter.POST("/savePlace", controllerHandle.SavePlaceController.SavePlace)
+		placeRouter.GET("/getPlace", controllerHandle.GetPlaceController.GetPlace)
+	}
+	userRouter := baseRouter.Group("/user")
+	{
+		userRouter.POST("/registUser", controllerHandle.RegistUserController.RegistUser)
+		userRouter.POST("/loginUser", controllerHandle.LoginUserController.LoginUser)
+		userRouter.POST("/renewAccessToken", controllerHandle.RenewAccessTokenController.RenewAccessToken)
+		userRouter.POST("/saveFavorite", controllerHandle.SaveFavoriteController.SaveFavorite)
+		userRouter.GET("/getUserFavorites", controllerHandle.GetUserFavoritesController.GetUserFavorites)
+	}
 }

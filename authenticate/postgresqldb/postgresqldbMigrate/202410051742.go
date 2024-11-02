@@ -3,7 +3,8 @@ package postgresqldbMigrate
 import (
 	"authenticate/model/dbmodel"
 
-	utility "github.com/TripressoCTS/cts-server-utility"
+	utility "authenticate/utility"
+
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
