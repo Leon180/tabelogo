@@ -1,0 +1,109 @@
+basePath: /google-map-search
+definitions:
+  responsemodel.CommonResponse:
+    properties:
+      result: {}
+    type: object
+host: localhost:80
+info:
+  contact:
+    email: your-email@domain.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Google Map service API documentation
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Google Map API
+  version: "1.0"
+paths:
+  /advanceSearch:
+    get:
+      consumes:
+      - application/json
+      description: 詳細検索
+      parameters:
+      - description: テキストクエリ
+        in: query
+        name: text_query
+        type: string
+      - description: 低緯度
+        in: query
+        name: low_latitude
+        type: number
+      - description: 低経度
+        in: query
+        name: low_longitude
+        type: number
+      - description: 高緯度
+        in: query
+        name: high_latitude
+        type: number
+      - description: 高経度
+        in: query
+        name: high_longitude
+        type: number
+      - description: 最大取得件数
+        in: query
+        name: max_result_count
+        type: integer
+      - description: 最低評価
+        in: query
+        name: min_rating
+        type: integer
+      - description: 現在開いているか
+        in: query
+        name: open_now
+        type: boolean
+      - description: ランク優先度
+        in: query
+        name: rank_preference
+        type: string
+      - description: 言語
+        in: query
+        name: language_code
+        type: string
+      - description: APIマスク
+        in: query
+        name: api_mask
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.CommonResponse'
+      summary: 詳細検索
+      tags:
+      - google-map-search
+  /quickSearch:
+    get:
+      consumes:
+      - application/json
+      description: クイック検索
+      parameters:
+      - description: キーワード
+        in: query
+        name: place_id
+        type: string
+      - description: APIマスク
+        in: query
+        name: api_mask
+        type: string
+      - description: 言語
+        in: query
+        name: language_code
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.CommonResponse'
+      summary: クイック検索
+      tags:
+      - google-map-search
+swagger: "2.0"

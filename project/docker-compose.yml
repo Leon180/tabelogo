@@ -19,27 +19,36 @@ services:
   #     mode: replicated
   #     replicas: 1
 
-  # authenticate-service:
-  #   build:
-  #     context: ./../authenticate
-  #     dockerfile: authenticate.dockerfile
-  #   restart: always
-  #   links: 
-  #     - logger-service
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
+  authenticate-service:
+    build:
+      context: ./../authenticate
+      dockerfile: authenticate.dockerfile
+    restart: always
+    # links: 
+    #   - logger-service
+    deploy:
+      mode: replicated
+      replicas: 1
 
-  # google-map-service:
-  #   build:
-  #     context: ./../google-map
-  #     dockerfile: google-map.dockerfile
-  #   restart: always
-  #   links:
-  #     - authenticate-service
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
+  tabelog-spider-service:
+    build:
+      context: ./../tabelog-spider-service
+      dockerfile: tabelog-spider-service.dockerfile
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  google-map-service:
+    build:
+      context: ./../google-map
+      dockerfile: google-map.dockerfile
+    restart: always
+    # links:
+    #   - authenticate-service
+    deploy:
+      mode: replicated
+      replicas: 1
   
   postgres:
     image: 'postgres:latest'
@@ -60,15 +69,6 @@ services:
     image: 'redis/redis-stack-server:latest'
     ports:
       - "6379:6379"
-
-  # tabelog-spider-service:
-  #   build:
-  #     context: ./../tabelog-spider-service
-  #     dockerfile: tabelog-spider-service.dockerfile
-  #   restart: always
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
   
   # logger-service:
   #   build:

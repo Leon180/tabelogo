@@ -12,11 +12,11 @@ type TabelogInfo struct {
 	Type        []string `json:"type"`
 }
 
-type TabelogInfoSlice []TabelogInfo
+type TabelogInfoResponse struct {
+	TabelogInfos []TabelogInfo `json:"tabelog_infos"`
+}
 
 type TabelogPhoto struct {
 	Link  enum.URL `json:"link"`
 	Photo []string `json:"photo"`
 }
-
-type TabelogPhotoSlice []TabelogPhoto

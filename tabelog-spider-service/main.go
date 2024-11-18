@@ -6,19 +6,36 @@ import (
 	"log"
 	"slices"
 	"tabelog-spider/config"
-	"tabelog-spider/controller"
+	"tabelog-spider/inject"
 	"tabelog-spider/model/enum"
-	"tabelog-spider/service"
 	"tabelog-spider/utility"
 	"time"
+
+	_ "tabelog-spider/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/location"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Tabelog Spider API
+// @version         1.0
+// @description     Tabelog Spider service API documentation
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  your-email@domain.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:80
+// @BasePath /tabelogo-spider
 func main() {
 	var (
 		cfg    config.Config
@@ -41,7 +58,9 @@ func main() {
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
 	)
-	setRoute(engine)
+	// inject
+	controllerHandle := inject.InitControllerHandle(utility.Logger)
+	setRoute(engine, controllerHandle)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)
 	}
@@ -67,10 +86,13 @@ func LogRequest() gin.HandlerFunc {
 	}
 }
 
-func setRoute(engine *gin.Engine) {
+func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
+	// Swagger docs
+	// Use this URL config for swagger
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	defaultRouter := engine.Group(engine.BasePath())
-	baseRouter := defaultRouter.Group("/tabelogo-spider/api/v1")
-	getTabelogInfoHandle := controller.NewGetTabelogInfoHandle(service.NewGetTabelogInfoHandler(), service.NewGetTabelogPhotoHandler())
-	baseRouter.GET("/getTabelogInfo", getTabelogInfoHandle.GetTabelogInfo)
-	baseRouter.GET("/getTabelogPhoto", getTabelogInfoHandle.GetTabelogPhoto)
+	baseRouter := defaultRouter.Group("/tabelogo-spider")
+	baseRouter.GET("/getTabelogInfo", controllerHandle.GetTabelogInfoController.GetTabelogInfo)
+	baseRouter.GET("/getTabelogPhoto", controllerHandle.GetTabelogInfoController.GetTabelogPhoto)
 }

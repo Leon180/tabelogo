@@ -8,8 +8,8 @@ import (
 
 type GetTabelogInfo entitymodel.TabelogElementInfoSlice
 
-func (g GetTabelogInfo) ToResponse() responsemodel.TabelogInfoSlice {
-	resp := responsemodel.TabelogInfoSlice{}
+func (g GetTabelogInfo) ToResponse() responsemodel.TabelogInfoResponse {
+	slice := []responsemodel.TabelogInfo{}
 	for _, v := range g {
 		tmp := responsemodel.TabelogInfo{
 			Link: v.Link,
@@ -33,9 +33,11 @@ func (g GetTabelogInfo) ToResponse() responsemodel.TabelogInfoSlice {
 				tmp.Type = e.Collection
 			}
 		}
-		resp = append(resp, tmp)
+		slice = append(slice, tmp)
 	}
-	return resp
+	return responsemodel.TabelogInfoResponse{
+		TabelogInfos: slice,
+	}
 }
 
 type GetTabelogPhoto entitymodel.TabelogElementInfo

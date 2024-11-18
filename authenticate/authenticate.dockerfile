@@ -1,5 +1,6 @@
 FROM alpine:latest
 RUN mkdir /app
+RUN mkdir /app/config
 COPY authenticateApp /app
-COPY ./cmd/api/app.env /
+COPY ./config/config.env /app/config
 CMD [ "/app/authenticateApp" ]

@@ -1,0 +1,107 @@
+basePath: /tabelogo-spider
+definitions:
+  enum.URL:
+    enum:
+    - https://tabelog.com/
+    type: string
+    x-enum-varnames:
+    - TabelogBaseURL
+  responsemodel.TabelogInfo:
+    properties:
+      bookmarks:
+        type: string
+      link:
+        $ref: '#/definitions/enum.URL'
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: string
+      ratingCount:
+        type: string
+      type:
+        items:
+          type: string
+        type: array
+    type: object
+  responsemodel.TabelogInfoResponse:
+    properties:
+      tabelog_infos:
+        items:
+          $ref: '#/definitions/responsemodel.TabelogInfo'
+        type: array
+    type: object
+  responsemodel.TabelogPhoto:
+    properties:
+      link:
+        $ref: '#/definitions/enum.URL'
+      photo:
+        items:
+          type: string
+        type: array
+    type: object
+host: localhost:80
+info:
+  contact:
+    email: your-email@domain.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Tabelog Spider service API documentation
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Tabelog Spider API
+  version: "1.0"
+paths:
+  /getTabelogInfo:
+    get:
+      consumes:
+      - application/json
+      description: タブログ情報取得
+      parameters:
+      - description: エリア
+        in: query
+        name: area
+        type: string
+      - description: 店名
+        in: query
+        name: place_name
+        type: string
+      - description: 最大取得件数
+        in: query
+        name: max_result_amount
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.TabelogInfoResponse'
+      summary: タブログ情報取得
+      tags:
+      - tabelogo-spider
+  /getTabelogPhoto:
+    get:
+      consumes:
+      - application/json
+      description: タブログ写真取得
+      parameters:
+      - description: リンク
+        in: query
+        name: link
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.TabelogPhoto'
+      summary: タブログ写真取得
+      tags:
+      - tabelogo-spider
+swagger: "2.0"

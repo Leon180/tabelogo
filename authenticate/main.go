@@ -44,7 +44,7 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      localhost:80
-// @BasePath  /api/v1/authenticate
+// @BasePath /authenticate
 func main() {
 	var (
 		cfg              config.Config
@@ -146,7 +146,7 @@ func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	defaultRouter := engine.Group(engine.BasePath())
-	baseRouter := defaultRouter.Group("/api/v1/authenticate")
+	baseRouter := defaultRouter.Group("/authenticate")
 	placeRouter := baseRouter.Group("/place")
 	{
 		placeRouter.POST("/savePlace", controllerHandle.SavePlaceController.SavePlace)

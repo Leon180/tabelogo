@@ -3,22 +3,39 @@ package main
 import (
 	"bytes"
 	"google-map/config"
-	"google-map/controller"
+	"google-map/inject"
 	"google-map/model/enum"
-	"google-map/service"
 	"google-map/utility"
 	"io"
 	"log"
 	"slices"
 	"time"
 
+	_ "google-map/docs"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/location"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Google Map API
+// @version         1.0
+// @description     Google Map service API documentation
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  your-email@domain.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:80
+// @BasePath /google-map-search
 func main() {
 	var (
 		cfg    config.Config
@@ -41,7 +58,9 @@ func main() {
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
 	)
-	setRoute(engine, cfg)
+	// inject
+	controllerHandle := inject.InitControllerHandle(cfg, utility.Logger)
+	setRoute(engine, controllerHandle)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)
 	}
@@ -67,10 +86,13 @@ func LogRequest() gin.HandlerFunc {
 	}
 }
 
-func setRoute(engine *gin.Engine, config config.Config) {
+func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
+	// Swagger docs
+	// Use this URL config for swagger
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	defaultRouter := engine.Group(engine.BasePath())
-	baseRouter := defaultRouter.Group("/tabelogo-google-search/api/v1")
-	googlePlaceSearchHandle := controller.NewGooglePlaceSearchHandle(service.NewGooglePlaceSearchHandler(), config)
-	baseRouter.GET("/quickSearch", googlePlaceSearchHandle.QuickSearch)
-	baseRouter.GET("/advanceSearch", googlePlaceSearchHandle.AdvanceSearch)
+	baseRouter := defaultRouter.Group("/google-map-search")
+	baseRouter.GET("/quickSearch", controllerHandle.GooglePlaceSearchController.QuickSearch)
+	baseRouter.GET("/advanceSearch", controllerHandle.GooglePlaceSearchController.AdvanceSearch)
 }

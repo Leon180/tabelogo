@@ -1,0 +1,162 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Tabelog Spider service API documentation",
+        "title": "Tabelog Spider API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "your-email@domain.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:80",
+    "basePath": "/tabelogo-spider",
+    "paths": {
+        "/getTabelogInfo": {
+            "get": {
+                "description": "タブログ情報取得",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tabelogo-spider"
+                ],
+                "summary": "タブログ情報取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エリア",
+                        "name": "area",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "店名",
+                        "name": "place_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "最大取得件数",
+                        "name": "max_result_amount",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responsemodel.TabelogInfoResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/getTabelogPhoto": {
+            "get": {
+                "description": "タブログ写真取得",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tabelogo-spider"
+                ],
+                "summary": "タブログ写真取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "リンク",
+                        "name": "link",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responsemodel.TabelogPhoto"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "enum.URL": {
+            "type": "string",
+            "enum": [
+                "https://tabelog.com/"
+            ],
+            "x-enum-varnames": [
+                "TabelogBaseURL"
+            ]
+        },
+        "responsemodel.TabelogInfo": {
+            "type": "object",
+            "properties": {
+                "bookmarks": {
+                    "type": "string"
+                },
+                "link": {
+                    "$ref": "#/definitions/enum.URL"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "string"
+                },
+                "ratingCount": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "responsemodel.TabelogInfoResponse": {
+            "type": "object",
+            "properties": {
+                "tabelog_infos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/responsemodel.TabelogInfo"
+                    }
+                }
+            }
+        },
+        "responsemodel.TabelogPhoto": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "$ref": "#/definitions/enum.URL"
+                },
+                "photo": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

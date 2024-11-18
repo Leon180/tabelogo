@@ -32,7 +32,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(
 	error,
 ) {
 	// Get Tabelog Link List in the restaurant list page
-	linkList, err := getTabelogLinkList(ctx, entitymodel.GetTabelogLinkListParam{
+	linkList, err := getTabelogLinkList(entitymodel.GetTabelogLinkListParam{
 		URL: enum.TabelogBaseURL.AddSubDirectory(param.Area).AddSubDirectory(enum.TabelogSubDirectoryRstLst.ToString()).AddParams(map[enum.Param]string{
 			enum.TabelogParamVS: "1",
 			enum.TabelogParamSK: param.PlaceName,
@@ -53,7 +53,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(
 		go func(i int, link enum.URL) {
 			defer wg.Done()
 			// get restaurant base info
-			elements, err := getElementsByContainerCollector(ctx, entitymodel.GetTabelogContentParam{
+			elements, err := getElementsByContainerCollector(entitymodel.GetTabelogContentParam{
 				URL: link,
 				ContainerCollector: entitymodel.ContainerCollector{
 					ContainerName: enum.ContainerSelectorTabelogRestaurantInfo,
@@ -74,7 +74,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(
 				ElementCollectorSlice: elements,
 			}
 			// get restaurant type
-			elements, err = getElementsByTwoLevelContainerCollector(ctx, entitymodel.GetTabelogTwoLevelContentParam{
+			elements, err = getElementsByTwoLevelContainerCollector(entitymodel.GetTabelogTwoLevelContentParam{
 				URL: link,
 				TwoLevelContainerCollector: entitymodel.TwoLevelContainerCollector{
 					ContainerName: enum.ContainerSelectorTabelogRestaurantType,
@@ -101,7 +101,6 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(
 }
 
 func getTabelogLinkList(
-	ctx context.Context,
 	param entitymodel.GetTabelogLinkListParam,
 ) ([]enum.URL, error) {
 	links := []string{}
@@ -130,7 +129,6 @@ func getTabelogLinkList(
 }
 
 func getElementsByContainerCollector(
-	ctx context.Context,
 	param entitymodel.GetTabelogContentParam,
 ) (
 	entitymodel.ElementCollectorSlice,
@@ -156,7 +154,6 @@ func getElementsByContainerCollector(
 }
 
 func getElementsByTwoLevelContainerCollector(
-	ctx context.Context,
 	param entitymodel.GetTabelogTwoLevelContentParam,
 ) (
 	entitymodel.ElementCollectorSlice,
@@ -201,7 +198,7 @@ func (handle GetTabelogPhotoHandle) GetTabelogPhoto(
 	entitymodel.TabelogElementInfo,
 	error,
 ) {
-	elements, err := getTabelogPhoto(ctx, entitymodel.GetTabelogTwoLevelContentParam{
+	elements, err := getTabelogPhoto(entitymodel.GetTabelogTwoLevelContentParam{
 		URL: link.AddSubDirectory(enum.TabelogSubDirectoryRstPhotoLst.ToString()),
 		TwoLevelContainerCollector: entitymodel.TwoLevelContainerCollector{
 			ContainerName: enum.ContainerSelectorTabelogRestaurantPhotoList,
@@ -223,7 +220,6 @@ func (handle GetTabelogPhotoHandle) GetTabelogPhoto(
 }
 
 func getTabelogPhoto(
-	ctx context.Context,
 	param entitymodel.GetTabelogTwoLevelContentParam,
 ) (
 	entitymodel.ElementCollectorSlice,

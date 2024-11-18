@@ -26,6 +26,16 @@ func NewGetTabelogInfoHandle(
 	}
 }
 
+// @Summary タブログ情報取得
+// @Description タブログ情報取得
+// @Tags tabelogo-spider
+// @Accept json
+// @Param area query string false "エリア"
+// @Param place_name query string false "店名"
+// @Param max_result_amount query int false "最大取得件数"
+// @Produce  json
+// @Success 200 {object} responsemodel.TabelogInfoResponse
+// @Router /getTabelogInfo [get]
 func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	var (
 		req requestmodel.GetTabelogInfoRequest
@@ -33,6 +43,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	)
 	if err = c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
+		return
 	}
 	tablogoInfo, err := handle.getTabelogInfoService.GetTabelogInfo(c, entitymodel.GetTabelogInfoParam{
 		Area:          req.Area,
@@ -41,10 +52,19 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	})
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
+		return
 	}
 	utility.CommonResponse(c, convert.GetTabelogInfo(tablogoInfo).ToResponse())
 }
 
+// @Summary タブログ写真取得
+// @Description タブログ写真取得
+// @Tags tabelogo-spider
+// @Accept json
+// @Param link query string true "リンク"
+// @Produce  json
+// @Success 200 {object} responsemodel.TabelogPhoto
+// @Router /getTabelogPhoto [get]
 func (handle *GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
 	var (
 		req requestmodel.GetTabelogPhotoRequest
@@ -52,10 +72,12 @@ func (handle *GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
 	)
 	if err = c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
+		return
 	}
 	tablogoPhoto, err := handle.getTabelogPhotoService.GetTabelogPhoto(c, req.Link)
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
+		return
 	}
 	utility.CommonResponse(c, convert.GetTabelogPhoto(tablogoPhoto).ToResponse())
 }
