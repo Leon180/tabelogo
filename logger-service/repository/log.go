@@ -20,14 +20,14 @@ type CreateLogHandler interface {
 }
 
 func NewCreateLogRepository(db *mongo.Client) CreateLogHandler {
-	return CreateLogHandle{db: db}
+	return &CreateLogHandle{db: db}
 }
 
 type CreateLogHandle struct {
 	db *mongo.Client
 }
 
-func (handle CreateLogHandle) CreateLog(ctx context.Context, logEntry entitymodel.LogEntry) error {
+func (handle *CreateLogHandle) CreateLog(ctx context.Context, logEntry entitymodel.LogEntry) error {
 	_, err := handle.db.Database("logs").
 		Collection("logs").
 		InsertOne(ctx, db.LogEntryEntity(logEntry).ToDBModel())
@@ -48,14 +48,14 @@ type ReadLogHandler interface {
 }
 
 func NewReadLogRepository(db *mongo.Client) ReadLogHandler {
-	return ReadLogHandle{db: db}
+	return &ReadLogHandle{db: db}
 }
 
 type ReadLogHandle struct {
 	db *mongo.Client
 }
 
-func (handle ReadLogHandle) ReadLogByID(ctx context.Context, id string) (entitymodel.LogEntry, error) {
+func (handle *ReadLogHandle) ReadLogByID(ctx context.Context, id string) (entitymodel.LogEntry, error) {
 	docID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		utility.SugarLogger.Errorln("error converting string to objectID", err)
@@ -74,7 +74,7 @@ func (handle ReadLogHandle) ReadLogByID(ctx context.Context, id string) (entitym
 	return logEntry.ToEntity(), nil
 }
 
-func (handle ReadLogHandle) ReadLogByIDs(ctx context.Context, ids []string) (entitymodel.LogEntrySlice, error) {
+func (handle *ReadLogHandle) ReadLogByIDs(ctx context.Context, ids []string) (entitymodel.LogEntrySlice, error) {
 	docIDs := make([]primitive.ObjectID, len(ids))
 	for i, id := range ids {
 		docID, err := primitive.ObjectIDFromHex(id)
@@ -105,7 +105,7 @@ func (handle ReadLogHandle) ReadLogByIDs(ctx context.Context, ids []string) (ent
 	return logEntries.ToEntitySlice(), nil
 }
 
-func (handle ReadLogHandle) ReadAllLogs(ctx context.Context) (entitymodel.LogEntrySlice, error) {
+func (handle *ReadLogHandle) ReadAllLogs(ctx context.Context) (entitymodel.LogEntrySlice, error) {
 	opts := options.Find()
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := handle.db.Database("logs").
@@ -125,7 +125,7 @@ func (handle ReadLogHandle) ReadAllLogs(ctx context.Context) (entitymodel.LogEnt
 	return logEntries.ToEntitySlice(), nil
 }
 
-func (handle ReadLogHandle) ReadLogsByService(ctx context.Context, service enum.Service) (entitymodel.LogEntrySlice, error) {
+func (handle *ReadLogHandle) ReadLogsByService(ctx context.Context, service enum.Service) (entitymodel.LogEntrySlice, error) {
 	opts := options.Find()
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := handle.db.Database("logs").
@@ -145,7 +145,7 @@ func (handle ReadLogHandle) ReadLogsByService(ctx context.Context, service enum.
 	return logEntries.ToEntitySlice(), nil
 }
 
-func (handle ReadLogHandle) ReadLogsByServiceAndName(ctx context.Context, service enum.Service, name string) (entitymodel.LogEntrySlice, error) {
+func (handle *ReadLogHandle) ReadLogsByServiceAndName(ctx context.Context, service enum.Service, name string) (entitymodel.LogEntrySlice, error) {
 	opts := options.Find()
 	opts.SetSort(bson.D{{Key: "created_at", Value: -1}})
 	cursor, err := handle.db.Database("logs").
@@ -165,7 +165,7 @@ func (handle ReadLogHandle) ReadLogsByServiceAndName(ctx context.Context, servic
 	return logEntries.ToEntitySlice(), nil
 }
 
-func (handle ReadLogHandle) ReadLogsSearch(ctx context.Context, service enum.Service, filter string) (entitymodel.LogEntrySlice, error) {
+func (handle *ReadLogHandle) ReadLogsSearch(ctx context.Context, service enum.Service, filter string) (entitymodel.LogEntrySlice, error) {
 	entity, err := handle.ReadLogsByService(ctx, service)
 	if err != nil {
 		return entitymodel.LogEntrySlice{}, err
@@ -193,14 +193,14 @@ type UpdateLogHandler interface {
 }
 
 func NewUpdateLogRepository(db *mongo.Client) UpdateLogHandler {
-	return UpdateLogHandle{db: db}
+	return &UpdateLogHandle{db: db}
 }
 
 type UpdateLogHandle struct {
 	db *mongo.Client
 }
 
-func (handle UpdateLogHandle) UpdateLog(ctx context.Context, logEntry entitymodel.LogEntry) error {
+func (handle *UpdateLogHandle) UpdateLog(ctx context.Context, logEntry entitymodel.LogEntry) error {
 	docID, err := primitive.ObjectIDFromHex(logEntry.ID)
 	if err != nil {
 		utility.SugarLogger.Errorln("error converting string to objectID", err)
@@ -228,14 +228,14 @@ type DeleteLogHandler interface {
 }
 
 func NewDeleteLogRepository(db *mongo.Client) DeleteLogHandler {
-	return DeleteLogHandle{db: db}
+	return &DeleteLogHandle{db: db}
 }
 
 type DeleteLogHandle struct {
 	db *mongo.Client
 }
 
-func (handle DeleteLogHandle) DeleteLogByID(ctx context.Context, id string) error {
+func (handle *DeleteLogHandle) DeleteLogByID(ctx context.Context, id string) error {
 	docID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		utility.SugarLogger.Errorln("error converting string to objectID", err)

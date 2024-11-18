@@ -35,13 +35,9 @@ type LoginUserRequest struct {
 }
 
 func (req *LoginUserRequest) ToEntity() (entitymodel.User, error) {
-	hashedPassword, err := utility.HashedPassword(req.Password)
-	if err != nil {
-		return entitymodel.User{}, err
-	}
 	return entitymodel.User{
-		Email:          req.Email,
-		HashedPassword: hashedPassword,
+		Email:    req.Email,
+		Password: req.Password,
 	}, nil
 }
 
@@ -67,10 +63,10 @@ func (req *SaveFavoriteRequest) ToEntity() entitymodel.Favorite {
 }
 
 type GetUserFavoritesRequest struct {
-	UserID                   string  `json:"user_id" binding:"required"`
-	Country                  *string `json:"country"`
-	AdministrativeAreaLevel1 *string `json:"administrative_area_level_1"`
-	OrderBy                  *int    `json:"order_by"`
+	UserID                   string  `form:"user_id" binding:"required"`
+	Country                  *string `form:"country"`
+	AdministrativeAreaLevel1 *string `form:"administrative_area_level_1"`
+	OrderBy                  *int    `form:"order_by"`
 }
 
 func (req *GetUserFavoritesRequest) ToEntity() entitymodel.GetUserFavoritesRequest {

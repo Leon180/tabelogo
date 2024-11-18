@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"go.uber.org/zap/zapcore"
 )
@@ -31,6 +32,10 @@ type Config struct {
 }
 
 func LoadConfig(config *Config, path string) error {
+	if config == nil {
+		log.Error().Msg("config is nil")
+		return nil
+	}
 	viper.SetConfigType("env")
 	viper.SetConfigName("config")
 	viper.AddConfigPath(path)

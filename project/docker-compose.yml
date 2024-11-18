@@ -2,47 +2,47 @@ version: '3'
 
 services:
 
-  broker-service:
-    build:
-      context: ./../broker
-      dockerfile: broker.dockerfile
-    restart: always
-    ports:
-      - "8080:8080"
-    links:
-      - authenticate-service
-      - google-map-service
-      - tabelog-spider-service
-      - logger-service
-      - mail-service
-    deploy:
-      mode: replicated
-      replicas: 1
+  # broker-service:
+  #   build:
+  #     context: ./../broker
+  #     dockerfile: broker.dockerfile
+  #   restart: always
+  #   ports:
+  #     - "8080:8080"
+  #   links:
+  #     - authenticate-service
+  #     - google-map-service
+  #     - tabelog-spider-service
+  #     - logger-service
+  #     - mail-service
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
 
-  authenticate-service:
-    build:
-      context: ./../authenticate
-      dockerfile: authenticate.dockerfile
-    restart: always
-    links: 
-      - logger-service
-    deploy:
-      mode: replicated
-      replicas: 1
+  # authenticate-service:
+  #   build:
+  #     context: ./../authenticate
+  #     dockerfile: authenticate.dockerfile
+  #   restart: always
+  #   links: 
+  #     - logger-service
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
 
-  google-map-service:
-    build:
-      context: ./../google-map
-      dockerfile: google-map.dockerfile
-    restart: always
-    links:
-      - authenticate-service
-    deploy:
-      mode: replicated
-      replicas: 1
+  # google-map-service:
+  #   build:
+  #     context: ./../google-map
+  #     dockerfile: google-map.dockerfile
+  #   restart: always
+  #   links:
+  #     - authenticate-service
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
   
   postgres:
-    image: 'postgres:14.0'
+    image: 'postgres:latest'
     ports:
       - "5432:5432"
     restart: always
@@ -50,86 +50,91 @@ services:
       mode: replicated
       replicas: 1
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: leon180
+      POSTGRES_PASSWORD: k29294046
       POSTGRES_DB: tabelogo
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
-  tabelog-spider-service:
-    build:
-      context: ./../tabelog-spider-service
-      dockerfile: tabelog-spider-service.dockerfile
-    restart: always
-    deploy:
-      mode: replicated
-      replicas: 1
-  
-  logger-service:
-    build:
-      context: ./../logger-service
-      dockerfile: logger-service.dockerfile
-    restart: always
-    deploy:
-      mode: replicated
-      replicas: 1
-    links:
-      - mongo
-
-  mongo:
-    image: 'mongo:4.2.16-bionic'
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: logs
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: jt79100
-    volumes:
-      - ./db-data/mongo/:/data/db/
-  
-  mail-service:
-    build:
-      context: ./../mail-service
-      dockerfile: ./../mail-service/mail-service.dockerfile
-    restart: always
-    deploy:
-      mode: replicated
-      replicas: 1
-    links:
-      - mailhog
-
-  mailhog:
-    image: 'jcalonso/mailhog:latest'
-    ports:
-      - "8025:8025"
-
-  listener-service:
-    build:
-      context: ./../listener-service
-      dockerfile: listener-service.dockerfile
-    deploy:
-      mode: replicated
-      replicas: 1
-    links:
-      - rabbitmq
-
-  rabbitmq:
-    restart: always
-    image: 'rabbitmq:3.9-alpine'
-    ports:
-      - "5672:5672"
-    deploy:
-      mode: replicated
-      replicas: 1
-    volumes:
-      - ./db-data/rabbitmq/:/var/lib/rabbitmq/
-  
-  redis-master-session:
+  redis:
     image: 'redis/redis-stack-server:latest'
     ports:
       - "6379:6379"
-    volumes:
-      - ./db-data/redis/master-session:/data/
+
+  # tabelog-spider-service:
+  #   build:
+  #     context: ./../tabelog-spider-service
+  #     dockerfile: tabelog-spider-service.dockerfile
+  #   restart: always
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  
+  # logger-service:
+  #   build:
+  #     context: ./../logger-service
+  #     dockerfile: logger-service.dockerfile
+  #   restart: always
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   links:
+  #     - mongo
+
+  # mongo:
+  #   image: 'mongo:4.2.16-bionic'
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_DATABASE: logs
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: jt79100
+  #   volumes:
+  #     - ./db-data/mongo/:/data/db/
+  
+  # mail-service:
+  #   build:
+  #     context: ./../mail-service
+  #     dockerfile: ./../mail-service/mail-service.dockerfile
+  #   restart: always
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   links:
+  #     - mailhog
+
+  # mailhog:
+  #   image: 'jcalonso/mailhog:latest'
+  #   ports:
+  #     - "8025:8025"
+
+  # listener-service:
+  #   build:
+  #     context: ./../listener-service
+  #     dockerfile: listener-service.dockerfile
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   links:
+  #     - rabbitmq
+
+  # rabbitmq:
+  #   restart: always
+  #   image: 'rabbitmq:3.9-alpine'
+  #   ports:
+  #     - "5672:5672"
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   volumes:
+  #     - ./db-data/rabbitmq/:/var/lib/rabbitmq/
+  
+  # redis-master-session:
+  #   image: 'redis/redis-stack-server:latest'
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - ./db-data/redis/master-session:/data/
 
   # redis-slave-session-1:
   #   image: 'redis/redis-stack-server:latest'
@@ -178,12 +183,12 @@ services:
   #     - redis-slave-session-1
   #     - redis-slave-session-2
   
-  redis-master-place:
-    image: 'redis/redis-stack-server:latest'
-    ports:
-      - "6382:6379"
-    volumes:
-      - ./db-data/redis/master-place:/data/
+  # redis-master-place:
+  #   image: 'redis/redis-stack-server:latest'
+  #   ports:
+  #     - "6382:6379"
+  #   volumes:
+  #     - ./db-data/redis/master-place:/data/
 
   # redis-slave-place-1:
   #   image: 'redis/redis-stack-server:latest'

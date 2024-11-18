@@ -24,7 +24,7 @@ func NewSavePlaceControllerHandle(savePlaceServiceHandler service.SavePlaceServi
 // @Param param body requestmodel.SavePlaceRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/place/savePlace [post]
+// @Router /place/savePlace [post]
 func (handle *SavePlaceControllerHandle) SavePlace(c *gin.Context) {
 	var req requestmodel.SavePlaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,6 +54,7 @@ func NewGetPlaceControllerHandle(getPlaceServiceHandler service.GetPlaceServiceH
 // @Param param query requestmodel.GetPlaceRequest true "json"
 // @Produce  json
 // @Success 200 "success"
+// @Router /place/getPlace [get]
 func (handle *GetPlaceControllerHandle) GetPlace(c *gin.Context) {
 	var req requestmodel.GetPlaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

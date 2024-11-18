@@ -37,7 +37,7 @@ func (db FavoriteSlice) ToEntityModel() entitymodel.FavoriteSlice {
 
 type PreloadFavoritePlaceUser struct {
 	Favorite
-	Place Place `gorm:"foreignKey:ID;references:PlaceID"`
+	Place Place `gorm:"foreignKey:ID;references:PlaceGoogleID"`
 	User  User  `gorm:"foreignKey:ID;references:UserID"`
 }
 

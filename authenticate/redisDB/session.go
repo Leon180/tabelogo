@@ -25,7 +25,7 @@ type SessionHandle struct {
 }
 
 func (s *SessionHandle) GetSession(ctx context.Context, key string) (entitymodel.Session, error) {
-	var session entitymodel.Session
+	var session []entitymodel.Session
 	st, err := s.redisClient.JSONGet(ctx, key, "$").Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -34,11 +34,14 @@ func (s *SessionHandle) GetSession(ctx context.Context, key string) (entitymodel
 		utility.SugarLogger.Error("error during get session, error: %s", err)
 		return entitymodel.Session{}, err
 	}
+	if st == "" {
+		return entitymodel.Session{}, nil
+	}
 	if err = json.Unmarshal([]byte(st), &session); err != nil {
 		utility.SugarLogger.Error("error during unmarshal session, error: %s", err)
 		return entitymodel.Session{}, err
 	}
-	return session, nil
+	return session[0], nil
 }
 
 func (s *SessionHandle) SetSession(ctx context.Context, key string, session entitymodel.Session, expiry *time.Duration) error {

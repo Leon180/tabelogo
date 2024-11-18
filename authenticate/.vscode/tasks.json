@@ -4,7 +4,7 @@
         {
             "label": "berforeInitServer",
             "type": "shell",
-            "command": "go mod tidy;go get;wire gen ./inject/...; swag init --parseDependency --parseInternal -g main.go"
+            "command": "go mod tidy;go get;wire gen ./inject/...;swag init --parseDependency --parseInternal"
         }
     ]
 }

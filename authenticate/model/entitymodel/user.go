@@ -12,6 +12,8 @@ type User struct {
 	Active         bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+
+	Password string
 }
 
 func (u User) IsActive() bool {

@@ -19,14 +19,14 @@ type GetTabelogInfoHandle struct {
 func NewGetTabelogInfoHandle(
 	getTabelogInfoService service.GetTabelogInfoHandler,
 	getTabelogPhotoService service.GetTabelogPhotoHandler,
-) GetTabelogInfoHandle {
-	return GetTabelogInfoHandle{
+) *GetTabelogInfoHandle {
+	return &GetTabelogInfoHandle{
 		getTabelogInfoService:  getTabelogInfoService,
 		getTabelogPhotoService: getTabelogPhotoService,
 	}
 }
 
-func (handle GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
+func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	var (
 		req requestmodel.GetTabelogInfoRequest
 		err error
@@ -45,7 +45,7 @@ func (handle GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	utility.CommonResponse(c, convert.GetTabelogInfo(tablogoInfo).ToResponse())
 }
 
-func (handle GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
+func (handle *GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
 	var (
 		req requestmodel.GetTabelogPhotoRequest
 		err error

@@ -21,8 +21,8 @@ func NewLogController(
 	readLogService service.ReadLogHandler,
 	updateLogService service.UpdateLogHandler,
 	deleteLogService service.DeleteLogHandler,
-) LogController {
-	return LogController{
+) *LogController {
+	return &LogController{
 		createLogService: createLogService,
 		readLogService:   readLogService,
 		updateLogService: updateLogService,
@@ -30,7 +30,7 @@ func NewLogController(
 	}
 }
 
-func (controller LogController) CreateLog(c *gin.Context) {
+func (controller *LogController) CreateLog(c *gin.Context) {
 	var (
 		requestBody requestmodel.LogEntryRequest
 	)
@@ -45,7 +45,7 @@ func (controller LogController) CreateLog(c *gin.Context) {
 	utility.CommonResponse(c, "log created successfully")
 }
 
-func (controller LogController) SearchLogs(c *gin.Context) {
+func (controller *LogController) SearchLogs(c *gin.Context) {
 	var (
 		requestBody requestmodel.SearchLogRequest
 	)
@@ -62,7 +62,7 @@ func (controller LogController) SearchLogs(c *gin.Context) {
 	utility.CommonResponse(c, logs)
 }
 
-func (controller LogController) ReadAllLogs(c *gin.Context) {
+func (controller *LogController) ReadAllLogs(c *gin.Context) {
 	logs, err := controller.readLogService.ReadAllLogs(c.Request.Context())
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)

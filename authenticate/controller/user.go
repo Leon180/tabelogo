@@ -25,7 +25,7 @@ func NewRegistUserControllerHandle(registUserServiceHandler service.RegistUserSe
 // @Param param body requestmodel.RegistUserRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/user/registUser [post]
+// @Router /user/registUser [post]
 func (handle *RegistUserControllerHandle) RegistUser(c *gin.Context) {
 	var req requestmodel.RegistUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -59,7 +59,7 @@ func NewLoginUserControllerHandle(loginUserServiceHandler service.LoginUserServi
 // @Param param body requestmodel.LoginUserRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/user/loginUser [post]
+// @Router /user/loginUser [post]
 func (handle *LoginUserControllerHandle) LoginUser(c *gin.Context) {
 	var req requestmodel.LoginUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -98,7 +98,7 @@ func NewRenewAccessTokenControllerHandle(renewAccessTokenServiceHandler service.
 // @Param param body requestmodel.RenewAccessTokenRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/user/renewAccessToken [post]
+// @Router /user/renewAccessToken [post]
 func (handle *RenewAccessTokenControllerHandle) RenewAccessToken(c *gin.Context) {
 	var req requestmodel.RenewAccessTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -128,7 +128,7 @@ func NewSaveFavoriteControllerHandle(saveFavoriteServiceHandler service.SaveFavo
 // @Param param body requestmodel.SaveFavoriteRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/user/saveFavorite [post]
+// @Router /user/saveFavorite [post]
 func (handle *SaveFavoriteControllerHandle) SaveFavorite(c *gin.Context) {
 	var req requestmodel.SaveFavoriteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -157,7 +157,7 @@ func NewGetUserFavoritesControllerHandle(getUserFavoritesServiceHandler service.
 // @Param param query requestmodel.GetUserFavoritesRequest true "json"
 // @Produce  json
 // @Success 200 "success"
-// @Router /api/v1/user/getUserFavorites [get]
+// @Router /user/getUserFavorites [get]
 func (handle *GetUserFavoritesControllerHandle) GetUserFavorites(c *gin.Context) {
 	var req requestmodel.GetUserFavoritesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {

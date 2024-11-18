@@ -18,14 +18,14 @@ type GooglePlaceSearchHandle struct {
 func NewGooglePlaceSearchHandle(
 	googlePlaceSearchService service.GooglePlaceSearchHandler,
 	config config.Config,
-) GooglePlaceSearchHandle {
-	return GooglePlaceSearchHandle{
+) *GooglePlaceSearchHandle {
+	return &GooglePlaceSearchHandle{
 		googlePlaceSearchService: service.NewGooglePlaceSearchHandler(),
 		config:                   config,
 	}
 }
 
-func (handle GooglePlaceSearchHandle) QuickSearch(c *gin.Context) {
+func (handle *GooglePlaceSearchHandle) QuickSearch(c *gin.Context) {
 	var (
 		req requestmodel.QuickSearchRequest
 	)
@@ -44,7 +44,7 @@ func (handle GooglePlaceSearchHandle) QuickSearch(c *gin.Context) {
 	utility.CommonResponse(c, googlePlaceSearch)
 }
 
-func (handle GooglePlaceSearchHandle) AdvanceSearch(c *gin.Context) {
+func (handle *GooglePlaceSearchHandle) AdvanceSearch(c *gin.Context) {
 	var (
 		req requestmodel.AdvanceSearchRequest
 	)

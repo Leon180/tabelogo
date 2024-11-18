@@ -19,12 +19,12 @@ type GetTabelogInfoHandler interface {
 }
 
 func NewGetTabelogInfoHandler() GetTabelogInfoHandler {
-	return GetTabelogInfoHandle{}
+	return &GetTabelogInfoHandle{}
 }
 
 type GetTabelogInfoHandle struct{}
 
-func (handle GetTabelogInfoHandle) GetTabelogInfo(
+func (handle *GetTabelogInfoHandle) GetTabelogInfo(
 	ctx context.Context,
 	param entitymodel.GetTabelogInfoParam,
 ) (

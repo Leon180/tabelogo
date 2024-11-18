@@ -133,7 +133,7 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 			return errors.UserExistsButNotActive
 		}
 		// check if password match
-		if loginUser.HashedPassword != existedUser.HashedPassword {
+		if err = utility.CompareHashAndPassword(existedUser.HashedPassword, loginUser.Password); err != nil {
 			return errors.LoginUserPasswordNotMatchError
 		}
 

@@ -13,7 +13,6 @@ func RequestToAnotherService(
 	headers map[enum.RequestHeader]string,
 	body string,
 ) (*http.Response, error) {
-
 	// Create client
 	client := &http.Client{
 		Timeout: 10 * time.Second,

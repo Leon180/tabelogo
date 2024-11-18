@@ -15,12 +15,12 @@ type GooglePlaceSearchHandler interface {
 }
 
 func NewGooglePlaceSearchHandler() GooglePlaceSearchHandler {
-	return GooglePlaceSearchHandle{}
+	return &GooglePlaceSearchHandle{}
 }
 
 type GooglePlaceSearchHandle struct{}
 
-func (handle GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest, config config.Config) (interface{}, error) {
+func (handle *GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest, config config.Config) (interface{}, error) {
 	resp, err := utility.RequestToAnotherService(
 		enum.RequestMethodGET,
 		enum.GoogleMapPlaceV1URL.AddSubDirectory(param.PlaceID).AddParams(map[enum.Param]string{
@@ -32,17 +32,21 @@ func (handle GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param ent
 		"",
 	)
 	if err != nil {
+		utility.SugarLogger.Error("error during request to google map quick search, error: %s", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var googleRsp interface{}
-	json.NewDecoder(resp.Body).Decode(&googleRsp)
+	if err := json.NewDecoder(resp.Body).Decode(&googleRsp); err != nil {
+		utility.SugarLogger.Error("error during decode google map quick search response, error: %s", err)
+		return nil, err
+	}
 
 	return googleRsp, nil
 }
 
-func (handle GooglePlaceSearchHandle) AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest, config config.Config) (interface{}, error) {
+func (handle *GooglePlaceSearchHandle) AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest, config config.Config) (interface{}, error) {
 	resp, err := utility.RequestToAnotherService(
 		enum.RequestMethodPOST,
 		enum.GoogleMapPlaceSearchTextURL,
@@ -54,12 +58,16 @@ func (handle GooglePlaceSearchHandle) AdvanceSearch(ctx context.Context, param e
 		param.ToRequestBody(),
 	)
 	if err != nil {
+		utility.SugarLogger.Error("error during request to google map advance search, error: %s", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var googleRsp interface{}
-	json.NewDecoder(resp.Body).Decode(&googleRsp)
+	if err := json.NewDecoder(resp.Body).Decode(&googleRsp); err != nil {
+		utility.SugarLogger.Error("error during decode google map advance search response, error: %s", err)
+		return nil, err
+	}
 
 	return googleRsp, nil
 }
