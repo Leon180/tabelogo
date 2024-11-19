@@ -1,4 +1,6 @@
 FROM alpine:latest
-RUN mkdir /app
+RUN mkdir -p /app/config
 COPY spiderApp /app
-CMD [ "/app/spiderApp" ]
+COPY ./config/config.env /app/config/
+WORKDIR /app
+CMD [ "./spiderApp" ]

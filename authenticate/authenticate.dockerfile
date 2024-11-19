@@ -1,6 +1,6 @@
 FROM alpine:latest
-RUN mkdir /app
-RUN mkdir /app/config
+RUN mkdir -p /app/config
 COPY authenticateApp /app
-COPY ./config/config.env /app/config
-CMD [ "/app/authenticateApp" ]
+COPY ./config/config_docker.env /app/config/config.env
+WORKDIR /app
+CMD [ "./authenticateApp" ]

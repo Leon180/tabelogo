@@ -27,8 +27,12 @@ down:
 	docker-compose down
 	@echo "Done!"
 
+## clear postgres
+clear_postgres:
+	rm -rf ./db-data/postgres/*
+
 ## up_build: start docker compose with build
-up_build: build_broker build_authenticate build_googlemap build_spider build_logger build_mail build_listener build_frontend
+up_build: build_authenticate build_googlemap build_spider build_logger
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."
@@ -58,7 +62,7 @@ build_authenticate_x86:
 	@echo "Done!"
 
 ## build_googlemap: build googlemap binary
-build_google-map:
+build_googlemap:
 	@echo "Building google-map binary..."
 	cd ../google-map && env GOOS=linux CGO_ENABLED=0 go build -o ${GOOGLEMAP_BINARY} ./
 	@echo "Done!"

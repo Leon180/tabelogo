@@ -1,6 +1,6 @@
 FROM alpine:latest
-RUN mkdir /app
-RUN mkdir /app/config
-COPY googlemapApp /app
-COPY ./config/app.env /app/config
-CMD [ "/app/googlemapApp" ]
+RUN mkdir -p /app/config
+COPY googlemapApp /app/
+COPY ./config/config.env /app/config/
+WORKDIR /app
+CMD [ "./googlemapApp" ]
