@@ -1,0 +1,165 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Logger service API documentation",
+        "title": "Logger Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "your-email@domain.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:80",
+    "basePath": "/logger",
+    "paths": {
+        "/createLog": {
+            "post": {
+                "description": "ログ作成",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logger"
+                ],
+                "summary": "ログ作成",
+                "parameters": [
+                    {
+                        "description": "ログ作成リクエスト",
+                        "name": "logEntry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requestmodel.LogEntryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responsemodel.CommonResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/readAllLogs": {
+            "get": {
+                "description": "全ログ取得",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logger"
+                ],
+                "summary": "全ログ取得",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responsemodel.CommonResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/searchLogs": {
+            "post": {
+                "description": "ログ検索",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logger"
+                ],
+                "summary": "ログ検索",
+                "parameters": [
+                    {
+                        "description": "ログ検索リクエスト",
+                        "name": "searchLogRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requestmodel.SearchLogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/responsemodel.CommonResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "enum.Service": {
+            "type": "string",
+            "enum": [
+                "auth",
+                "google_map",
+                "spider",
+                "user",
+                "mail",
+                "logger"
+            ],
+            "x-enum-varnames": [
+                "ServiceAuth",
+                "ServiceGoogleMap",
+                "ServiceSpider",
+                "ServiceUser",
+                "ServiceMail",
+                "ServiceLogger"
+            ]
+        },
+        "requestmodel.LogEntryRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
+        },
+        "requestmodel.SearchLogRequest": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/enum.Service"
+                }
+            }
+        },
+        "responsemodel.CommonResponse": {
+            "type": "object",
+            "properties": {
+                "result": {}
+            }
+        }
+    }
+}

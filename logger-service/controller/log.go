@@ -30,6 +30,14 @@ func NewLogController(
 	}
 }
 
+// @Summary ログ作成
+// @Description ログ作成
+// @Tags logger
+// @Accept json
+// @Param logEntry body requestmodel.LogEntryRequest true "ログ作成リクエスト"
+// @Produce json
+// @Success 200 {object} responsemodel.CommonResponse
+// @Router /createLog [post]
 func (controller *LogController) CreateLog(c *gin.Context) {
 	var (
 		requestBody requestmodel.LogEntryRequest
@@ -45,6 +53,14 @@ func (controller *LogController) CreateLog(c *gin.Context) {
 	utility.CommonResponse(c, "log created successfully")
 }
 
+// @Summary ログ検索
+// @Description ログ検索
+// @Tags logger
+// @Accept json
+// @Param searchLogRequest body requestmodel.SearchLogRequest true "ログ検索リクエスト"
+// @Produce json
+// @Success 200 {object} responsemodel.CommonResponse
+// @Router /searchLogs [post]
 func (controller *LogController) SearchLogs(c *gin.Context) {
 	var (
 		requestBody requestmodel.SearchLogRequest
@@ -62,6 +78,13 @@ func (controller *LogController) SearchLogs(c *gin.Context) {
 	utility.CommonResponse(c, logs)
 }
 
+// @Summary 全ログ取得
+// @Description 全ログ取得
+// @Tags logger
+// @Accept json
+// @Produce json
+// @Success 200 {object} responsemodel.CommonResponse
+// @Router /readAllLogs [get]
 func (controller *LogController) ReadAllLogs(c *gin.Context) {
 	logs, err := controller.readLogService.ReadAllLogs(c.Request.Context())
 	if err != nil {

@@ -6,23 +6,39 @@ import (
 	"io"
 	"log"
 	"logger-service/config"
-	"logger-service/controller"
+	"logger-service/inject"
 	"logger-service/model/enum"
-	"logger-service/repository"
-	"logger-service/service"
 	"logger-service/utility"
 	"slices"
 	"time"
+
+	_ "logger-service/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/location"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// @title           Logger Service API
+// @version         1.0
+// @description     Logger service API documentation
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  your-email@domain.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:80
+// @BasePath /logger
 func main() {
 	var (
 		cfg         config.Config
@@ -50,7 +66,8 @@ func main() {
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
 	)
-	setRoute(engine, mongoClient)
+	controllerHandle := inject.InitControllerHandle(cfg, utility.Logger, mongoClient)
+	setRoute(engine, controllerHandle)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)
 	}
@@ -92,24 +109,14 @@ func LogRequest() gin.HandlerFunc {
 	}
 }
 
-func setRoute(engine *gin.Engine, mongoClient *mongo.Client) {
+func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
+	// Swagger docs
+	// Use this URL config for swagger
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	defaultRouter := engine.Group(engine.BasePath())
-	baseRouter := defaultRouter.Group("/logger/api/v1")
-	logController := controller.NewLogController(
-		service.NewCreateLogService(
-			repository.NewCreateLogRepository(mongoClient),
-		),
-		service.NewReadLogService(
-			repository.NewReadLogRepository(mongoClient),
-		),
-		service.NewUpdateLogService(
-			repository.NewUpdateLogRepository(mongoClient),
-		),
-		service.NewDeleteLogService(
-			repository.NewDeleteLogRepository(mongoClient),
-		),
-	)
-	baseRouter.POST("/createLog", logController.CreateLog)
-	baseRouter.GET("/readAllLogs", logController.ReadAllLogs)
-	baseRouter.POST("/searchLogs", logController.SearchLogs)
+	baseRouter := defaultRouter.Group("/logger")
+	baseRouter.POST("/createLog", controllerHandle.LogController.CreateLog)
+	baseRouter.GET("/readAllLogs", controllerHandle.LogController.ReadAllLogs)
+	baseRouter.POST("/searchLogs", controllerHandle.LogController.SearchLogs)
 }

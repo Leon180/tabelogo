@@ -8,12 +8,13 @@ package inject
 
 import (
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 // Injectors from wire.go:
 
-func InitControllerHandle(logger *zap.Logger) *ControllerHandle {
-	getTabelogInfoHandler := provideGetTabelogInfoService()
+func InitControllerHandle(logger *zap.Logger, rateLimiter *rate.Limiter) *ControllerHandle {
+	getTabelogInfoHandler := provideGetTabelogInfoService(rateLimiter)
 	getTabelogPhotoHandler := provideGetTabelogPhotoService()
 	getTabelogInfoHandle := provideGetTabelogInfoController(getTabelogInfoHandler, getTabelogPhotoHandler)
 	controllerHandle := newControllerHandle(getTabelogInfoHandle)

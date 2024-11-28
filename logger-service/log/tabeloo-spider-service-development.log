@@ -12,3 +12,4 @@
 {"severity":"WARN","time":"2024-09-03T20:15:39.012+0800","message":"Http Response EventID: 0112c433-2db6-4ab7-94fe-be34a0a53635, Error: server selection error: server selection timeout, current topology: { Type: Unknown, Servers: [{ Addr: mongo:27017, Type: Unknown, Last error: dial tcp: lookup mongo: no such host }, ] }"}
 {"severity":"INFO","time":"2024-09-03T20:15:39.014+0800","message":"/logger/api/v1/createLog","status":500,"method":"POST","path":"/logger/api/v1/createLog","query":"","ip":"::1","user-agent":"PostmanRuntime/7.41.2","latency":30.008628209,"time":"2024-09-03T12:15:39Z"}
 {"severity":"DEBUG","time":"2024-11-17T16:15:13.288+0800","message":"Env========= development"}
+{"severity":"DEBUG","time":"2024-11-20T00:07:50.693+0800","message":"Env========= development"}

@@ -11,7 +11,7 @@ import (
 )
 
 func InitControllerHandle(
-	config config.Config,
+	config *config.Config,
 	logger *zap.Logger,
 ) *ControllerHandle {
 	wire.Build(

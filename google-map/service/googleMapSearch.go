@@ -10,22 +10,27 @@ import (
 )
 
 type GooglePlaceSearchHandler interface {
-	QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest, config config.Config) (interface{}, error)
-	AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest, config config.Config) (interface{}, error)
+	QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest) (interface{}, error)
+	AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest) (interface{}, error)
 }
 
-func NewGooglePlaceSearchHandler() GooglePlaceSearchHandler {
-	return &GooglePlaceSearchHandle{}
+func NewGooglePlaceSearchHandler(config *config.Config) GooglePlaceSearchHandler {
+	return &GooglePlaceSearchHandle{
+		config: config,
+	}
 }
 
-type GooglePlaceSearchHandle struct{}
+type GooglePlaceSearchHandle struct {
+	config *config.Config
+}
 
-func (handle *GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest, config config.Config) (interface{}, error) {
+func (handle *GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param entitymodel.QuickSearchRequest) (interface{}, error) {
 	resp, err := utility.RequestToAnotherService(
+		ctx,
 		enum.RequestMethodGET,
 		enum.GoogleMapPlaceV1URL.AddSubDirectory(param.PlaceID).AddParams(map[enum.Param]string{
 			enum.APIMask:      param.APIMask,
-			enum.Key:          config.GoogleMapAPIKey,
+			enum.Key:          handle.config.GoogleMapAPIKey,
 			enum.LanguageCode: param.LanguageCode,
 		}),
 		nil,
@@ -46,13 +51,14 @@ func (handle *GooglePlaceSearchHandle) QuickSearch(ctx context.Context, param en
 	return googleRsp, nil
 }
 
-func (handle *GooglePlaceSearchHandle) AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest, config config.Config) (interface{}, error) {
+func (handle *GooglePlaceSearchHandle) AdvanceSearch(ctx context.Context, param entitymodel.AdvanceSearchRequest) (interface{}, error) {
 	resp, err := utility.RequestToAnotherService(
+		ctx,
 		enum.RequestMethodPOST,
 		enum.GoogleMapPlaceSearchTextURL,
 		map[enum.RequestHeader]string{
 			enum.RequestHeaderContentType:    enum.ContextTypeJSON.ToString(),
-			enum.RequestHeaderXGoogAPIKey:    config.GoogleMapAPIKey,
+			enum.RequestHeaderXGoogAPIKey:    handle.config.GoogleMapAPIKey,
 			enum.RequestHeaderXGoogFieldMask: param.APIMask,
 		},
 		param.ToRequestBody(),

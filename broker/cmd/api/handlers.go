@@ -3,7 +3,6 @@ package main
 import (
 	"broker/rabbitmq/event"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,6 @@ func (s *Server) Broker(c *gin.Context) {
 
 func (s *Server) TransRequest(method, url string) func(*gin.Context) {
 	return func(c *gin.Context) {
-		fmt.Println(url)
 		var err error
 		header := c.Request.Header
 		body := c.Request.Body

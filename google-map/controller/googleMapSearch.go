@@ -12,15 +12,15 @@ import (
 
 type GooglePlaceSearchHandle struct {
 	googlePlaceSearchService service.GooglePlaceSearchHandler
-	config                   config.Config
+	config                   *config.Config
 }
 
 func NewGooglePlaceSearchHandle(
 	googlePlaceSearchService service.GooglePlaceSearchHandler,
-	config config.Config,
+	config *config.Config,
 ) *GooglePlaceSearchHandle {
 	return &GooglePlaceSearchHandle{
-		googlePlaceSearchService: service.NewGooglePlaceSearchHandler(),
+		googlePlaceSearchService: googlePlaceSearchService,
 		config:                   config,
 	}
 }
@@ -36,16 +36,13 @@ func NewGooglePlaceSearchHandle(
 // @Success 200 {object} responsemodel.CommonResponse
 // @Router /quickSearch [get]
 func (handle *GooglePlaceSearchHandle) QuickSearch(c *gin.Context) {
-	var (
-		req requestmodel.QuickSearchRequest
-	)
-
+	var req requestmodel.QuickSearchRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 		return
 	}
 
-	googlePlaceSearch, err := handle.googlePlaceSearchService.QuickSearch(c, req.ToEntity(), handle.config)
+	googlePlaceSearch, err := handle.googlePlaceSearchService.QuickSearch(c, req.ToEntity())
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return
@@ -73,16 +70,13 @@ func (handle *GooglePlaceSearchHandle) QuickSearch(c *gin.Context) {
 // @Success 200 {object} responsemodel.CommonResponse
 // @Router /advanceSearch [get]
 func (handle *GooglePlaceSearchHandle) AdvanceSearch(c *gin.Context) {
-	var (
-		req requestmodel.AdvanceSearchRequest
-	)
-
+	var req requestmodel.AdvanceSearchRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 		return
 	}
 
-	googlePlaceSearch, err := handle.googlePlaceSearchService.AdvanceSearch(c, req.ToEntity(), handle.config)
+	googlePlaceSearch, err := handle.googlePlaceSearchService.AdvanceSearch(c, req.ToEntity())
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return

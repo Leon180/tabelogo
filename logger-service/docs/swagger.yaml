@@ -1,0 +1,112 @@
+basePath: /logger
+definitions:
+  enum.Service:
+    enum:
+    - auth
+    - google_map
+    - spider
+    - user
+    - mail
+    - logger
+    type: string
+    x-enum-varnames:
+    - ServiceAuth
+    - ServiceGoogleMap
+    - ServiceSpider
+    - ServiceUser
+    - ServiceMail
+    - ServiceLogger
+  requestmodel.LogEntryRequest:
+    properties:
+      data:
+        type: string
+      name:
+        type: string
+      service:
+        type: string
+    type: object
+  requestmodel.SearchLogRequest:
+    properties:
+      filter:
+        type: string
+      service:
+        $ref: '#/definitions/enum.Service'
+    type: object
+  responsemodel.CommonResponse:
+    properties:
+      result: {}
+    type: object
+host: localhost:80
+info:
+  contact:
+    email: your-email@domain.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Logger service API documentation
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Logger Service API
+  version: "1.0"
+paths:
+  /createLog:
+    post:
+      consumes:
+      - application/json
+      description: ログ作成
+      parameters:
+      - description: ログ作成リクエスト
+        in: body
+        name: logEntry
+        required: true
+        schema:
+          $ref: '#/definitions/requestmodel.LogEntryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.CommonResponse'
+      summary: ログ作成
+      tags:
+      - logger
+  /readAllLogs:
+    get:
+      consumes:
+      - application/json
+      description: 全ログ取得
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.CommonResponse'
+      summary: 全ログ取得
+      tags:
+      - logger
+  /searchLogs:
+    post:
+      consumes:
+      - application/json
+      description: ログ検索
+      parameters:
+      - description: ログ検索リクエスト
+        in: body
+        name: searchLogRequest
+        required: true
+        schema:
+          $ref: '#/definitions/requestmodel.SearchLogRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/responsemodel.CommonResponse'
+      summary: ログ検索
+      tags:
+      - logger
+swagger: "2.0"

@@ -3,10 +3,12 @@ package inject
 import (
 	"tabelog-spider/controller"
 	"tabelog-spider/service"
+
+	"golang.org/x/time/rate"
 )
 
-func provideGetTabelogInfoService() service.GetTabelogInfoHandler {
-	return service.NewGetTabelogInfoHandler()
+func provideGetTabelogInfoService(rateLimiter *rate.Limiter) service.GetTabelogInfoHandler {
+	return service.NewGetTabelogInfoHandler(rateLimiter)
 }
 
 func provideGetTabelogPhotoService() service.GetTabelogPhotoHandler {

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CommonErrorResponse(c *gin.Context, err error, result *interface{}) {
+func CommonErrorResponse(c *gin.Context, err error, result interface{}) {
 	if eventIDKey, ok := c.Get(enum.MiddleWareEventIDKey); ok {
 		SugarLogger.Warnf("Http Response EventID: %s, Error: %v", eventIDKey.(string), err)
 	}

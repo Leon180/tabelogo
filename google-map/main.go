@@ -59,7 +59,7 @@ func main() {
 		LogRequest(),
 	)
 	// inject
-	controllerHandle := inject.InitControllerHandle(cfg, utility.Logger)
+	controllerHandle := inject.InitControllerHandle(&cfg, utility.Logger)
 	setRoute(engine, controllerHandle)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)

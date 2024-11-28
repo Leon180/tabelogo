@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"golang.org/x/time/rate"
 )
 
 // @title           Tabelog Spider API
@@ -58,8 +59,9 @@ func main() {
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
 	)
+	rateLimiter := rate.NewLimiter(rate.Every(100*time.Millisecond), 1)
 	// inject
-	controllerHandle := inject.InitControllerHandle(utility.Logger)
+	controllerHandle := inject.InitControllerHandle(utility.Logger, rateLimiter)
 	setRoute(engine, controllerHandle)
 	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
 		utility.SugarLogger.Fatal(err)

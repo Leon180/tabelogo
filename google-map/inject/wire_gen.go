@@ -13,8 +13,8 @@ import (
 
 // Injectors from wire.go:
 
-func InitControllerHandle(config2 config.Config, logger *zap.Logger) *ControllerHandle {
-	googlePlaceSearchHandler := provideSearchService()
+func InitControllerHandle(config2 *config.Config, logger *zap.Logger) *ControllerHandle {
+	googlePlaceSearchHandler := provideSearchService(config2)
 	googlePlaceSearchHandle := provideSearchController(googlePlaceSearchHandler, config2)
 	controllerHandle := newControllerHandle(googlePlaceSearchHandle)
 	return controllerHandle

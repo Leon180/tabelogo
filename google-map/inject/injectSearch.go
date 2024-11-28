@@ -6,13 +6,13 @@ import (
 	"google-map/service"
 )
 
-func provideSearchService() service.GooglePlaceSearchHandler {
-	return service.NewGooglePlaceSearchHandler()
+func provideSearchService(config *config.Config) service.GooglePlaceSearchHandler {
+	return service.NewGooglePlaceSearchHandler(config)
 }
 
 func provideSearchController(
 	searchService service.GooglePlaceSearchHandler,
-	config config.Config,
+	config *config.Config,
 ) *controller.GooglePlaceSearchHandle {
 	return controller.NewGooglePlaceSearchHandle(
 		searchService,
