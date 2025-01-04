@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package grpcauth;
+option go_package = "authenticate/grpc/proto";
+
+import "google/protobuf/timestamp.proto";
+
+service UserService {
+    rpc RegistUser (RegistUserRequest) returns (User);
+    rpc LoginUser (LoginUserRequest) returns (LoginUserResponse);
+    rpc RenewAccessToken (RenewAccessTokenRequest) returns (LoginUserResponse);
+    rpc SaveFavorite (SaveFavoriteRequest) returns (CommonResponse);
+    rpc GetUserFavorites (GetUserFavoritesRequest) returns (GetUserFavoritesResponse);
+}
+
+
+service PlaceService {
+    rpc SavePlace (SavePlaceRequest) returns (CommonResponse);
+    rpc GetPlace (GetPlaceRequest) returns (Place);
+}
+
+message CommonResponse {
+    string message = 1; // success
+}
+
+message RegistUserRequest {
+    string nickname = 1;
+    string email = 2;
+    string password = 3;
+}
+
+message LoginUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    string user_id = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    google.protobuf.Timestamp access_token_expires_at = 4;
+    google.protobuf.Timestamp refresh_token_expires_at = 5;
+}
+
+message RenewAccessTokenRequest {
+    string refresh_token = 1;
+}
+
+message SaveFavoriteRequest {
+    bool is_favorite = 1;
+    string user_id = 2;
+    string place_google_id = 3;
+}
+
+message GetUserFavoritesRequest {
+    string user_id = 1;
+    string country = 2;
+    string administrative_area_level_1 = 3;
+    int32 order_by = 4;
+}
+
+message GetUserFavoritesResponse {
+    User user = 1;
+    repeated Place places = 2;
+}
+
+message User {
+    string nickname = 1;
+    string email = 2;
+    bool active = 3;
+}
+
+message Place {
+    string google_id = 1;
+    string tw_display_name = 2;
+    string jp_display_name = 3;
+    string tw_formatted_address = 4;
+    repeated string tw_weekday_descriptions = 5;
+    string administrative_area_level_1 = 6;
+    string country = 7;
+    string google_map_uri = 8;
+    string international_phone_number = 9;
+    string lat = 10;
+    string lng = 11;
+    string primary_type = 12;
+    string rating = 13;
+    repeated string types = 14;
+    int32 user_rating_count = 15;
+    string website_uri = 16;
+    int32 place_version = 17;
+    google.protobuf.Timestamp updated_at = 18;
+}
+
+message SavePlaceRequest {
+    string google_id = 1;
+    string tw_display_name = 2;
+    string jp_display_name = 3;
+    string tw_formatted_address = 4;
+    repeated string tw_weekday_descriptions = 5;
+    string administrative_area_level_1 = 6;
+    string country = 7;
+    string google_map_uri = 8;
+    string international_phone_number = 9;
+    string lat = 10;
+    string lng = 11;
+    string primary_type = 12;
+    string rating = 13;
+    repeated string types = 14;
+    int32 user_rating_count = 15;
+    string website_uri = 16;
+    int32 place_version = 17;
+}
+
+message GetPlaceRequest {
+    string google_id = 1;
+}

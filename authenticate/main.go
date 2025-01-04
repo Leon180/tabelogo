@@ -2,6 +2,8 @@ package main
 
 import (
 	"authenticate/config"
+	"authenticate/grpc/proto"
+	grpcservice "authenticate/grpc/service"
 	"authenticate/inject"
 	"authenticate/model/enum"
 	"authenticate/postgresqldb"
@@ -28,6 +30,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"google.golang.org/grpc"
 	"gorm.io/gorm"
 )
 
@@ -102,6 +105,9 @@ func main() {
 			utility.SugarLogger.Fatal(err)
 		}
 	}()
+
+	s := grpc.NewServer()
+	proto.RegisterUserServiceServer(s, grpcservice.NewUserServiceServer(controllerHandle.RegistUserController.RegistUser))
 
 	// graceful shutdown setup
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
