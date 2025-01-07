@@ -10,4 +10,5 @@ var serviceHandleSet = wire.NewSet(
 	provideRenewAccessTokenService,
 	provideSaveFavoriteService,
 	provideGetUserFavoritesService,
+	provideLogoutUserService,
 )

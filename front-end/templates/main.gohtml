@@ -166,8 +166,8 @@
     <script>
         {{/* Ｓervice link  */}}
         const brokerUrl = {{.BrokerURL}}
-        const quickSearchLink = `${brokerUrl}/quick_search`
-        const advanceSearchLink = `${brokerUrl}/advance_search`
+        const quickSearchLink = `${brokerUrl}/google-map-search/quickSearch`
+        const advanceSearchLink = `${brokerUrl}/google-map-search/advanceSearch`
         const tabelogoLink = `${brokerUrl}/tabelogo`
         const tabeLogoImgLink = `${brokerUrl}/tabephoto`
         const textAPIReturnAmount = 20
@@ -335,16 +335,22 @@
             })
             infoWindows = []
             // error handling
-            if (searchResults.TW.hasOwnProperty("error")) {
+            if (searchResults.TW.error_code) {
                 alert(`We meet some problem, please try again later...
                     error: ${searchResults.TW.error}
                 `)
                 listSearchResults.classList.add("d-none")
                 return
+            } else if (searchResults.TW.error) {
+                alert(`We meet some problem, please try again later...
+                    error: ${searchResults.TW.error.message}
+                `)
+                listSearchResults.classList.add("d-none")
+                return
             }
             // generate new markers and infoWindows
-            generateListInfoHTML(searchResults.TW)
-            generateMarkers(map, searchResults.TW)
+            generateListInfoHTML(searchResults.TW.result)
+            generateMarkers(map, searchResults.TW.result)
         })
         .catch((error)=>{
             console.log(error)
@@ -460,19 +466,12 @@
             let response = await fetch(quickSearchLink, body)
             let resjson = await response.json()
             let data = resjson.result
-            if (resjson.source=="google") {
-                if (!data.hasOwnProperty("error") && needMark) {
-                    markPlace(map, data.location.latitude, data.location.longitude)
-                    obj[objParam] = filterInfo(data)
-                } else if (data.hasOwnProperty("error")) {
-                    obj[objParam] = {
-                        "error": data.error,
-                    }
-                }
-            } else if (resjson.source=="redis"){
-                if (needMark) {
-                    markPlace(map, data.lat, data.lng)
-                    obj[objParam] = filterInfoRedis(data)
+            if (!data.hasOwnProperty("error") && needMark) {
+                markPlace(map, data.location.latitude, data.location.longitude)
+                obj[objParam] = filterInfo(data)
+            } else if (data.hasOwnProperty("error")) {
+                obj[objParam] = {
+                    "error": data.error,
                 }
             }
         } catch (error) {
@@ -1766,14 +1765,21 @@
     async function refreshToken() {
         try {
             const token_update_at = localStorage.getItem("tabelogo_token_update_at")
-            if (Date.now()-token_update_at < 1000*60*3) { // update every 3 min
+            const access_token_expires_at = localStorage.getItem("tabelogo_token_expires_at")
+            const refresh_token = localStorage.getItem("tabelogo_refresh_token")
+            if (access_token_expires_at === null ||
+                 Date.now()>access_token_expires_at ||
+                 refresh_token === null) {
+                alert("Session expired, Please login to use this function")
+                window.localStorage.removeItem("user_id")
+                window.localStorage.removeItem("tabelogo_token")
+                window.localStorage.removeItem("tabelogo_token_update_at")
+                window.localStorage.removeItem("tabelogo_refresh_token")
+                window.localStorage.removeItem("tabelogo_token_expires_at")
+                window.location.href = "/login";
                 return
             }
-            const refresh_token = localStorage.getItem("tabelogo_refresh_token")
-            if (refresh_token === null) {
-                window.localStorage.removeItem("tabelogo_token")
-                window.localStorage.removeItem("tabelogo_refresh_token")
-                alert("Session expired, Please login to use this function")
+            if (Date.now()-token_update_at > parseDurationToMs({{.AccessTokenDuration}})/2) { // update if half of the duration is passed since last update
                 return
             }
             const headers = new Headers();
@@ -1786,25 +1792,58 @@
                 headers: headers,
                 body: JSON.stringify(payload)
             }
-            let response = await fetch(`${brokerUrl}/renew_access`, body)
+            let response = await fetch(`${brokerUrl}/user/renewAccessToken`, body)
             let responseJSON = await response.json()
-            if (responseJSON.hasOwnProperty("error")) {
-                if (responseJSON.error == "failed to verify token: token has expired" || responseJSON.error == "token is invalid") {
+            if (!responseJSON.access_token) {
+                if (responseJSON.error_code === 3002) { // session expired
+                    window.localStorage.removeItem("user_id")
                     window.localStorage.removeItem("tabelogo_token")
+                    window.localStorage.removeItem("tabelogo_token_update_at")
                     window.localStorage.removeItem("tabelogo_refresh_token")
+                    window.localStorage.removeItem("tabelogo_token_expires_at")
+                    window.location.href = "/login";
                     alert("Session expired, Please login to use this function")
-                } else {
-                    alert(`We meet some problem, please try again later...
-                        error: ${responseJSON.error}
-                    `)
                 }
                 return
             }
-            localStorage.setItem("tabelogo_token", responseJSON.renew.access_token)
-            localStorage.setItem("tabelogo_token_expires_at", responseJSON.renew.access_token_expires_at)
+            localStorage.setItem("user_id", responseJSON.result.user_id)
+            localStorage.setItem("tabelogo_token", responseJSON.result.access_token)
+            localStorage.setItem("tabelogo_token_update_at", Date.now())
+            localStorage.setItem("tabelogo_refresh_token", responseJSON.result.refresh_token)
+            localStorage.setItem("tabelogo_token_expires_at", responseJSON.result.access_token_expires_at)
         } catch (error) {
             console.log(error)
         }
+    }
+
+    function parseDurationToMs(durationStr) {
+        // Initialize total milliseconds
+        let totalMs = 0;
+        // Match all number+unit pairs in the string
+        const matches = durationStr.match(/(\d+)([hms])/g);
+        
+        if (!matches) {
+            throw new Error('Invalid duration format. Expected format like "1h2m3s", "15m", "30s", etc.');
+        }
+        
+        matches.forEach(match => {
+            const value = parseInt(match.slice(0, -1));
+            const unit = match.slice(-1);
+            
+            switch (unit) {
+                case 'h':
+                    totalMs += value * 60 * 60 * 1000; // hours to ms
+                    break;
+                case 'm':
+                    totalMs += value * 60 * 1000;      // minutes to ms
+                    break;
+                case 's':
+                    totalMs += value * 1000;           // seconds to ms
+                    break;
+            }
+        });
+        
+        return totalMs;
     }
 
     </script>

@@ -2,22 +2,22 @@ version: '3'
 
 services:
 
-  # broker-service:
-  #   build:
-  #     context: ./../broker
-  #     dockerfile: broker.dockerfile
-  #   restart: always
-  #   ports:
-  #     - "8080:8080"
-  #   links:
-  #     - authenticate-service
-  #     - google-map-service
-  #     - tabelog-spider-service
-  #     - logger-service
-  #     - mail-service
-  #   deploy:
-  #     mode: replicated
-  #     replicas: 1
+  broker-service:
+    build:
+      context: ./../broker
+      dockerfile: broker.dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    links:
+      - authenticate-service
+      - google-map-service
+      - tabelog-spider-service
+      # - logger-service
+      # - mail-service
+    deploy:
+      mode: replicated
+      replicas: 1
 
   authenticate-service:
     build:
@@ -81,16 +81,16 @@ services:
   #   links:
   #     - mongo
 
-  # mongo:
-  #   image: 'mongo:4.2.16-bionic'
-  #   ports:
-  #     - "27017:27017"
-  #   environment:
-  #     MONGO_INITDB_DATABASE: logs
-  #     MONGO_INITDB_ROOT_USERNAME: admin
-  #     MONGO_INITDB_ROOT_PASSWORD: jt79100
-  #   volumes:
-  #     - ./db-data/mongo/:/data/db/
+  mongo:
+    image: 'mongo:8.0.4'
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: logs
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: jt79100
+    volumes:
+      - ./db-data/mongo/:/data/db/
   
   # mail-service:
   #   build:

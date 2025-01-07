@@ -47,14 +47,13 @@ type RenewAccessTokenRequest struct {
 
 type SaveFavoriteRequest struct {
 	IsFavorite    bool   `json:"is_favorite" binding:"required"`
-	UserID        string `json:"user_id" binding:"required"`
 	PlaceGoogleID string `json:"place_google_id" binding:"required"`
 }
 
-func (req *SaveFavoriteRequest) ToEntity() entitymodel.Favorite {
+func (req *SaveFavoriteRequest) ToEntity(userID string) entitymodel.Favorite {
 	return entitymodel.Favorite{
 		ID:            utility.GenDefaultUUID(),
-		UserID:        req.UserID,
+		UserID:        userID,
 		PlaceGoogleID: req.PlaceGoogleID,
 		IsFavorite:    req.IsFavorite,
 		CreatedAt:     time.Now(),
@@ -63,15 +62,14 @@ func (req *SaveFavoriteRequest) ToEntity() entitymodel.Favorite {
 }
 
 type GetUserFavoritesRequest struct {
-	UserID                   string  `form:"user_id" binding:"required"`
 	Country                  *string `form:"country"`
 	AdministrativeAreaLevel1 *string `form:"administrative_area_level_1"`
 	OrderBy                  *int    `form:"order_by"`
 }
 
-func (req *GetUserFavoritesRequest) ToEntity() entitymodel.GetUserFavoritesRequest {
+func (req *GetUserFavoritesRequest) ToEntity(userID string) entitymodel.GetUserFavoritesRequest {
 	entity := entitymodel.GetUserFavoritesRequest{
-		UserID:                   req.UserID,
+		UserID:                   userID,
 		Country:                  req.Country,
 		AdministrativeAreaLevel1: req.AdministrativeAreaLevel1,
 	}

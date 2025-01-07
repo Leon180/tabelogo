@@ -3,8 +3,8 @@ package main
 import (
 	"authenticate/config"
 	"authenticate/grpc/proto"
-	grpcservice "authenticate/grpc/service"
 	"authenticate/inject"
+	"authenticate/middleware"
 	"authenticate/model/enum"
 	"authenticate/postgresqldb"
 	"authenticate/postgresqldb/postgresqldbMigrate"
@@ -14,6 +14,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os/signal"
 	"slices"
@@ -31,6 +32,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +50,11 @@ import (
 
 // @host      localhost:80
 // @BasePath /authenticate
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT authorization header
 func main() {
 	var (
 		cfg              config.Config
@@ -85,6 +92,10 @@ func main() {
 	// inject
 	controllerHandle = inject.InitControllerHandle(db, &cfg, utility.Logger, redisClient, cfg.TokenSymmetricKey)
 
+	// init middleware
+	authMiddleware := middleware.NewTransactionAuthMiddleware(redisClient, db)
+	traceIDMiddleware := middleware.NewTraceIDMiddleware()
+
 	engine = gin.Default()
 	engine.SetTrustedProxies(nil)
 	engine.Use(
@@ -94,8 +105,9 @@ func main() {
 		location.Default(),
 		cors.New(cfg.GenCORSConfig()),
 		LogRequest(),
+		traceIDMiddleware.Handler(),
 	)
-	setRoute(engine, controllerHandle)
+	setRoute(engine, controllerHandle, authMiddleware)
 	server := &http.Server{
 		Addr:    ":" + cfg.ConnWebPort,
 		Handler: engine,
@@ -106,8 +118,23 @@ func main() {
 		}
 	}()
 
-	s := grpc.NewServer()
-	proto.RegisterUserServiceServer(s, grpcservice.NewUserServiceServer(controllerHandle.RegistUserController.RegistUser))
+	lis, err := net.Listen("tcp", ":"+cfg.ConnGRPCPort) // Add cfg.GRPCPort to your config
+	if err != nil {
+		utility.SugarLogger.Fatalf("failed to listen: %v", err)
+	}
+	authInterceptor := middleware.NewTransactionAuthInterceptor(redisClient, db)
+	traceIDInterceptor := middleware.NewTraceIDInterceptor()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(authInterceptor.Unary()),
+		grpc.UnaryInterceptor(traceIDInterceptor.Unary()),
+	)
+	setGRPCService(s, controllerHandle)
+	reflection.Register(s)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
 
 	// graceful shutdown setup
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -122,6 +149,7 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		utility.SugarLogger.Errorf("Error during server shutdown: %v", err)
 	}
+	s.GracefulStop()
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Shutting down gracefully")
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Server shutdown")
 }
@@ -146,14 +174,14 @@ func LogRequest() gin.HandlerFunc {
 	}
 }
 
-func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
+func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle, authMiddleware *middleware.AuthMiddleware) {
 	// Swagger docs
 	// Use this URL config for swagger
 	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	defaultRouter := engine.Group(engine.BasePath())
 	baseRouter := defaultRouter.Group("/authenticate")
-	placeRouter := baseRouter.Group("/place")
+	placeRouter := baseRouter.Group("/place").Use(authMiddleware.Handler())
 	{
 		placeRouter.POST("/savePlace", controllerHandle.SavePlaceController.SavePlace)
 		placeRouter.GET("/getPlace", controllerHandle.GetPlaceController.GetPlace)
@@ -163,7 +191,13 @@ func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 		userRouter.POST("/registUser", controllerHandle.RegistUserController.RegistUser)
 		userRouter.POST("/loginUser", controllerHandle.LoginUserController.LoginUser)
 		userRouter.POST("/renewAccessToken", controllerHandle.RenewAccessTokenController.RenewAccessToken)
-		userRouter.POST("/saveFavorite", controllerHandle.SaveFavoriteController.SaveFavorite)
-		userRouter.GET("/getUserFavorites", controllerHandle.GetUserFavoritesController.GetUserFavorites)
+		userRouter.POST("/logoutUser", authMiddleware.Handler(), controllerHandle.LogoutUserController.LogoutUser)
+		userRouter.POST("/saveFavorite", authMiddleware.Handler(), controllerHandle.SaveFavoriteController.SaveFavorite)
+		userRouter.GET("/getUserFavorites", authMiddleware.Handler(), controllerHandle.GetUserFavoritesController.GetUserFavorites)
 	}
+}
+
+func setGRPCService(s *grpc.Server, controllerHandle *inject.ControllerHandle) {
+	proto.RegisterUserServiceServer(s, controllerHandle.UserServiceServer)
+	proto.RegisterPlaceServiceServer(s, controllerHandle.PlaceServiceServer)
 }

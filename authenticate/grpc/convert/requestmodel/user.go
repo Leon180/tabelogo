@@ -29,14 +29,12 @@ func ConvertRenewAccessTokenRequest(req *proto.RenewAccessTokenRequest) requestm
 func ConvertSaveFavoriteRequest(req *proto.SaveFavoriteRequest) requestmodel.SaveFavoriteRequest {
 	return requestmodel.SaveFavoriteRequest{
 		IsFavorite:    req.IsFavorite,
-		UserID:        req.UserId,
 		PlaceGoogleID: req.PlaceGoogleId,
 	}
 }
 
 func ConvertGetUserFavoritesRequest(req *proto.GetUserFavoritesRequest) requestmodel.GetUserFavoritesRequest {
 	return requestmodel.GetUserFavoritesRequest{
-		UserID: req.UserId,
 		Country: func() *string {
 			if req.Country == "" {
 				return nil

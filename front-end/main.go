@@ -61,12 +61,16 @@ func renderFrontEnd(w http.ResponseWriter, t string, config Config) {
 	}
 
 	var data struct {
-		BrokerURL  string
-		WebsiteURL string
+		BrokerURL            string
+		WebsiteURL           string
+		AccessTokenDuration  string
+		RefreshTokenDuration string
 	}
 
 	data.BrokerURL = config.BrokerURLDeployment
 	data.WebsiteURL = config.WebsiteURLDeployment
+	data.AccessTokenDuration = config.AccessTokenDuration
+	data.RefreshTokenDuration = config.RefreshTokenDuration
 
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

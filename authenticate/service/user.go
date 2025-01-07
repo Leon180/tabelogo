@@ -90,7 +90,6 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 		refreshToken   string
 		refreshPayload *token.Payload
 		session        entitymodel.Session
-		existedSession entitymodel.Session
 		needUpdate     bool
 		regenSession   bool
 	)
@@ -138,35 +137,34 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 		}
 
 		// check session in db
-		existedSession, err = handle.userAndSessionWithTransactionRepository.GetSessionByUserID(ctx, session.UserID)
+		session, err = handle.userAndSessionWithTransactionRepository.GetSessionByUserID(ctx, existedUser.ID)
 		if err != nil {
 			return err
 		}
 
-		// generate access token
-		if accessToken, accessPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.AccessTokenDuration); err != nil {
-			return err
-		}
-		// generate refresh token
-		if refreshToken, refreshPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.RefreshTokenDuration); err != nil {
-			return err
-		}
-		session = entitymodel.Session{
-			ID:                    utility.GenDefaultUUID(),
-			UserID:                existedUser.ID,
-			AccessToken:           accessToken,
-			RefreshToken:          refreshToken,
-			UserAgent:             request.UserAgent,
-			ClientIP:              request.ClientIP,
-			IsBlocked:             false,
-			AccessTokenExpiresAt:  accessPayload.ExpiresAt,
-			RefreshTokenExpiresAt: refreshPayload.ExpiresAt,
-			CreatedAt:             time.Now(),
-		}
-
 		// if session not exist, create session
-		if !existedSession.IsExist() {
+		if !session.IsExist() {
 			regenSession = true
+			// generate access token
+			if accessToken, accessPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.AccessTokenDuration); err != nil {
+				return err
+			}
+			// generate refresh token
+			if refreshToken, refreshPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.RefreshTokenDuration); err != nil {
+				return err
+			}
+			session = entitymodel.Session{
+				ID:                    utility.GenDefaultUUID(),
+				UserID:                existedUser.ID,
+				AccessToken:           accessToken,
+				RefreshToken:          refreshToken,
+				UserAgent:             request.UserAgent,
+				ClientIP:              request.ClientIP,
+				IsBlocked:             false,
+				AccessTokenExpiresAt:  accessPayload.ExpiresAt,
+				RefreshTokenExpiresAt: refreshPayload.ExpiresAt,
+				CreatedAt:             time.Now(),
+			}
 			if err = handle.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
 				return err
 			}
@@ -176,17 +174,17 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 		// if session exist:
 
 		// if session is blocked, return error
-		if existedSession.Blocked() {
+		if session.Blocked() {
 			return errors.SessionBlockedError
 		}
 
 		// if session can be updated, update session
-		if (existedSession.IsAccessTokenExpired() && !existedSession.IsRefreshTokenExpired()) ||
-			existedSession.IsAccessTokenExpired() {
-			existedSession.AccessTokenExpiresAt = session.AccessTokenExpiresAt.Add(handle.config.RefreshTokenDuration)
-			existedSession.ClientIP = request.ClientIP
-			existedSession.UserAgent = request.UserAgent
-			if err = handle.userAndSessionWithTransactionRepository.UpdateSession(ctx, existedSession.ID, existedSession.GetUpdates()); err != nil {
+		if (session.IsAccessTokenExpired() && !session.IsRefreshTokenExpired()) ||
+			session.IsAccessTokenExpired() {
+			session.AccessTokenExpiresAt = session.AccessTokenExpiresAt.Add(handle.config.RefreshTokenDuration)
+			session.ClientIP = request.ClientIP
+			session.UserAgent = request.UserAgent
+			if err = handle.userAndSessionWithTransactionRepository.UpdateSession(ctx, session.ID, session.GetUpdates()); err != nil {
 				return err
 			}
 			return nil
@@ -194,7 +192,7 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 
 		// if session is exist but expired, delete session and create new session
 		regenSession = true
-		if err = handle.userAndSessionWithTransactionRepository.DeleteSession(ctx, existedSession.ID); err != nil {
+		if err = handle.userAndSessionWithTransactionRepository.DeleteSession(ctx, session.ID); err != nil {
 			return err
 		}
 		if err = handle.userAndSessionWithTransactionRepository.CreateSession(ctx, session); err != nil {
@@ -208,16 +206,21 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 	expiry := time.Until(session.AccessTokenExpiresAt)
 	// if exist session, reset exist session in redis
 	if !regenSession {
-		if err = handle.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, existedSession, &expiry); err != nil {
+		if err = handle.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, session, &expiry); err != nil {
 			return entitymodel.Session{}, err
 		}
-		return existedSession, nil
+		if err = handle.SessionWithTransactionRedis.SetSession(ctx, session.AccessToken, session, &expiry); err != nil {
+			return entitymodel.Session{}, err
+		}
+		return session, nil
 	}
 	// else set session in redis
 	if err = handle.SessionWithTransactionRedis.SetSession(ctx, loginUser.Email, session, &expiry); err != nil {
 		return entitymodel.Session{}, err
 	}
-
+	if err = handle.SessionWithTransactionRedis.SetSession(ctx, session.AccessToken, session, &expiry); err != nil {
+		return entitymodel.Session{}, err
+	}
 	return session, nil
 }
 
@@ -237,6 +240,13 @@ func NewRenewAccessTokenServiceHandler(
 		SessionWithTransactionRedis:             SessionWithTransactionRedis,
 		config:                                  config,
 	}
+}
+
+type RenewAccessTokenServiceHandle struct {
+	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler
+	tokenMaker                              token.Maker
+	SessionWithTransactionRedis             redisDB.SessionWithTransactionHandler
+	config                                  *config.Config
 }
 
 func (handle *RenewAccessTokenServiceHandle) RenewAccessToken(ctx context.Context, refreshToken string) (entitymodel.Session, error) {
@@ -291,21 +301,70 @@ func (handle *RenewAccessTokenServiceHandle) RenewAccessToken(ctx context.Contex
 		if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, &expiry); err != nil {
 			return entitymodel.Session{}, err
 		}
+		if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.Session.AccessToken, sessionWithUser.Session, &expiry); err != nil {
+			return entitymodel.Session{}, err
+		}
 		return sessionWithUser.Session, nil
 	}
 	// else set session in redis
 	if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, &expiry); err != nil {
 		return entitymodel.Session{}, err
 	}
+	if err = handle.SessionWithTransactionRedis.SetSession(ctx, sessionWithUser.Session.AccessToken, sessionWithUser.Session, &expiry); err != nil {
+		return entitymodel.Session{}, err
+	}
 
 	return sessionWithUser.Session, nil
 }
 
-type RenewAccessTokenServiceHandle struct {
+type LogoutUserServiceHandler interface {
+	LogoutUser(ctx context.Context, userID string, accessToken string) error
+}
+
+func NewLogoutUserServiceHandler(
+	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler,
+	SessionWithTransactionRedis redisDB.SessionWithTransactionHandler,
+) LogoutUserServiceHandler {
+	return &LogoutUserServiceHandle{
+		userAndSessionWithTransactionRepository: userAndSessionWithTransactionRepository,
+		SessionWithTransactionRedis:             SessionWithTransactionRedis,
+	}
+}
+
+type LogoutUserServiceHandle struct {
 	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler
-	tokenMaker                              token.Maker
 	SessionWithTransactionRedis             redisDB.SessionWithTransactionHandler
-	config                                  *config.Config
+}
+
+func (handle *LogoutUserServiceHandle) LogoutUser(ctx context.Context, userID string, accessToken string) error {
+	// get session in db
+	sessionWithUser, err := handle.userAndSessionWithTransactionRepository.GetSessionWithUserByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if !sessionWithUser.IsExist() {
+		return errors.HTTPStatusUnauthorized
+	}
+	// delete session in redis
+	if err := handle.userAndSessionWithTransactionRepository.WithTransaction(ctx, func(tx *gorm.DB) error {
+		if err := handle.SessionWithTransactionRedis.DeleteSession(ctx, sessionWithUser.User.Email); err != nil {
+			return err
+		}
+		if err := handle.SessionWithTransactionRedis.DeleteSession(ctx, sessionWithUser.Session.AccessToken); err != nil {
+			return err
+		}
+		if err := handle.SessionWithTransactionRedis.DeleteSession(ctx, accessToken); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	// delete session in db
+	if err := handle.userAndSessionWithTransactionRepository.DeleteSession(ctx, sessionWithUser.Session.ID); err != nil {
+		return err
+	}
+	return nil
 }
 
 type SaveFavoriteServiceHandler interface {

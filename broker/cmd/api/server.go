@@ -28,17 +28,11 @@ func NewServer(rabbitConn *amqp.Connection) *Server {
 	router.POST("/tabelogo", server.TransRequest("POST", tabelogSpiderServiceURL))
 	router.POST("/tabephoto", server.TransRequest("POST", tabelogSpiderServiceURL+"/photo"))
 	// Authenticate service:
-	router.POST("/regist", server.TransRequest("POST", authenticateServiceURL+"/regist"))
-	router.POST("/login", server.TransRequest("POST", authenticateServiceURL+"/login"))
-	router.POST("/renew_access", server.TransRequest("POST", authenticateServiceURL+"/renew_access"))
-	router.POST("/favorite", server.TransRequest("POST", authenticateServiceURL+"/favorite")) // toggle favorite
-	router.POST("/get_favs", server.TransRequest("POST", authenticateServiceURL+"/get_favs"))
-	router.POST("/get_favs_by_country", server.TransRequest("POST", authenticateServiceURL+"/get_favs_by_country"))
-	router.POST("/get_favs_by_country_region", server.TransRequest("POST", authenticateServiceURL+"/get_favs_by_country_region"))
-	router.POST("get_fav_countries", server.TransRequest("POST", authenticateServiceURL+"/get_fav_countries"))
-	router.POST("get_fav_regions", server.TransRequest("POST", authenticateServiceURL+"/get_fav_regions"))
-	router.POST("/check_update_fav", server.TransRequest("POST", authenticateServiceURL+"/check_update_fav"))
-	router.POST("/get_user", server.TransRequest("POST", authenticateServiceURL+"/get_user"))
+	router.POST("/user/registUser", server.TransRequest("POST", authenticateServiceURL+"/user/registUser"))
+	router.POST("/user/loginUser", server.TransRequest("POST", authenticateServiceURL+"/user/loginUser"))
+	router.POST("/user/renewAccessToken", server.TransRequest("POST", authenticateServiceURL+"/user/renewAccessToken"))
+	router.POST("/user/saveFavorite", server.TransRequest("POST", authenticateServiceURL+"/user/saveFavorite")) // toggle favorite
+	router.POST("/user/getUserFavorites", server.TransRequest("POST", authenticateServiceURL+"/user/getUserFavorites"))
 	// Google API service:
 	router.POST("/quick_search", server.TransRequest("POST", googleMapServiceURL+"/quick_search"))
 	router.POST("/advance_search", server.TransRequest("POST", googleMapServiceURL+"/advance_search"))

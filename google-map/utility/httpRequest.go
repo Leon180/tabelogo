@@ -16,10 +16,6 @@ func RequestToAnotherService(
 	body string,
 ) (*http.Response, error) {
 
-	// create context with timeout
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, method.ToString(), url.ToString(), bytes.NewBuffer([]byte(body)))
 	if err != nil {
@@ -39,7 +35,7 @@ func RequestToAnotherService(
 
 	// Create client
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 10 * time.Second,
 	}
 
 	// Send the request

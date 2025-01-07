@@ -9,10 +9,11 @@ type Config struct {
 	WebsiteURL           string `mapstructure:"WEBSITE_URL"`
 	BrokerURLDeployment  string `mapstructure:"BROKER_URL_DEPLOYMENT"`
 	WebsiteURLDeployment string `mapstructure:"WEBSITE_URL_DEPLOYMENT"`
+	AccessTokenDuration  string `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration string `mapstructure:"REFRESH_TOKEN_DURATION"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
-
 	// set the config file type
 	viper.SetConfigType("env")
 	viper.SetConfigName("app")

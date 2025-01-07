@@ -30,8 +30,10 @@ func (a APIErr) Error() string {
 }
 
 var (
-	HTTPStatusBadRequest = &APIErr{HTTPStatus: http.StatusBadRequest, ErrorCode: enum.HTTPStatusBadRequest, ErrorMessage: ErrorMessageMap[enum.HTTPStatusBadRequest]}
-	RedisNilError        = &APIErr{HTTPStatus: http.StatusBadRequest, ErrorCode: enum.RedisNilError, ErrorMessage: ErrorMessageMap[enum.RedisNilError]}
+	HTTPStatusBadRequest          = &APIErr{HTTPStatus: http.StatusBadRequest, ErrorCode: enum.HTTPStatusBadRequest, ErrorMessage: ErrorMessageMap[enum.HTTPStatusBadRequest]}
+	HTTPStatusUnauthorized        = &APIErr{HTTPStatus: http.StatusUnauthorized, ErrorCode: enum.HTTPStatusUnauthorized, ErrorMessage: ErrorMessageMap[enum.HTTPStatusUnauthorized]}
+	HTTPStatusInternalServerError = &APIErr{HTTPStatus: http.StatusInternalServerError, ErrorCode: enum.HTTPStatusInternalServerError, ErrorMessage: ErrorMessageMap[enum.HTTPStatusInternalServerError]}
+	RedisNilError                 = &APIErr{HTTPStatus: http.StatusBadRequest, ErrorCode: enum.RedisNilError, ErrorMessage: ErrorMessageMap[enum.RedisNilError]}
 )
 
 var (
@@ -50,8 +52,10 @@ var (
 )
 
 var ErrorMessageMap = map[enum.ErrorCode]string{
-	enum.HTTPStatusBadRequest: "Bad Request",
-	enum.RedisNilError:        "Redis Nil Error",
+	enum.HTTPStatusBadRequest:          "Bad Request",
+	enum.HTTPStatusUnauthorized:        "Unauthorized",
+	enum.HTTPStatusInternalServerError: "Internal Server Error",
+	enum.RedisNilError:                 "Redis Nil Error",
 
 	// user
 	enum.UserNotExistsError:     "User already exists",

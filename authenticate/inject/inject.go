@@ -1,6 +1,9 @@
 package inject
 
-import "authenticate/controller"
+import (
+	"authenticate/controller"
+	grpcservice "authenticate/grpc/service"
+)
 
 // ControllerHandle Controller Handle
 type ControllerHandle struct {
@@ -11,6 +14,9 @@ type ControllerHandle struct {
 	GetUserFavoritesController *controller.GetUserFavoritesControllerHandle
 	SavePlaceController        *controller.SavePlaceControllerHandle
 	GetPlaceController         *controller.GetPlaceControllerHandle
+	LogoutUserController       *controller.LogoutUserControllerHandle
+	UserServiceServer          *grpcservice.UserServiceServer
+	PlaceServiceServer         *grpcservice.PlaceServiceServer
 }
 
 func newControllerHandle(
@@ -21,6 +27,9 @@ func newControllerHandle(
 	getUserFavoritesController *controller.GetUserFavoritesControllerHandle,
 	savePlaceController *controller.SavePlaceControllerHandle,
 	getPlaceController *controller.GetPlaceControllerHandle,
+	logoutUserController *controller.LogoutUserControllerHandle,
+	userServiceServer *grpcservice.UserServiceServer,
+	placeServiceServer *grpcservice.PlaceServiceServer,
 ) *ControllerHandle {
 	return &ControllerHandle{
 		RegistUserController:       registUserController,
@@ -30,5 +39,8 @@ func newControllerHandle(
 		GetUserFavoritesController: getUserFavoritesController,
 		SavePlaceController:        savePlaceController,
 		GetPlaceController:         getPlaceController,
+		LogoutUserController:       logoutUserController,
+		UserServiceServer:          userServiceServer,
+		PlaceServiceServer:         placeServiceServer,
 	}
 }

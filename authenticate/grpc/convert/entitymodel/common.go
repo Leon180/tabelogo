@@ -2,7 +2,9 @@ package entitymodel
 
 import (
 	"authenticate/model/entitymodel"
+	"authenticate/model/enum"
 	"context"
+	"strings"
 
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -13,8 +15,9 @@ func ConvertRequest(ctx context.Context) entitymodel.Request {
 	return entitymodel.Request{
 		UserAgent: func() string {
 			md, ok := metadata.FromIncomingContext(ctx)
-			if ok && len(md.Get("user-agent")) > 0 {
-				return md.Get("user-agent")[0]
+			key := strings.ToLower(enum.RequestHeaderUserAgent.ToString())
+			if ok && len(md.Get(key)) > 0 {
+				return md.Get(key)[0]
 			}
 			return ""
 		}(),

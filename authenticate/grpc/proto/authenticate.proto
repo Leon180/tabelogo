@@ -9,6 +9,7 @@ service UserService {
     rpc RegistUser (RegistUserRequest) returns (User);
     rpc LoginUser (LoginUserRequest) returns (LoginUserResponse);
     rpc RenewAccessToken (RenewAccessTokenRequest) returns (LoginUserResponse);
+    rpc LogoutUser (CommonRequest) returns (CommonResponse);
     rpc SaveFavorite (SaveFavoriteRequest) returns (CommonResponse);
     rpc GetUserFavorites (GetUserFavoritesRequest) returns (GetUserFavoritesResponse);
 }
@@ -17,6 +18,10 @@ service UserService {
 service PlaceService {
     rpc SavePlace (SavePlaceRequest) returns (CommonResponse);
     rpc GetPlace (GetPlaceRequest) returns (Place);
+}
+
+message CommonRequest {
+    string message = 1;
 }
 
 message CommonResponse {
@@ -48,15 +53,13 @@ message RenewAccessTokenRequest {
 
 message SaveFavoriteRequest {
     bool is_favorite = 1;
-    string user_id = 2;
-    string place_google_id = 3;
+    string place_google_id = 2;
 }
 
 message GetUserFavoritesRequest {
-    string user_id = 1;
-    string country = 2;
-    string administrative_area_level_1 = 3;
-    int32 order_by = 4;
+    string country = 1;
+    string administrative_area_level_1 = 2;
+    int32 order_by = 3;
 }
 
 message GetUserFavoritesResponse {

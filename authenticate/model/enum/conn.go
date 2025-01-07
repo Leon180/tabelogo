@@ -1,6 +1,10 @@
 package enum
 
-import "github.com/samber/lo"
+import (
+	"strings"
+
+	"github.com/samber/lo"
+)
 
 const MiddleWareEventIDKey = "event_id_key"
 
@@ -96,6 +100,7 @@ const (
 	RequestHeaderAccessHeaders  RequestHeader = "Access-Control-Request-Headers"
 	RequestHeaderXGoogAPIKey    RequestHeader = "X-Goog-Api-Key"
 	RequestHeaderXGoogFieldMask RequestHeader = "X-Goog-FieldMask"
+	RequestHeaderUserAgent      RequestHeader = "User-Agent"
 )
 
 func (r RequestHeader) ToString() string {
@@ -157,4 +162,18 @@ func (e ExposeHeaderGroup) GetSlice() ExposeHeaderSlice {
 	default:
 		return ExposeHeaderSlice{}
 	}
+}
+
+type AuthorizationType string
+
+const (
+	AuthorizationTypeBearer AuthorizationType = "Bearer"
+)
+
+func (a AuthorizationType) ToString() string {
+	return string(a)
+}
+
+func (a AuthorizationType) MatchNoCase(authType string) bool {
+	return strings.EqualFold(a.ToString(), authType)
 }

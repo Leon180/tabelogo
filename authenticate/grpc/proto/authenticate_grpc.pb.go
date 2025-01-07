@@ -22,6 +22,7 @@ const (
 	UserService_RegistUser_FullMethodName       = "/grpcauth.UserService/RegistUser"
 	UserService_LoginUser_FullMethodName        = "/grpcauth.UserService/LoginUser"
 	UserService_RenewAccessToken_FullMethodName = "/grpcauth.UserService/RenewAccessToken"
+	UserService_LogoutUser_FullMethodName       = "/grpcauth.UserService/LogoutUser"
 	UserService_SaveFavorite_FullMethodName     = "/grpcauth.UserService/SaveFavorite"
 	UserService_GetUserFavorites_FullMethodName = "/grpcauth.UserService/GetUserFavorites"
 )
@@ -33,6 +34,7 @@ type UserServiceClient interface {
 	RegistUser(ctx context.Context, in *RegistUserRequest, opts ...grpc.CallOption) (*User, error)
 	LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
 	RenewAccessToken(ctx context.Context, in *RenewAccessTokenRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
+	LogoutUser(ctx context.Context, in *CommonRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	SaveFavorite(ctx context.Context, in *SaveFavoriteRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 	GetUserFavorites(ctx context.Context, in *GetUserFavoritesRequest, opts ...grpc.CallOption) (*GetUserFavoritesResponse, error)
 }
@@ -75,6 +77,16 @@ func (c *userServiceClient) RenewAccessToken(ctx context.Context, in *RenewAcces
 	return out, nil
 }
 
+func (c *userServiceClient) LogoutUser(ctx context.Context, in *CommonRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, UserService_LogoutUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) SaveFavorite(ctx context.Context, in *SaveFavoriteRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommonResponse)
@@ -102,6 +114,7 @@ type UserServiceServer interface {
 	RegistUser(context.Context, *RegistUserRequest) (*User, error)
 	LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
 	RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*LoginUserResponse, error)
+	LogoutUser(context.Context, *CommonRequest) (*CommonResponse, error)
 	SaveFavorite(context.Context, *SaveFavoriteRequest) (*CommonResponse, error)
 	GetUserFavorites(context.Context, *GetUserFavoritesRequest) (*GetUserFavoritesResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
@@ -122,6 +135,9 @@ func (UnimplementedUserServiceServer) LoginUser(context.Context, *LoginUserReque
 }
 func (UnimplementedUserServiceServer) RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*LoginUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RenewAccessToken not implemented")
+}
+func (UnimplementedUserServiceServer) LogoutUser(context.Context, *CommonRequest) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LogoutUser not implemented")
 }
 func (UnimplementedUserServiceServer) SaveFavorite(context.Context, *SaveFavoriteRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveFavorite not implemented")
@@ -204,6 +220,24 @@ func _UserService_RenewAccessToken_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_LogoutUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).LogoutUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_LogoutUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).LogoutUser(ctx, req.(*CommonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_SaveFavorite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SaveFavoriteRequest)
 	if err := dec(in); err != nil {
@@ -258,6 +292,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RenewAccessToken",
 			Handler:    _UserService_RenewAccessToken_Handler,
+		},
+		{
+			MethodName: "LogoutUser",
+			Handler:    _UserService_LogoutUser_Handler,
 		},
 		{
 			MethodName: "SaveFavorite",

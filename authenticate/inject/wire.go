@@ -25,6 +25,7 @@ func InitControllerHandle(
 		tokenMakerHandleSet,
 		serviceHandleSet,
 		controllerHandleSet,
+		grpcServerSet,
 		newControllerHandle,
 	)
 	return &ControllerHandle{}

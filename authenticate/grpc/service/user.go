@@ -1,10 +1,12 @@
 package grpcservice
 
 import (
+	"authenticate/errors"
 	convertentity "authenticate/grpc/convert/entitymodel"
 	convertrequest "authenticate/grpc/convert/requestmodel"
 	convertresponse "authenticate/grpc/convert/responsemodel"
 	"authenticate/grpc/proto"
+	"authenticate/middleware"
 	"authenticate/service"
 	"context"
 )
@@ -13,6 +15,7 @@ func NewUserServiceServer(
 	registUserServiceHandler service.RegistUserServiceHandler,
 	loginUserServiceHandler service.LoginUserServiceHandler,
 	renewAccessTokenServiceHandler service.RenewAccessTokenServiceHandler,
+	logoutUserServiceHandler service.LogoutUserServiceHandler,
 	saveFavoriteServiceHandler service.SaveFavoriteServiceHandler,
 	getUserFavoritesServiceHandler service.GetUserFavoritesServiceHandler,
 ) *UserServiceServer {
@@ -20,6 +23,7 @@ func NewUserServiceServer(
 		registUserServiceHandler:       registUserServiceHandler,
 		loginUserServiceHandler:        loginUserServiceHandler,
 		renewAccessTokenServiceHandler: renewAccessTokenServiceHandler,
+		logoutUserServiceHandler:       logoutUserServiceHandler,
 		saveFavoriteServiceHandler:     saveFavoriteServiceHandler,
 		getUserFavoritesServiceHandler: getUserFavoritesServiceHandler,
 	}
@@ -30,6 +34,7 @@ type UserServiceServer struct {
 	registUserServiceHandler       service.RegistUserServiceHandler
 	loginUserServiceHandler        service.LoginUserServiceHandler
 	renewAccessTokenServiceHandler service.RenewAccessTokenServiceHandler
+	logoutUserServiceHandler       service.LogoutUserServiceHandler
 	saveFavoriteServiceHandler     service.SaveFavoriteServiceHandler
 	getUserFavoritesServiceHandler service.GetUserFavoritesServiceHandler
 }
@@ -69,9 +74,26 @@ func (server *UserServiceServer) RenewAccessToken(ctx context.Context, req *prot
 	return convertresponse.SessionEntityModel(session).ToLoginUserResponseProto(), nil
 }
 
+func (server *UserServiceServer) LogoutUser(ctx context.Context, req *proto.CommonRequest) (*proto.CommonResponse, error) {
+	session, ok := middleware.GRPCGetSession(ctx)
+	if !ok {
+		return nil, errors.HTTPStatusUnauthorized
+	}
+	if err := server.logoutUserServiceHandler.LogoutUser(ctx, session.UserID, session.AccessToken); err != nil {
+		return nil, err
+	}
+	return &proto.CommonResponse{
+		Message: "success",
+	}, nil
+}
+
 func (server *UserServiceServer) SaveFavorite(ctx context.Context, req *proto.SaveFavoriteRequest) (*proto.CommonResponse, error) {
 	request := convertrequest.ConvertSaveFavoriteRequest(req)
-	if err := server.saveFavoriteServiceHandler.SaveFavorite(ctx, request.ToEntity()); err != nil {
+	session, ok := middleware.GRPCGetSession(ctx)
+	if !ok {
+		return nil, errors.HTTPStatusUnauthorized
+	}
+	if err := server.saveFavoriteServiceHandler.SaveFavorite(ctx, request.ToEntity(session.UserID)); err != nil {
 		return nil, err
 	}
 	return &proto.CommonResponse{
@@ -81,7 +103,11 @@ func (server *UserServiceServer) SaveFavorite(ctx context.Context, req *proto.Sa
 
 func (server *UserServiceServer) GetUserFavorites(ctx context.Context, req *proto.GetUserFavoritesRequest) (*proto.GetUserFavoritesResponse, error) {
 	request := convertrequest.ConvertGetUserFavoritesRequest(req)
-	favorites, err := server.getUserFavoritesServiceHandler.GetUserFavorites(ctx, request.ToEntity())
+	session, ok := middleware.GRPCGetSession(ctx)
+	if !ok {
+		return nil, errors.HTTPStatusUnauthorized
+	}
+	favorites, err := server.getUserFavoritesServiceHandler.GetUserFavorites(ctx, request.ToEntity(session.UserID))
 	if err != nil {
 		return nil, err
 	}

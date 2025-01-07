@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewSessionHandle(db *gorm.DB) repository.SessionHandler {
+func NewSessionHandler(db *gorm.DB) repository.SessionHandler {
 	return &SessionHandle{db: db}
 }
 
@@ -65,6 +65,34 @@ func (handle *SessionHandle) GetSessionByUserID(ctx context.Context, userID stri
 	}
 
 	return session.ToEntityModel(), nil
+}
+
+func (handle *SessionHandle) GetSessionWithUserByUserID(ctx context.Context, userID string) (entitymodel.SessionPreloadUser, error) {
+	var dbModel dbmodel.SessionPreloadUser
+
+	if err := handle.db.WithContext(ctx).
+		Preload("User").
+		Where("user_id = ?", userID).
+		Find(&dbModel).Error; err != nil {
+		utility.SugarLogger.Errorln("error getting session with user by user ID:", err)
+		return entitymodel.SessionPreloadUser{}, err
+	}
+
+	return dbModel.ToEntityModel(), nil
+}
+
+func (handle *SessionHandle) GetSessionWithUserByAccessToken(ctx context.Context, accessToken string) (entitymodel.SessionPreloadUser, error) {
+	var dbModel dbmodel.SessionPreloadUser
+
+	if err := handle.db.WithContext(ctx).
+		Preload("User").
+		Where("access_token = ?", accessToken).
+		Find(&dbModel).Error; err != nil {
+		utility.SugarLogger.Errorln("error getting session with user by access token:", err)
+		return entitymodel.SessionPreloadUser{}, err
+	}
+
+	return dbModel.ToEntityModel(), nil
 }
 
 func (handle *SessionHandle) GetSessionWithUserByRefreshToken(ctx context.Context, refreshToken string) (entitymodel.SessionPreloadUser, error) {

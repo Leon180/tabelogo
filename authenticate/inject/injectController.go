@@ -12,4 +12,5 @@ var controllerHandleSet = wire.NewSet(
 	provideGetUserFavoritesController,
 	provideSavePlaceController,
 	provideGetPlaceController,
+	provideLogoutUserController,
 )

@@ -9,6 +9,8 @@ import (
 	"authenticate/service"
 	"authenticate/token"
 
+	grpcservice "authenticate/grpc/service"
+
 	"gorm.io/gorm"
 )
 
@@ -96,4 +98,43 @@ func provideSaveFavoriteController(saveFavoriteServiceHandler service.SaveFavori
 
 func provideGetUserFavoritesController(getUserFavoritesServiceHandler service.GetUserFavoritesServiceHandler) *controller.GetUserFavoritesControllerHandle {
 	return controller.NewGetUserFavoritesControllerHandle(getUserFavoritesServiceHandler)
+}
+
+func provideLogoutUserService(
+	userAndSessionWithTransactionRepository repository.UserAndSessionWithTransactionHandler,
+	SessionWithTransactionRedis redisDB.SessionWithTransactionHandler,
+) service.LogoutUserServiceHandler {
+	return service.NewLogoutUserServiceHandler(userAndSessionWithTransactionRepository, SessionWithTransactionRedis)
+}
+
+func provideLogoutUserController(logoutUserServiceHandler service.LogoutUserServiceHandler) *controller.LogoutUserControllerHandle {
+	return controller.NewLogoutUserControllerHandle(logoutUserServiceHandler)
+}
+
+func provideUserServiceServer(
+	registUserServiceHandler service.RegistUserServiceHandler,
+	loginUserServiceHandler service.LoginUserServiceHandler,
+	renewAccessTokenServiceHandler service.RenewAccessTokenServiceHandler,
+	logoutUserServiceHandler service.LogoutUserServiceHandler,
+	saveFavoriteServiceHandler service.SaveFavoriteServiceHandler,
+	getUserFavoritesServiceHandler service.GetUserFavoritesServiceHandler,
+) *grpcservice.UserServiceServer {
+	return grpcservice.NewUserServiceServer(
+		registUserServiceHandler,
+		loginUserServiceHandler,
+		renewAccessTokenServiceHandler,
+		logoutUserServiceHandler,
+		saveFavoriteServiceHandler,
+		getUserFavoritesServiceHandler,
+	)
+}
+
+func providePlaceServiceServer(
+	savePlaceServiceHandler service.SavePlaceServiceHandler,
+	getPlaceServiceHandler service.GetPlaceServiceHandler,
+) *grpcservice.PlaceServiceServer {
+	return grpcservice.NewPlaceServiceServer(
+		savePlaceServiceHandler,
+		getPlaceServiceHandler,
+	)
 }

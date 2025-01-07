@@ -2,6 +2,8 @@ package controller
 
 import (
 	"authenticate/convert/HTTPResponse"
+	"authenticate/errors"
+	"authenticate/middleware"
 	"authenticate/model/requestmodel"
 	"authenticate/service"
 	"authenticate/utility"
@@ -21,6 +23,7 @@ func NewSavePlaceControllerHandle(savePlaceServiceHandler service.SavePlaceServi
 // @Description 場所保存
 // @Tags place
 // @Accept json
+// @Security BearerAuth
 // @Param param body requestmodel.SavePlaceRequest true "json"
 // @Produce  json
 // @Success 200 "success"
@@ -31,8 +34,11 @@ func (handle *SavePlaceControllerHandle) SavePlace(c *gin.Context) {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
-	place := req.ToEntity()
-	if err := handle.savePlaceServiceHandler.SavePlace(c.Request.Context(), place); err != nil {
+	if _, ok := middleware.GetSession(c); !ok {
+		utility.CommonErrorResponse(c, errors.HTTPStatusUnauthorized, nil)
+		return
+	}
+	if err := handle.savePlaceServiceHandler.SavePlace(c.Request.Context(), req.ToEntity()); err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
@@ -51,6 +57,7 @@ func NewGetPlaceControllerHandle(getPlaceServiceHandler service.GetPlaceServiceH
 // @Description 場所取得
 // @Tags place
 // @Accept json
+// @Security BearerAuth
 // @Param param query requestmodel.GetPlaceRequest true "json"
 // @Produce  json
 // @Success 200 "success"
@@ -59,6 +66,11 @@ func (handle *GetPlaceControllerHandle) GetPlace(c *gin.Context) {
 	var req requestmodel.GetPlaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utility.CommonErrorResponse(c, err, nil)
+		return
+	}
+	_, ok := middleware.GetSession(c)
+	if !ok {
+		utility.CommonErrorResponse(c, errors.HTTPStatusUnauthorized, nil)
 		return
 	}
 	place, err := handle.getPlaceServiceHandler.GetPlace(c.Request.Context(), req.GoogleID)

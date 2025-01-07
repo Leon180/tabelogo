@@ -2,6 +2,8 @@ package controller
 
 import (
 	"authenticate/convert/HTTPResponse"
+	"authenticate/errors"
+	"authenticate/middleware"
 	"authenticate/model/entitymodel"
 	"authenticate/model/requestmodel"
 	"authenticate/service"
@@ -121,10 +123,40 @@ func NewSaveFavoriteControllerHandle(saveFavoriteServiceHandler service.SaveFavo
 	return &SaveFavoriteControllerHandle{saveFavoriteServiceHandler: saveFavoriteServiceHandler}
 }
 
+type LogoutUserControllerHandle struct {
+	logoutUserServiceHandler service.LogoutUserServiceHandler
+}
+
+func NewLogoutUserControllerHandle(logoutUserServiceHandler service.LogoutUserServiceHandler) *LogoutUserControllerHandle {
+	return &LogoutUserControllerHandle{logoutUserServiceHandler: logoutUserServiceHandler}
+}
+
+// @Summary ログアウト
+// @Description ログアウト
+// @Tags user
+// @Accept json
+// @Security BearerAuth
+// @Produce  json
+// @Success 200 "success"
+// @Router /user/logoutUser [post]
+func (handle *LogoutUserControllerHandle) LogoutUser(c *gin.Context) {
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		utility.CommonErrorResponse(c, errors.HTTPStatusUnauthorized, nil)
+		return
+	}
+	if err := handle.logoutUserServiceHandler.LogoutUser(c.Request.Context(), session.UserID, session.AccessToken); err != nil {
+		utility.CommonErrorResponse(c, err, nil)
+		return
+	}
+	utility.CommonResponse(c, "success")
+}
+
 // @Summary お気に入り保存
 // @Description お気に入り保存
 // @Tags user
 // @Accept json
+// @Security BearerAuth
 // @Param param body requestmodel.SaveFavoriteRequest true "json"
 // @Produce  json
 // @Success 200 "success"
@@ -135,7 +167,12 @@ func (handle *SaveFavoriteControllerHandle) SaveFavorite(c *gin.Context) {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
-	if err := handle.saveFavoriteServiceHandler.SaveFavorite(c.Request.Context(), req.ToEntity()); err != nil {
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		utility.CommonErrorResponse(c, errors.HTTPStatusUnauthorized, nil)
+		return
+	}
+	if err := handle.saveFavoriteServiceHandler.SaveFavorite(c.Request.Context(), req.ToEntity(session.UserID)); err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
@@ -154,6 +191,7 @@ func NewGetUserFavoritesControllerHandle(getUserFavoritesServiceHandler service.
 // @Description お気に入り取得
 // @Tags user
 // @Accept json
+// @Security BearerAuth
 // @Param param query requestmodel.GetUserFavoritesRequest true "json"
 // @Produce  json
 // @Success 200 "success"
@@ -164,7 +202,12 @@ func (handle *GetUserFavoritesControllerHandle) GetUserFavorites(c *gin.Context)
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
-	favorites, err := handle.getUserFavoritesServiceHandler.GetUserFavorites(c.Request.Context(), req.ToEntity())
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		utility.CommonErrorResponse(c, errors.HTTPStatusUnauthorized, nil)
+		return
+	}
+	favorites, err := handle.getUserFavoritesServiceHandler.GetUserFavorites(c.Request.Context(), req.ToEntity(session.UserID))
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return

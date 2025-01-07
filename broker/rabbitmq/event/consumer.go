@@ -11,13 +11,15 @@ import (
 )
 
 type Consumer struct {
-	conn      *amqp.Connection
-	queueName string // deal with which queue?
+	conn          *amqp.Connection
+	queueName     string // deal with which queue?
+	logServiceURL string
 }
 
-func NewConsumer(conn *amqp.Connection) (Consumer, error) {
+func NewConsumer(conn *amqp.Connection, logServiceURL string) (Consumer, error) {
 	consumer := Consumer{
-		conn: conn,
+		conn:          conn,
+		logServiceURL: logServiceURL,
 	}
 
 	err := consumer.setup()
@@ -59,15 +61,13 @@ func (consumer *Consumer) Listen(topics []string) error {
 
 	// bind the queue to the exchange logs_topic for each topics key
 	for _, s := range topics {
-		ch.QueueBind(
+		if err := ch.QueueBind(
 			q.Name,
 			s,
 			"logs_topic",
 			false,
 			nil,
-		)
-
-		if err != nil {
+		); err != nil {
 			return err
 		}
 	}

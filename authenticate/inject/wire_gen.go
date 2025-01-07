@@ -40,6 +40,10 @@ func InitControllerHandle(db *gorm.DB, config2 *config.Config, logger *zap.Logge
 	redisDBPlaceHandler := providePlaceRedisRepository(redisClient)
 	getPlaceServiceHandler := provideGetPlaceService(placeHandler, redisDBPlaceHandler)
 	getPlaceControllerHandle := provideGetPlaceController(getPlaceServiceHandler)
-	controllerHandle := newControllerHandle(registUserControllerHandle, loginUserControllerHandle, renewAccessTokenControllerHandle, saveFavoriteControllerHandle, getUserFavoritesControllerHandle, savePlaceControllerHandle, getPlaceControllerHandle)
+	logoutUserServiceHandler := provideLogoutUserService(userAndSessionWithTransactionHandler, sessionWithTransactionHandler)
+	logoutUserControllerHandle := provideLogoutUserController(logoutUserServiceHandler)
+	userServiceServer := provideUserServiceServer(registUserServiceHandler, loginUserServiceHandler, renewAccessTokenServiceHandler, logoutUserServiceHandler, saveFavoriteServiceHandler, getUserFavoritesServiceHandler)
+	placeServiceServer := providePlaceServiceServer(savePlaceServiceHandler, getPlaceServiceHandler)
+	controllerHandle := newControllerHandle(registUserControllerHandle, loginUserControllerHandle, renewAccessTokenControllerHandle, saveFavoriteControllerHandle, getUserFavoritesControllerHandle, savePlaceControllerHandle, getPlaceControllerHandle, logoutUserControllerHandle, userServiceServer, placeServiceServer)
 	return controllerHandle
 }
