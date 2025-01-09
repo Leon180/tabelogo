@@ -24,6 +24,7 @@ func InitControllerHandle(config2 config.Config, logger *zap.Logger, db *mongo.C
 	deleteLogHandler := provideDeleteLogRepository(db)
 	serviceDeleteLogHandler := provideDeleteLogService(deleteLogHandler)
 	logController := provideLogController(serviceCreateLogHandler, serviceReadLogHandler, serviceUpdateLogHandler, serviceDeleteLogHandler)
-	controllerHandle := newControllerHandle(logController)
+	logServiceServer := provideLogServiceServer(serviceCreateLogHandler, serviceReadLogHandler, serviceUpdateLogHandler, serviceDeleteLogHandler)
+	controllerHandle := newControllerHandle(logController, logServiceServer)
 	return controllerHandle
 }

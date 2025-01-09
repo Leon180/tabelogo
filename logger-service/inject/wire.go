@@ -20,6 +20,7 @@ func InitControllerHandle(
 		repositoryHandleSet,
 		serviceHandleSet,
 		controllerHandleSet,
+		grpcServerSet,
 		newControllerHandle,
 	)
 	return &ControllerHandle{}

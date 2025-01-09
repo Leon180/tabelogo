@@ -1,7 +1,9 @@
 package utility
 
 import (
+	"context"
 	"logger-service/config"
+	"logger-service/model/enum"
 	"os"
 	"time"
 
@@ -99,4 +101,14 @@ func InitLogger(logCfg config.LogConfig) {
 		}),
 	)
 	SugarLogger = Logger.Sugar()
+}
+
+func LogWithTraceID(ctx context.Context, data ...interface{}) {
+	if traceID := ctx.Value(enum.TraceIDKey); traceID != nil {
+		SugarLogger.
+			With("EventID", traceID.(string)).
+			Error(data...)
+		return
+	}
+	SugarLogger.Error(data...)
 }

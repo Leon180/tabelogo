@@ -75,7 +75,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.CommonResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responsemodel.LogEntryResponse"
+                            }
                         }
                     }
                 }
@@ -109,7 +112,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.CommonResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/responsemodel.LogEntryResponse"
+                            }
                         }
                     }
                 }
@@ -146,7 +152,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "service": {
-                    "type": "string"
+                    "$ref": "#/definitions/enum.Service"
                 }
             }
         },
@@ -166,6 +172,37 @@ const docTemplate = `{
             "properties": {
                 "result": {}
             }
+        },
+        "responsemodel.LogEntryResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service": {
+                    "$ref": "#/definitions/enum.Service"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT authorization header",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

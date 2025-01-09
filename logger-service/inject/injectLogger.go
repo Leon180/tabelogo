@@ -5,6 +5,8 @@ import (
 	"logger-service/repository"
 	"logger-service/service"
 
+	grpcservice "logger-service/grpc/service"
+
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -47,4 +49,13 @@ func provideLogController(
 	deleteLogService service.DeleteLogHandler,
 ) *controller.LogController {
 	return controller.NewLogController(createLogService, readLogService, updateLogService, deleteLogService)
+}
+
+func provideLogServiceServer(
+	createLogService service.CreateLogHandler,
+	readLogService service.ReadLogHandler,
+	updateLogService service.UpdateLogHandler,
+	deleteLogService service.DeleteLogHandler,
+) *grpcservice.LogServiceServer {
+	return grpcservice.NewLogServiceServer(createLogService, readLogService, updateLogService, deleteLogService)
 }

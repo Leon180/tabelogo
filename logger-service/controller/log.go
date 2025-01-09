@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"logger-service/convert/HTTPResponse"
 	"logger-service/errors"
 	"logger-service/model/requestmodel"
 	"logger-service/service"
@@ -39,9 +40,7 @@ func NewLogController(
 // @Success 200 {object} responsemodel.CommonResponse
 // @Router /createLog [post]
 func (controller *LogController) CreateLog(c *gin.Context) {
-	var (
-		requestBody requestmodel.LogEntryRequest
-	)
+	var requestBody requestmodel.LogEntryRequest
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 		return
@@ -59,23 +58,20 @@ func (controller *LogController) CreateLog(c *gin.Context) {
 // @Accept json
 // @Param searchLogRequest body requestmodel.SearchLogRequest true "ログ検索リクエスト"
 // @Produce json
-// @Success 200 {object} responsemodel.CommonResponse
+// @Success 200 {object} responsemodel.LogEntrySliceResponse
 // @Router /searchLogs [post]
 func (controller *LogController) SearchLogs(c *gin.Context) {
-	var (
-		requestBody requestmodel.SearchLogRequest
-	)
+	var requestBody requestmodel.SearchLogRequest
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 		return
 	}
-
 	logs, err := controller.readLogService.ReadLogsByServiceAndName(c.Request.Context(), requestBody.Service, requestBody.Filter)
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
-	utility.CommonResponse(c, logs)
+	utility.CommonResponse(c, HTTPResponse.LogEntrySliceResponseRef(logs).ToResponse())
 }
 
 // @Summary 全ログ取得
@@ -83,7 +79,7 @@ func (controller *LogController) SearchLogs(c *gin.Context) {
 // @Tags logger
 // @Accept json
 // @Produce json
-// @Success 200 {object} responsemodel.CommonResponse
+// @Success 200 {object} responsemodel.LogEntrySliceResponse
 // @Router /readAllLogs [get]
 func (controller *LogController) ReadAllLogs(c *gin.Context) {
 	logs, err := controller.readLogService.ReadAllLogs(c.Request.Context())
@@ -91,5 +87,5 @@ func (controller *LogController) ReadAllLogs(c *gin.Context) {
 		utility.CommonErrorResponse(c, err, nil)
 		return
 	}
-	utility.CommonResponse(c, logs)
+	utility.CommonResponse(c, HTTPResponse.LogEntrySliceResponseRef(logs).ToResponse())
 }

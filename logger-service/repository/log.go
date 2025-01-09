@@ -32,7 +32,7 @@ func (handle *CreateLogHandle) CreateLog(ctx context.Context, logEntry entitymod
 		Collection("logs").
 		InsertOne(ctx, db.LogEntryEntity(logEntry).ToDBModel())
 	if err != nil {
-		utility.SugarLogger.Errorln("error inserting log entry", err)
+		utility.LogWithTraceID(ctx, "error inserting log entry", err)
 		return err
 	}
 	return nil
@@ -58,7 +58,7 @@ type ReadLogHandle struct {
 func (handle *ReadLogHandle) ReadLogByID(ctx context.Context, id string) (entitymodel.LogEntry, error) {
 	docID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		utility.SugarLogger.Errorln("error converting string to objectID", err)
+		utility.LogWithTraceID(ctx, "error converting string to objectID", err)
 		return entitymodel.LogEntry{}, err
 	}
 
@@ -67,7 +67,7 @@ func (handle *ReadLogHandle) ReadLogByID(ctx context.Context, id string) (entity
 		Collection("logs").
 		FindOne(ctx, bson.M{"_id": docID}).
 		Decode(&logEntry); err != nil {
-		utility.SugarLogger.Errorln("error getting log entry", err)
+		utility.LogWithTraceID(ctx, "error getting log entry", err)
 		return entitymodel.LogEntry{}, err
 	}
 
@@ -79,7 +79,7 @@ func (handle *ReadLogHandle) ReadLogByIDs(ctx context.Context, ids []string) (en
 	for i, id := range ids {
 		docID, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
-			utility.SugarLogger.Errorln("error converting string to objectID", err)
+			utility.LogWithTraceID(ctx, "error converting string to objectID", err)
 			return []entitymodel.LogEntry{}, err
 		}
 		docIDs[i] = docID
@@ -92,13 +92,13 @@ func (handle *ReadLogHandle) ReadLogByIDs(ctx context.Context, ids []string) (en
 		Collection("logs").
 		Find(ctx, bson.M{"_id": bson.M{"$in": docIDs}}, opts)
 	if err != nil {
-		utility.SugarLogger.Errorln("error getting log entries", err)
+		utility.LogWithTraceID(ctx, "error getting log entries", err)
 		return []entitymodel.LogEntry{}, err
 	}
 
 	var logEntries db.LogEntrySlice
 	if err := cursor.All(ctx, &logEntries); err != nil {
-		utility.SugarLogger.Errorln("error decoding log entries", err)
+		utility.LogWithTraceID(ctx, "error decoding log entries", err)
 		return []entitymodel.LogEntry{}, err
 	}
 
@@ -112,13 +112,13 @@ func (handle *ReadLogHandle) ReadAllLogs(ctx context.Context) (entitymodel.LogEn
 		Collection("logs").
 		Find(ctx, bson.D{}, opts)
 	if err != nil {
-		utility.SugarLogger.Errorln("error getting all log entries", err)
+		utility.LogWithTraceID(ctx, "error getting all log entries", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
 	var logEntries db.LogEntrySlice
 	if err := cursor.All(ctx, &logEntries); err != nil {
-		utility.SugarLogger.Errorln("error decoding log entries", err)
+		utility.LogWithTraceID(ctx, "error decoding log entries", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
@@ -132,13 +132,13 @@ func (handle *ReadLogHandle) ReadLogsByService(ctx context.Context, service enum
 		Collection("logs").
 		Find(ctx, bson.M{"service": service}, opts)
 	if err != nil {
-		utility.SugarLogger.Errorln("error getting log entries by service", err)
+		utility.LogWithTraceID(ctx, "error getting log entries by service", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
 	var logEntries db.LogEntrySlice
 	if err := cursor.All(ctx, &logEntries); err != nil {
-		utility.SugarLogger.Errorln("error decoding log entries", err)
+		utility.LogWithTraceID(ctx, "error decoding log entries", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
@@ -152,13 +152,13 @@ func (handle *ReadLogHandle) ReadLogsByServiceAndName(ctx context.Context, servi
 		Collection("logs").
 		Find(ctx, bson.M{"service": service, "name": name}, opts)
 	if err != nil {
-		utility.SugarLogger.Errorln("error getting log entries by service and name", err)
+		utility.LogWithTraceID(ctx, "error getting log entries by service and name", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
 	var logEntries db.LogEntrySlice
 	if err := cursor.All(ctx, &logEntries); err != nil {
-		utility.SugarLogger.Errorln("error decoding log entries", err)
+		utility.LogWithTraceID(ctx, "error decoding log entries", err)
 		return entitymodel.LogEntrySlice{}, err
 	}
 
@@ -203,7 +203,7 @@ type UpdateLogHandle struct {
 func (handle *UpdateLogHandle) UpdateLog(ctx context.Context, logEntry entitymodel.LogEntry) error {
 	docID, err := primitive.ObjectIDFromHex(logEntry.ID)
 	if err != nil {
-		utility.SugarLogger.Errorln("error converting string to objectID", err)
+		utility.LogWithTraceID(ctx, "error converting string to objectID", err)
 		return err
 	}
 
@@ -216,7 +216,7 @@ func (handle *UpdateLogHandle) UpdateLog(ctx context.Context, logEntry entitymod
 				{Key: "updated_at", Value: time.Now()},
 			}}})
 	if err != nil {
-		utility.SugarLogger.Errorln("error updating log entry", err)
+		utility.LogWithTraceID(ctx, "error updating log entry", err)
 		return err
 	}
 
@@ -238,7 +238,7 @@ type DeleteLogHandle struct {
 func (handle *DeleteLogHandle) DeleteLogByID(ctx context.Context, id string) error {
 	docID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		utility.SugarLogger.Errorln("error converting string to objectID", err)
+		utility.LogWithTraceID(ctx, "error converting string to objectID", err)
 		return err
 	}
 
@@ -246,7 +246,7 @@ func (handle *DeleteLogHandle) DeleteLogByID(ctx context.Context, id string) err
 		Collection("logs").
 		DeleteOne(ctx, bson.M{"_id": docID})
 	if err != nil {
-		utility.SugarLogger.Errorln("error deleting log entry", err)
+		utility.LogWithTraceID(ctx, "error deleting log entry", err)
 		return err
 	}
 

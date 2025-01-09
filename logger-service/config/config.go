@@ -30,6 +30,7 @@ type Config struct {
 	CORSAllowMethods     string `mapstructure:"CORS_ALLOW_METHODS"`
 	CORSAllowHeaders     string `mapstructure:"CORS_ALLOW_HEADERS"`
 	CORSExposeHeaders    string `mapstructure:"CORS_EXPOSE_HEADERS"`
+	ConnGRPCPort         string `mapstructure:"CONN_GRPC_PORT"`
 }
 
 func LoadConfig(config *Config, path string) error {

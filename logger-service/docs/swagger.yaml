@@ -23,7 +23,7 @@ definitions:
       name:
         type: string
       service:
-        type: string
+        $ref: '#/definitions/enum.Service'
     type: object
   requestmodel.SearchLogRequest:
     properties:
@@ -35,6 +35,21 @@ definitions:
   responsemodel.CommonResponse:
     properties:
       result: {}
+    type: object
+  responsemodel.LogEntryResponse:
+    properties:
+      createdAt:
+        type: string
+      data:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      service:
+        $ref: '#/definitions/enum.Service'
+      updatedAt:
+        type: string
     type: object
 host: localhost:80
 info:
@@ -83,7 +98,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/responsemodel.CommonResponse'
+            items:
+              $ref: '#/definitions/responsemodel.LogEntryResponse'
+            type: array
       summary: 全ログ取得
       tags:
       - logger
@@ -105,8 +122,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/responsemodel.CommonResponse'
+            items:
+              $ref: '#/definitions/responsemodel.LogEntryResponse'
+            type: array
       summary: ログ検索
       tags:
       - logger
+securityDefinitions:
+  BearerAuth:
+    description: JWT authorization header
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

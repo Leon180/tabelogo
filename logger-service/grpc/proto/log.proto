@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package grpclog;
+option go_package = "logger-service/grpc/proto";
+
+import "google/protobuf/timestamp.proto";
+
+service LogService {
+    rpc CreateLog(CreateLogRequest) returns (CommonResponse);
+    rpc SearchLogs(SearchLogRequest) returns (LogEntrySliceResponse);
+    rpc ReadAllLogs(CommonRequest) returns (LogEntrySliceResponse);
+}
+
+
+message CommonRequest {
+    string message = 1;
+}
+
+message CommonResponse {
+    string message = 1;
+}
+
+message CreateLogRequest {
+    string name = 1;
+    string service = 2;
+    string data = 3;
+}
+
+message SearchLogRequest {
+    string service = 1;
+    string filter = 2;
+}
+
+message LogEntryResponse {
+    string id = 1;
+    string name = 2;
+    string service = 3;
+    string data = 4;
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp updated_at = 6;
+}
+
+message LogEntrySliceResponse {
+    repeated LogEntryResponse log_entries = 1;
+}

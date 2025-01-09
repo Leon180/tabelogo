@@ -1,15 +1,16 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"log"
 	"logger-service/config"
+	"logger-service/grpc/proto"
 	"logger-service/inject"
-	"logger-service/model/enum"
 	"logger-service/utility"
-	"slices"
+	"net"
+	"net/http"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "logger-service/docs"
@@ -23,6 +24,10 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+	"logger-service/middleware"
 )
 
 // @title           Logger Service API
@@ -39,6 +44,11 @@ import (
 
 // @host      localhost:80
 // @BasePath /logger
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT authorization header
 func main() {
 	var (
 		cfg         config.Config
@@ -52,10 +62,19 @@ func main() {
 	defer utility.Logger.Sync()
 	defer utility.SugarLogger.Sync()
 	utility.SugarLogger.Debugf("Env========= %s", cfg.Environment)
+
+	// connect to mongo
 	mongoClient, err := connectToMongoDB(cfg)
 	if err != nil {
 		utility.SugarLogger.Fatal(err)
 	}
+
+	// inject
+	controllerHandle := inject.InitControllerHandle(cfg, utility.Logger, mongoClient)
+
+	// init middleware
+	traceIDMiddleware := middleware.NewTraceIDMiddleware()
+
 	engine = gin.Default()
 	engine.SetTrustedProxies(nil)
 	engine.Use(
@@ -64,13 +83,52 @@ func main() {
 		gzip.Gzip(gzip.DefaultCompression),
 		location.Default(),
 		cors.New(cfg.GenCORSConfig()),
-		LogRequest(),
+		traceIDMiddleware.Handler(),
 	)
-	controllerHandle := inject.InitControllerHandle(cfg, utility.Logger, mongoClient)
+
 	setRoute(engine, controllerHandle)
-	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
-		utility.SugarLogger.Fatal(err)
+	server := &http.Server{
+		Addr:    ":" + cfg.ConnWebPort,
+		Handler: engine,
 	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	lis, err := net.Listen("tcp", ":"+cfg.ConnGRPCPort) // Add cfg.GRPCPort to your config
+	if err != nil {
+		utility.SugarLogger.Fatalf("failed to listen: %v", err)
+	}
+	traceIDInterceptor := middleware.NewTraceIDInterceptor()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(traceIDInterceptor.Unary()),
+	)
+	setGRPCService(s, controllerHandle)
+	reflection.Register(s)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	// graceful shutdown setup
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// graceful shutdown
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Graceful shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		utility.SugarLogger.Errorf("Error during server shutdown: %v", err)
+	}
+	s.GracefulStop()
+	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Shutting down gracefully")
+	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Server shutdown")
 }
 
 func connectToMongoDB(config config.Config) (*mongo.Client, error) {
@@ -89,26 +147,6 @@ func connectToMongoDB(config config.Config) (*mongo.Client, error) {
 	return client, nil
 }
 
-func LogRequest() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		eventID := utility.GenDefaultUUID()
-		c.Set(enum.MiddleWareEventIDKey, eventID)
-		if contextType := c.Request.Header.Get("Content-type"); slices.Contains(enum.ContextTypeGroupDefault.GetSlice().ToStringSlice(), contextType) {
-			buf, err := io.ReadAll(c.Request.Body)
-			if err != nil {
-				utility.SugarLogger.Error(err)
-				c.Next()
-				return
-			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s, Body: %s", c.Request, eventID, string(buf))
-		} else {
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s", c.Request, eventID)
-		}
-		c.Next()
-	}
-}
-
 func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 	// Swagger docs
 	// Use this URL config for swagger
@@ -119,4 +157,8 @@ func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 	baseRouter.POST("/createLog", controllerHandle.LogController.CreateLog)
 	baseRouter.GET("/readAllLogs", controllerHandle.LogController.ReadAllLogs)
 	baseRouter.POST("/searchLogs", controllerHandle.LogController.SearchLogs)
+}
+
+func setGRPCService(s *grpc.Server, controllerHandle *inject.ControllerHandle) {
+	proto.RegisterLogServiceServer(s, controllerHandle.LogServiceServer)
 }
