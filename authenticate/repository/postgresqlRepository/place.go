@@ -44,7 +44,7 @@ func (handle *PlaceHandle) CreatePlace(ctx context.Context, place entitymodel.Pl
 
 	if err := handle.db.WithContext(ctx).
 		Create(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("create place error", err)
+		utility.LogWithTraceID(ctx, "create place error", err)
 		return err
 	}
 
@@ -56,7 +56,7 @@ func (handle *PlaceHandle) GetPlaceByGoogleID(ctx context.Context, googleID stri
 	if err := handle.db.WithContext(ctx).
 		Where("google_id = ?", googleID).
 		Find(&place).Error; err != nil {
-		utility.SugarLogger.Errorln("get place by google id error", err)
+		utility.LogWithTraceID(ctx, "get place by google id error", err)
 		return entitymodel.Place{}, err
 	}
 	return place.ToEntityModel(), nil
@@ -67,7 +67,7 @@ func (handle *PlaceHandle) GetPlaceByID(ctx context.Context, placeID string) (en
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", placeID).
 		Find(&place).Error; err != nil {
-		utility.SugarLogger.Errorln("get place by id error", err)
+		utility.LogWithTraceID(ctx, "get place by id error", err)
 		return entitymodel.Place{}, err
 	}
 	return place.ToEntityModel(), nil
@@ -78,7 +78,7 @@ func (handle *PlaceHandle) UpdatePlace(ctx context.Context, placeID string, upda
 		Model(&dbmodel.Place{}).
 		Where("id = ?", placeID).
 		Updates(updates).Error; err != nil {
-		utility.SugarLogger.Errorln("update place error", err)
+		utility.LogWithTraceID(ctx, "update place error", err)
 		return err
 	}
 	return nil
@@ -88,7 +88,7 @@ func (handle *PlaceHandle) DeletePlace(ctx context.Context, placeID string) erro
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", placeID).
 		Delete(&dbmodel.Place{}).Error; err != nil {
-		utility.SugarLogger.Errorln("delete place error", err)
+		utility.LogWithTraceID(ctx, "delete place error", err)
 		return err
 	}
 	return nil

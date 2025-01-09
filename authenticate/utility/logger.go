@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"authenticate/config"
+	"authenticate/model/enum"
 
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
@@ -176,4 +177,14 @@ func InitLogger(logCfg config.LogConfig) {
 		}),
 	)
 	SugarLogger = Logger.Sugar()
+}
+
+func LogWithTraceID(ctx context.Context, data ...interface{}) {
+	if traceID := ctx.Value(enum.TraceIDKey); traceID != nil {
+		SugarLogger.
+			With("EventID", traceID.(string)).
+			Error(data...)
+		return
+	}
+	SugarLogger.Error(data...)
 }

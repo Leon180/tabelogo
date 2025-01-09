@@ -1,6 +1,7 @@
 package token
 
 import (
+	"authenticate/model/entitymodel"
 	"fmt"
 	"time"
 
@@ -27,8 +28,8 @@ func NewPasetoMaker(symmetricKey string) (Maker, error) {
 	return maker, nil
 }
 
-func (maker *PasetoMaker) CreateToken(email string, duration time.Duration) (string, *Payload, error) {
-	payload, err := NewPayload(email, duration)
+func (maker *PasetoMaker) CreateToken(userInfo entitymodel.User, duration time.Duration) (string, *Payload, error) {
+	payload, err := NewPayload(userInfo, duration)
 	if err != nil {
 		return "", payload, fmt.Errorf("failed to create payload: %w", err)
 	}

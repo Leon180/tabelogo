@@ -5,19 +5,15 @@ import (
 	"authenticate/grpc/proto"
 	"authenticate/inject"
 	"authenticate/middleware"
-	"authenticate/model/enum"
 	"authenticate/postgresqldb"
 	"authenticate/postgresqldb/postgresqldbMigrate"
 	"authenticate/redisDB"
 	"authenticate/utility"
-	"bytes"
 	"context"
-	"io"
 	"log"
 	"net"
 	"net/http"
 	"os/signal"
-	"slices"
 	"syscall"
 	"time"
 
@@ -104,7 +100,6 @@ func main() {
 		gzip.Gzip(gzip.DefaultCompression),
 		location.Default(),
 		cors.New(cfg.GenCORSConfig()),
-		LogRequest(),
 		traceIDMiddleware.Handler(),
 	)
 	setRoute(engine, controllerHandle, authMiddleware)
@@ -152,26 +147,6 @@ func main() {
 	s.GracefulStop()
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Shutting down gracefully")
 	utility.SugarLogger.Info("[AUTHENTICATE-SERVICE] Server shutdown")
-}
-
-func LogRequest() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		eventID := utility.GenDefaultUUID()
-		c.Set(enum.MiddleWareEventIDKey, eventID)
-		if contextType := c.Request.Header.Get("Content-type"); slices.Contains(enum.ContextTypeGroupDefault.GetSlice().ToStringSlice(), contextType) {
-			buf, err := io.ReadAll(c.Request.Body)
-			if err != nil {
-				utility.SugarLogger.Error(err)
-				c.Next()
-				return
-			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s, Body: %s", c.Request, eventID, string(buf))
-		} else {
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s", c.Request, eventID)
-		}
-		c.Next()
-	}
 }
 
 func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle, authMiddleware *middleware.AuthMiddleware) {

@@ -31,11 +31,11 @@ func (p *PlaceHandle) GetPlace(ctx context.Context, placeGoogleID string) (entit
 		if err == redis.Nil {
 			return entitymodel.Place{}, nil
 		}
-		utility.SugarLogger.Error("error during get place, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during get place, error: %s", err)
 		return entitymodel.Place{}, err
 	}
 	if err = json.Unmarshal([]byte(st), &place); err != nil {
-		utility.SugarLogger.Error("error during unmarshal place, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during unmarshal place, error: %s", err)
 		return entitymodel.Place{}, err
 	}
 	return place, nil
@@ -43,14 +43,14 @@ func (p *PlaceHandle) GetPlace(ctx context.Context, placeGoogleID string) (entit
 
 func (p *PlaceHandle) SetPlace(ctx context.Context, placeGoogleID string, place entitymodel.Place, expiry *time.Duration) error {
 	if _, err := p.redisClient.JSONSet(ctx, placeGoogleID, "$", place).Result(); err != nil {
-		utility.SugarLogger.Error("error during set place, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during set place, error: %s", err)
 		return err
 	}
 	if expiry == nil {
 		return nil
 	}
 	if err := p.redisClient.Expire(ctx, placeGoogleID, *expiry).Err(); err != nil {
-		utility.SugarLogger.Error("error during set place expiry, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during set place expiry, error: %s", err)
 		return err
 	}
 	return nil
@@ -58,7 +58,7 @@ func (p *PlaceHandle) SetPlace(ctx context.Context, placeGoogleID string, place 
 
 func (p *PlaceHandle) DeletePlace(ctx context.Context, placeGoogleID string) error {
 	if err := p.redisClient.Del(ctx, placeGoogleID).Err(); err != nil {
-		utility.SugarLogger.Error("error during delete place, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during delete place, error: %s", err)
 		return err
 	}
 	return nil

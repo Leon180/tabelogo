@@ -34,7 +34,7 @@ func (handle *SessionHandle) CreateSession(ctx context.Context, session entitymo
 
 	if err := handle.db.WithContext(ctx).
 		Create(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error creating session:", err)
+		utility.LogWithTraceID(ctx, "error creating session:", err)
 		return err
 	}
 
@@ -47,7 +47,7 @@ func (handle *SessionHandle) GetSessionByID(ctx context.Context, sessionID strin
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", sessionID).
 		Find(&session).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting session by ID:", err)
+		utility.LogWithTraceID(ctx, "error getting session by ID:", err)
 		return entitymodel.Session{}, err
 	}
 
@@ -60,7 +60,7 @@ func (handle *SessionHandle) GetSessionByUserID(ctx context.Context, userID stri
 	if err := handle.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Find(&session).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting session by user ID:", err)
+		utility.LogWithTraceID(ctx, "error getting session by user ID:", err)
 		return entitymodel.Session{}, err
 	}
 
@@ -74,7 +74,7 @@ func (handle *SessionHandle) GetSessionWithUserByUserID(ctx context.Context, use
 		Preload("User").
 		Where("user_id = ?", userID).
 		Find(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting session with user by user ID:", err)
+		utility.LogWithTraceID(ctx, "error getting session with user by user ID:", err)
 		return entitymodel.SessionPreloadUser{}, err
 	}
 
@@ -88,7 +88,7 @@ func (handle *SessionHandle) GetSessionWithUserByAccessToken(ctx context.Context
 		Preload("User").
 		Where("access_token = ?", accessToken).
 		Find(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting session with user by access token:", err)
+		utility.LogWithTraceID(ctx, "error getting session with user by access token:", err)
 		return entitymodel.SessionPreloadUser{}, err
 	}
 
@@ -102,7 +102,7 @@ func (handle *SessionHandle) GetSessionWithUserByRefreshToken(ctx context.Contex
 		Preload("User").
 		Where("refresh_token = ?", refreshToken).
 		Find(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting session with user by refresh token:", err)
+		utility.LogWithTraceID(ctx, "error getting session with user by refresh token:", err)
 		return entitymodel.SessionPreloadUser{}, err
 	}
 
@@ -114,7 +114,7 @@ func (handle *SessionHandle) UpdateSession(ctx context.Context, sessionID string
 		Model(&dbmodel.Session{}).
 		Where("id = ?", sessionID).
 		Updates(updates).Error; err != nil {
-		utility.SugarLogger.Errorln("error updating session:", err)
+		utility.LogWithTraceID(ctx, "error updating session:", err)
 		return err
 	}
 
@@ -125,7 +125,7 @@ func (handle *SessionHandle) DeleteSession(ctx context.Context, sessionID string
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", sessionID).
 		Delete(&dbmodel.Session{}).Error; err != nil {
-		utility.SugarLogger.Errorln("error deleting session:", err)
+		utility.LogWithTraceID(ctx, "error deleting session:", err)
 		return err
 	}
 

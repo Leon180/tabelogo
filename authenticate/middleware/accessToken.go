@@ -23,6 +23,15 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
+// authMethods is a map of methods that require authentication
+var authMethods = map[string]bool{
+	"/grpcauth.UserService/SaveFavorite":     true,
+	"/grpcauth.UserService/GetUserFavorites": true,
+	"/grpcauth.UserService/LogoutUser":       true,
+	"/grpcauth.PlaceService/SavePlace":       true,
+	"/grpcauth.PlaceService/GetPlace":        true,
+}
+
 type AuthMiddleware struct {
 	sessionRedis redisDB.SessionHandler
 	sessionRepo  repository.SessionHandler
@@ -96,10 +105,10 @@ func (a *AuthMiddleware) Handler() gin.HandlerFunc {
 			}
 			// If found in DB, cache it in Redis for future requests
 			if err := a.sessionRedis.SetSession(ctx, sessionWithUser.AccessToken, sessionWithUser.Session, nil); err != nil {
-				utility.SugarLogger.Error("Failed to cache session in Redis:", err)
+				utility.LogWithTraceID(ctx, "Failed to cache session in Redis:", err)
 			}
 			if err := a.sessionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, nil); err != nil {
-				utility.SugarLogger.Error("Failed to cache session in Redis:", err)
+				utility.LogWithTraceID(ctx, "Failed to cache session in Redis:", err)
 			}
 		}
 
@@ -212,10 +221,10 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 			}
 
 			if err := interceptor.sessionRedis.SetSession(ctx, sessionWithUser.AccessToken, sessionWithUser.Session, nil); err != nil {
-				utility.SugarLogger.Error("Failed to cache session in Redis:", err)
+				utility.LogWithTraceID(ctx, "Failed to cache session in Redis:", err)
 			}
 			if err := interceptor.sessionRedis.SetSession(ctx, sessionWithUser.User.Email, sessionWithUser.Session, nil); err != nil {
-				utility.SugarLogger.Error("Failed to cache session in Redis:", err)
+				utility.LogWithTraceID(ctx, "Failed to cache session in Redis:", err)
 			}
 		}
 
@@ -224,7 +233,7 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		}
 
 		// Add session to context
-		newCtx := context.WithValue(ctx, sessionKey, session)
+		newCtx := context.WithValue(ctx, enum.SessionKey, session)
 
 		// Continue with the handler
 		return handler(newCtx, req)
@@ -233,6 +242,6 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 
 // Helper function to get session from context
 func GRPCGetSession(ctx context.Context) (entitymodel.Session, bool) {
-	session, ok := ctx.Value(sessionKey).(entitymodel.Session)
+	session, ok := ctx.Value(enum.SessionKey).(entitymodel.Session)
 	return session, ok
 }

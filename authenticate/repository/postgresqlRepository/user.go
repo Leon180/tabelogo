@@ -31,7 +31,7 @@ func (handle *UserHandle) CreateUser(ctx context.Context, user entitymodel.User)
 
 	if err := handle.db.WithContext(ctx).
 		Create(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error creating user:", err)
+		utility.LogWithTraceID(ctx, "error creating user:", err)
 		return err
 	}
 
@@ -44,7 +44,7 @@ func (handle *UserHandle) GetUserByEmail(ctx context.Context, email string) (ent
 	if err := handle.db.WithContext(ctx).
 		Where("email = ?", email).
 		Find(&user).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting user by email:", err)
+		utility.LogWithTraceID(ctx, "error getting user by email:", err)
 		return entitymodel.User{}, err
 	}
 
@@ -56,7 +56,7 @@ func (handle *UserHandle) UpdateUser(ctx context.Context, userID string, updates
 		Model(&dbmodel.User{}).
 		Where("id = ?", userID).
 		Updates(updates).Error; err != nil {
-		utility.SugarLogger.Errorln("error updating user:", err)
+		utility.LogWithTraceID(ctx, "error updating user:", err)
 		return err
 	}
 	return nil
@@ -66,7 +66,7 @@ func (handle *UserHandle) DeleteUser(ctx context.Context, userID string) error {
 	if err := handle.db.WithContext(ctx).
 		Where("id = ?", userID).
 		Delete(&dbmodel.User{}).Error; err != nil {
-		utility.SugarLogger.Errorln("error deleting user:", err)
+		utility.LogWithTraceID(ctx, "error deleting user:", err)
 		return err
 	}
 	return nil

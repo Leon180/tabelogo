@@ -1,8 +1,11 @@
 package token
 
-import "time"
+import (
+	"authenticate/model/entitymodel"
+	"time"
+)
 
 type Maker interface {
-	CreateToken(email string, duration time.Duration) (string, *Payload, error)
+	CreateToken(user entitymodel.User, duration time.Duration) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
 }

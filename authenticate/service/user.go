@@ -146,11 +146,11 @@ func (handle *LoginUserServiceHandle) LoginUser(ctx context.Context, loginUser e
 		if !session.IsExist() {
 			regenSession = true
 			// generate access token
-			if accessToken, accessPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.AccessTokenDuration); err != nil {
+			if accessToken, accessPayload, err = handle.tokenMaker.CreateToken(existedUser, handle.config.AccessTokenDuration); err != nil {
 				return err
 			}
 			// generate refresh token
-			if refreshToken, refreshPayload, err = handle.tokenMaker.CreateToken(existedUser.Email, handle.config.RefreshTokenDuration); err != nil {
+			if refreshToken, refreshPayload, err = handle.tokenMaker.CreateToken(existedUser, handle.config.RefreshTokenDuration); err != nil {
 				return err
 			}
 			session = entitymodel.Session{

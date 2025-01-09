@@ -30,7 +30,7 @@ func (f *FavoriteHandle) CreateFavorite(ctx context.Context, favorite entitymode
 	}
 	if err := f.db.WithContext(ctx).
 		Create(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error creating favorite:", err)
+		utility.LogWithTraceID(ctx, "error creating favorite:", err)
 		return err
 	}
 	return nil
@@ -41,7 +41,7 @@ func (f *FavoriteHandle) GetFavoriteByUserIDAndPlaceGoogleID(ctx context.Context
 	if err := f.db.WithContext(ctx).
 		Where("user_id = ? AND place_google_id = ?", userID, placeGoogleID).
 		Find(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting favorite by user id and place id:", err)
+		utility.LogWithTraceID(ctx, "error getting favorite by user id and place id:", err)
 		return entitymodel.Favorite{}, err
 	}
 	return dbModel.ToEntityModel(), nil
@@ -73,7 +73,7 @@ func (f *FavoriteHandle) GetUserFavoritePlaces(ctx context.Context, userID strin
 		}
 	}
 	if err := sql.Find(&dbModel).Error; err != nil {
-		utility.SugarLogger.Errorln("error getting user favorite places:", err)
+		utility.LogWithTraceID(ctx, "error getting user favorite places:", err)
 		return entitymodel.UserFavoritePlaces{}, err
 	}
 	entity := dbModel.ToUserFavoritePlacesSliceEntityModel()
@@ -91,7 +91,7 @@ func (f *FavoriteHandle) UpdateFavorite(ctx context.Context, favorite entitymode
 			"is_favorite": favorite.IsFavorite,
 			"updated_at":  favorite.UpdatedAt,
 		}).Error; err != nil {
-		utility.SugarLogger.Errorln("error updating favorite by user id and place id:", err)
+		utility.LogWithTraceID(ctx, "error updating favorite by user id and place id:", err)
 		return err
 	}
 	return nil

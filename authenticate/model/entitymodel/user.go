@@ -21,7 +21,7 @@ func (u User) IsActive() bool {
 }
 
 func (u User) IsExist() bool {
-	return u.ID != ""
+	return u.ID != "" && u.Email != ""
 }
 
 type UserSlice []User

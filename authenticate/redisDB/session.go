@@ -31,14 +31,14 @@ func (s *SessionHandle) GetSession(ctx context.Context, key string) (entitymodel
 		if err == redis.Nil {
 			return entitymodel.Session{}, nil
 		}
-		utility.SugarLogger.Error("error during get session, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during get session, error: %s", err)
 		return entitymodel.Session{}, err
 	}
 	if st == "" {
 		return entitymodel.Session{}, nil
 	}
 	if err = json.Unmarshal([]byte(st), &session); err != nil {
-		utility.SugarLogger.Error("error during unmarshal session, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during unmarshal session, error: %s", err)
 		return entitymodel.Session{}, err
 	}
 	return session[0], nil
@@ -46,14 +46,14 @@ func (s *SessionHandle) GetSession(ctx context.Context, key string) (entitymodel
 
 func (s *SessionHandle) SetSession(ctx context.Context, key string, session entitymodel.Session, expiry *time.Duration) error {
 	if _, err := s.redisClient.JSONSet(ctx, key, "$", session).Result(); err != nil {
-		utility.SugarLogger.Error("error during set session, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during set session, error: %s", err)
 		return err
 	}
 	if expiry == nil {
 		return nil
 	}
 	if err := s.redisClient.Expire(ctx, key, *expiry).Err(); err != nil {
-		utility.SugarLogger.Error("error during set session expiry, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during set session expiry, error: %s", err)
 		return err
 	}
 	return nil
@@ -61,7 +61,7 @@ func (s *SessionHandle) SetSession(ctx context.Context, key string, session enti
 
 func (s *SessionHandle) DeleteSession(ctx context.Context, key string) error {
 	if err := s.redisClient.Del(ctx, key).Err(); err != nil {
-		utility.SugarLogger.Error("error during delete session, error: %s", err)
+		utility.LogWithTraceID(ctx, "error during delete session, error: %s", err)
 		return err
 	}
 	return nil
