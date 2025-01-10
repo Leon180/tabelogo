@@ -1,18 +1,18 @@
-package convert
+package responsemodel
 
 import (
+	"tabelog-spider/grpc/proto"
 	"tabelog-spider/model/entitymodel"
 	"tabelog-spider/model/enum"
-	"tabelog-spider/model/responsemodel"
 )
 
-type GetTabelogInfo entitymodel.TabelogElementInfoSlice
+type TabelogElementInfoSlice entitymodel.TabelogElementInfoSlice
 
-func (g GetTabelogInfo) ToResponse() responsemodel.TabelogInfoResponseList {
-	slice := []responsemodel.TabelogInfoResponse{}
-	for _, v := range g {
-		tmp := responsemodel.TabelogInfoResponse{
-			Link: v.Link,
+func (entity TabelogElementInfoSlice) TabelogInfoResponseListProto() *proto.TabelogInfoResponseList {
+	slice := []*proto.TabelogInfoResponse{}
+	for _, v := range entity {
+		tmp := &proto.TabelogInfoResponse{
+			Link: string(v.Link),
 		}
 		for _, e := range v.ElementCollectorSlice {
 			if len(e.Collection) == 0 {
@@ -35,16 +35,16 @@ func (g GetTabelogInfo) ToResponse() responsemodel.TabelogInfoResponseList {
 		}
 		slice = append(slice, tmp)
 	}
-	return responsemodel.TabelogInfoResponseList{
+	return &proto.TabelogInfoResponseList{
 		TabelogInfos: slice,
 	}
 }
 
 type GetTabelogPhoto entitymodel.TabelogElementInfo
 
-func (g GetTabelogPhoto) ToResponse() responsemodel.TabelogPhotoResponse {
-	resp := responsemodel.TabelogPhotoResponse{
-		Link: g.Link,
+func (g GetTabelogPhoto) ToTabelogPhotoResponseProto() *proto.TabelogPhotoResponse {
+	resp := &proto.TabelogPhotoResponse{
+		Link: string(g.Link),
 	}
 	if len(g.ElementCollectorSlice) == 0 {
 		return resp

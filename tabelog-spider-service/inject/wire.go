@@ -16,6 +16,7 @@ func InitControllerHandle(
 	wire.Build(
 		serviceHandleSet,
 		controllerHandleSet,
+		grpcServiceSet,
 		newControllerHandle,
 	)
 	return &ControllerHandle{}

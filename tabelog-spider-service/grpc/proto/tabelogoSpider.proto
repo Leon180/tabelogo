@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package grpctabelogo;
+option go_package = "tabelog-spider-service/grpc/proto";
+
+service TabelogoSpiderService {
+    rpc GetTabelogInfo (GetTabelogInfoRequest) returns (TabelogInfoResponseList);
+    rpc GetTabelogPhoto (GetTabelogPhotoRequest) returns (TabelogPhotoResponse);
+}
+
+message GetTabelogInfoRequest {
+    string area = 1;
+    string place_name = 2;
+    int32 max_result_amount = 3;
+}
+
+message TabelogInfoResponse {
+    string link = 1;
+    string name = 2;
+    string rating = 3;
+    string rating_count = 4;
+    string bookmarks = 5;
+    string phone = 6;
+    repeated string type = 7;
+}
+
+message TabelogInfoResponseList {
+    repeated TabelogInfoResponse tabelog_infos = 1;
+}
+
+message GetTabelogPhotoRequest {
+    string link = 1;
+}   
+
+message TabelogPhotoResponse {
+    string link = 1;
+    repeated string photo = 2;
+}

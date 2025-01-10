@@ -13,7 +13,7 @@ type User struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 
-	Password string
+	Password string // only for request convert record, the db will only store hashed password
 }
 
 func (u User) IsActive() bool {

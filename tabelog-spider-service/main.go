@@ -2,11 +2,18 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log"
+	"net"
+	"net/http"
+	"os/signal"
 	"slices"
+	"syscall"
 	"tabelog-spider/config"
+	"tabelog-spider/grpc/proto"
 	"tabelog-spider/inject"
+	"tabelog-spider/middleware"
 	"tabelog-spider/model/enum"
 	"tabelog-spider/utility"
 	"time"
@@ -21,6 +28,8 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/time/rate"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // @title           Tabelog Spider API
@@ -62,10 +71,63 @@ func main() {
 	rateLimiter := rate.NewLimiter(rate.Every(100*time.Millisecond), 1)
 	// inject
 	controllerHandle := inject.InitControllerHandle(utility.Logger, rateLimiter)
+
+	// init middleware
+	traceIDMiddleware := middleware.NewTraceIDMiddleware()
+
+	engine = gin.Default()
+	engine.SetTrustedProxies(nil)
+	engine.Use(
+		ginzap.Ginzap(utility.Logger, time.RFC3339, true),
+		ginzap.RecoveryWithZap(utility.Logger, true),
+		gzip.Gzip(gzip.DefaultCompression),
+		location.Default(),
+		cors.New(cfg.GenCORSConfig()),
+		traceIDMiddleware.Handler(),
+	)
 	setRoute(engine, controllerHandle)
-	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
-		utility.SugarLogger.Fatal(err)
+	server := &http.Server{
+		Addr:    ":" + cfg.ConnWebPort,
+		Handler: engine,
 	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	lis, err := net.Listen("tcp", ":"+cfg.ConnGRPCPort) // Add cfg.GRPCPort to your config
+	if err != nil {
+		utility.SugarLogger.Fatalf("failed to listen: %v", err)
+	}
+	traceIDInterceptor := middleware.NewTraceIDInterceptor()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(traceIDInterceptor.Unary()),
+	)
+	setGRPCService(s, controllerHandle)
+	reflection.Register(s)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	// graceful shutdown setup
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// graceful shutdown
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Graceful shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		utility.SugarLogger.Errorf("Error during server shutdown: %v", err)
+	}
+	s.GracefulStop()
+	utility.SugarLogger.Info("[TABELOG-SERVICE] Shutting down gracefully")
+	utility.SugarLogger.Info("[TABELOG-SERVICE] Server shutdown")
 }
 
 func LogRequest() gin.HandlerFunc {
@@ -97,4 +159,8 @@ func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 	baseRouter := defaultRouter.Group("/tabelogo-spider")
 	baseRouter.GET("/getTabelogInfo", controllerHandle.GetTabelogInfoController.GetTabelogInfo)
 	baseRouter.GET("/getTabelogPhoto", controllerHandle.GetTabelogInfoController.GetTabelogPhoto)
+}
+
+func setGRPCService(s *grpc.Server, controllerHandle *inject.ControllerHandle) {
+	proto.RegisterTabelogoSpiderServiceServer(s, controllerHandle.TabelogoSpiderServiceServer)
 }

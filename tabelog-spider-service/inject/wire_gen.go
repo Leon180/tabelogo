@@ -17,6 +17,7 @@ func InitControllerHandle(logger *zap.Logger, rateLimiter *rate.Limiter) *Contro
 	getTabelogInfoHandler := provideGetTabelogInfoService(rateLimiter)
 	getTabelogPhotoHandler := provideGetTabelogPhotoService()
 	getTabelogInfoHandle := provideGetTabelogInfoController(getTabelogInfoHandler, getTabelogPhotoHandler)
-	controllerHandle := newControllerHandle(getTabelogInfoHandle)
+	tabelogoSpiderServiceServer := provideTabelogoSpiderServiceServer(getTabelogInfoHandler, getTabelogPhotoHandler)
+	controllerHandle := newControllerHandle(getTabelogInfoHandle, tabelogoSpiderServiceServer)
 	return controllerHandle
 }

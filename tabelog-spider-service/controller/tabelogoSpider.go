@@ -3,7 +3,6 @@ package controller
 import (
 	"tabelog-spider/convert"
 	"tabelog-spider/errors"
-	"tabelog-spider/model/entitymodel"
 	"tabelog-spider/model/requestmodel"
 	"tabelog-spider/service"
 	"tabelog-spider/utility"
@@ -34,7 +33,7 @@ func NewGetTabelogInfoHandle(
 // @Param place_name query string false "店名"
 // @Param max_result_amount query int false "最大取得件数"
 // @Produce  json
-// @Success 200 {object} responsemodel.TabelogInfoResponse
+// @Success 200 {object} responsemodel.TabelogInfoResponseList
 // @Router /getTabelogInfo [get]
 func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 	var (
@@ -45,11 +44,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 		utility.CommonErrorResponse(c, errors.HTTPStatusBadRequest, nil)
 		return
 	}
-	tablogoInfo, err := handle.getTabelogInfoService.GetTabelogInfo(c, entitymodel.GetTabelogInfoParam{
-		Area:          req.Area,
-		PlaceName:     req.PlaceName,
-		MaxLinkAmount: req.MaxResultAmount,
-	})
+	tablogoInfo, err := handle.getTabelogInfoService.GetTabelogInfo(c, req.ToEntity())
 	if err != nil {
 		utility.CommonErrorResponse(c, err, nil)
 		return
@@ -63,7 +58,7 @@ func (handle *GetTabelogInfoHandle) GetTabelogInfo(c *gin.Context) {
 // @Accept json
 // @Param link query string true "リンク"
 // @Produce  json
-// @Success 200 {object} responsemodel.TabelogPhoto
+// @Success 200 {object} responsemodel.TabelogPhotoResponse
 // @Router /getTabelogPhoto [get]
 func (handle *GetTabelogInfoHandle) GetTabelogPhoto(c *gin.Context) {
 	var (

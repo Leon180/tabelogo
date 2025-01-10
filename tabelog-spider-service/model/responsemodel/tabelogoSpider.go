@@ -2,7 +2,7 @@ package responsemodel
 
 import "tabelog-spider/model/enum"
 
-type TabelogInfo struct {
+type TabelogInfoResponse struct {
 	Link        enum.URL `json:"link"`
 	Name        string   `json:"name"`
 	Rating      string   `json:"rating"`
@@ -12,11 +12,11 @@ type TabelogInfo struct {
 	Type        []string `json:"type"`
 }
 
-type TabelogInfoResponse struct {
-	TabelogInfos []TabelogInfo `json:"tabelog_infos"`
+type TabelogInfoResponseList struct {
+	TabelogInfos []TabelogInfoResponse `json:"tabelog_infos"`
 }
 
-type TabelogPhoto struct {
+type TabelogPhotoResponse struct {
 	Link  enum.URL `json:"link"`
 	Photo []string `json:"photo"`
 }

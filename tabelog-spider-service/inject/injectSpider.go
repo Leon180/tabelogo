@@ -4,6 +4,8 @@ import (
 	"tabelog-spider/controller"
 	"tabelog-spider/service"
 
+	grpcservice "tabelog-spider/grpc/service"
+
 	"golang.org/x/time/rate"
 )
 
@@ -20,6 +22,16 @@ func provideGetTabelogInfoController(
 	getTabelogPhotoService service.GetTabelogPhotoHandler,
 ) *controller.GetTabelogInfoHandle {
 	return controller.NewGetTabelogInfoHandle(
+		getTabelogInfoService,
+		getTabelogPhotoService,
+	)
+}
+
+func provideTabelogoSpiderServiceServer(
+	getTabelogInfoService service.GetTabelogInfoHandler,
+	getTabelogPhotoService service.GetTabelogPhotoHandler,
+) *grpcservice.TabelogoSpiderServiceServer {
+	return grpcservice.NewTabelogoSpiderServiceServer(
 		getTabelogInfoService,
 		getTabelogPhotoService,
 	)
