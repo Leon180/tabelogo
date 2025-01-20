@@ -204,3 +204,5 @@
 {"severity":"INFO","time":"2025-01-07T21:18:41.548+0800","message":"Database migration completed successfully"}
 {"severity":"DEBUG","time":"2025-01-07T21:22:22.395+0800","message":"Env========= development"}
 {"severity":"INFO","time":"2025-01-07T21:22:22.466+0800","message":"Database migration completed successfully"}
+{"severity":"DEBUG","time":"2025-01-20T18:20:06.629+0800","message":"Env========= development"}
+{"severity":"FATAL","time":"2025-01-20T18:20:06.642+0800","message":"error occur while connect to postgresql db: failed to connect to `host=localhost user=leon180 database=tabelogo`: dial error (dial tcp 127.0.0.1:5432: connect: connection refused)","stacktrace":"authenticate/postgresqldb.InitGormDB\n\t/Users/lileon/Documents/Project/tabelogo/authenticate/postgresqldb/connect.go:48\nmain.main\n\t/Users/lileon/Documents/Project/tabelogo/authenticate/main.go:71\nruntime.main\n\t/opt/homebrew/Cellar/go@1.22/1.22.9/libexec/src/runtime/proc.go:271"}

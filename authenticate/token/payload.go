@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -24,6 +25,8 @@ type Payload struct {
 	ExpiresAt time.Time        `json:"expires_at"`
 	Issuer    string           `json:"issuer"`
 	Subject   string           `json:"subject"`
+	NotBefore time.Time        `json:"not_before"`
+	Audience  string           `json:"audience"`
 }
 
 func NewPayload(userInfo entitymodel.User, duration time.Duration) (*Payload, error) {
@@ -50,4 +53,28 @@ func (payload *Payload) Valid() error {
 		return ErrInvalidToken
 	}
 	return nil
+}
+
+func (payload *Payload) GetExpirationTime() (*jwt.NumericDate, error) {
+	return jwt.NewNumericDate(payload.ExpiresAt), nil
+}
+
+func (payload *Payload) GetIssuedAt() (*jwt.NumericDate, error) {
+	return jwt.NewNumericDate(payload.IssuedAt), nil
+}
+
+func (payload *Payload) GetNotBefore() (*jwt.NumericDate, error) {
+	return jwt.NewNumericDate(payload.NotBefore), nil
+}
+
+func (payload *Payload) GetAudience() (jwt.ClaimStrings, error) {
+	return jwt.ClaimStrings{payload.Audience}, nil
+}
+
+func (payload *Payload) GetIssuer() (string, error) {
+	return payload.Issuer, nil
+}
+
+func (payload *Payload) GetSubject() (string, error) {
+	return payload.Subject, nil
 }

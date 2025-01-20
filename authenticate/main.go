@@ -120,8 +120,10 @@ func main() {
 	authInterceptor := middleware.NewTransactionAuthInterceptor(redisClient, db)
 	traceIDInterceptor := middleware.NewTraceIDInterceptor()
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(authInterceptor.Unary()),
-		grpc.UnaryInterceptor(traceIDInterceptor.Unary()),
+		grpc.ChainUnaryInterceptor(
+			authInterceptor.Unary(),
+			traceIDInterceptor.Unary(),
+		),
 	)
 	setGRPCService(s, controllerHandle)
 	reflection.Register(s)
