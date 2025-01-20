@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "google/protobuf/Any.proto";
+
+package grpcgooglemap;
+option go_package = "google-map/grpc/proto";
+
+service GoogleMapService {
+    rpc QuickSearch (QuickSearchRequest) returns (InterfaceResponse);
+    rpc AdvanceSearch (AdvanceSearchRequest) returns (InterfaceResponse);
+}
+
+message InterfaceResponse {
+    google.protobuf.Any data = 1;
+}
+
+message QuickSearchRequest {
+    string place_id = 1;
+    string api_mask = 2;
+    string language_code = 3;
+}
+
+message AdvanceSearchRequest {
+    string text_query = 1;
+    float low_latitude = 2;
+    float low_longitude = 3;
+    float high_latitude = 4;
+    float high_longitude = 5;
+    int32 max_result_count = 6;
+    int32 min_rating = 7;
+    bool open_now = 8;
+    string rank_preference = 9;
+    string language_code = 10;
+    string api_mask = 11;
+}

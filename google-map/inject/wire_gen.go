@@ -16,6 +16,7 @@ import (
 func InitControllerHandle(config2 *config.Config, logger *zap.Logger) *ControllerHandle {
 	googlePlaceSearchHandler := provideSearchService(config2)
 	googlePlaceSearchHandle := provideSearchController(googlePlaceSearchHandler, config2)
-	controllerHandle := newControllerHandle(googlePlaceSearchHandle)
+	googleMapServiceServer := provideGoogleMapServiceServer(googlePlaceSearchHandler, config2)
+	controllerHandle := newControllerHandle(googlePlaceSearchHandle, googleMapServiceServer)
 	return controllerHandle
 }

@@ -1,14 +1,17 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"google-map/config"
+	"google-map/grpc/proto"
 	"google-map/inject"
-	"google-map/model/enum"
+	"google-map/middleware"
 	"google-map/utility"
-	"io"
 	"log"
-	"slices"
+	"net"
+	"net/http"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "google-map/docs"
@@ -20,6 +23,8 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // @title           Google Map API
@@ -48,6 +53,12 @@ func main() {
 	defer utility.Logger.Sync()
 	defer utility.SugarLogger.Sync()
 	utility.SugarLogger.Debugf("Env========= %s", cfg.Environment)
+	// inject
+	controllerHandle := inject.InitControllerHandle(&cfg, utility.Logger)
+
+	// init middleware
+	traceIDMiddleware := middleware.NewTraceIDMiddleware()
+
 	engine = gin.Default()
 	engine.SetTrustedProxies(nil)
 	engine.Use(
@@ -56,34 +67,51 @@ func main() {
 		gzip.Gzip(gzip.DefaultCompression),
 		location.Default(),
 		cors.New(cfg.GenCORSConfig()),
-		LogRequest(),
+		traceIDMiddleware.Handler(),
 	)
-	// inject
-	controllerHandle := inject.InitControllerHandle(&cfg, utility.Logger)
 	setRoute(engine, controllerHandle)
-	if err := engine.Run(":" + cfg.ConnWebPort); err != nil {
-		utility.SugarLogger.Fatal(err)
+	server := &http.Server{
+		Addr:    ":" + cfg.ConnWebPort,
+		Handler: engine,
 	}
-}
-
-func LogRequest() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		eventID := utility.GenDefaultUUID()
-		c.Set(enum.MiddleWareEventIDKey, eventID)
-		if contextType := c.Request.Header.Get("Content-type"); slices.Contains(enum.ContextTypeGroupDefault.GetSlice().ToStringSlice(), contextType) {
-			buf, err := io.ReadAll(c.Request.Body)
-			if err != nil {
-				utility.SugarLogger.Error(err)
-				c.Next()
-				return
-			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s, Body: %s", c.Request, eventID, string(buf))
-		} else {
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s", c.Request, eventID)
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			utility.SugarLogger.Fatal(err)
 		}
-		c.Next()
+	}()
+
+	lis, err := net.Listen("tcp", ":"+cfg.ConnGRPCPort) // Add cfg.GRPCPort to your config
+	if err != nil {
+		utility.SugarLogger.Fatalf("failed to listen: %v", err)
 	}
+	traceIDInterceptor := middleware.NewTraceIDInterceptor()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(traceIDInterceptor.Unary()),
+	)
+	setGRPCService(s, controllerHandle)
+	reflection.Register(s)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			utility.SugarLogger.Fatal(err)
+		}
+	}()
+
+	// graceful shutdown setup
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// graceful shutdown
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Graceful shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		utility.SugarLogger.Errorf("Error during server shutdown: %v", err)
+	}
+	s.GracefulStop()
+	utility.SugarLogger.Info("[GOOGLE-MAP-SERVICE] Shutting down gracefully")
+	utility.SugarLogger.Info("[GOOGLE-MAP-SERVICE] Server shutdown")
 }
 
 func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
@@ -95,4 +123,8 @@ func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {
 	baseRouter := defaultRouter.Group("/google-map-search")
 	baseRouter.GET("/quickSearch", controllerHandle.GooglePlaceSearchController.QuickSearch)
 	baseRouter.GET("/advanceSearch", controllerHandle.GooglePlaceSearchController.AdvanceSearch)
+}
+
+func setGRPCService(s *grpc.Server, controllerHandle *inject.ControllerHandle) {
+	proto.RegisterGoogleMapServiceServer(s, controllerHandle.GoogleMapServiceServer)
 }

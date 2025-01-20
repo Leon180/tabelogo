@@ -61,7 +61,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.TabelogInfoResponse"
+                            "$ref": "#/definitions/responsemodel.TabelogInfoResponseList"
                         }
                     }
                 }
@@ -93,7 +93,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.TabelogPhoto"
+                            "$ref": "#/definitions/responsemodel.TabelogPhotoResponse"
                         }
                     }
                 }
@@ -110,7 +110,7 @@ const docTemplate = `{
                 "TabelogBaseURL"
             ]
         },
-        "responsemodel.TabelogInfo": {
+        "responsemodel.TabelogInfoResponse": {
             "type": "object",
             "properties": {
                 "bookmarks": {
@@ -139,18 +139,18 @@ const docTemplate = `{
                 }
             }
         },
-        "responsemodel.TabelogInfoResponse": {
+        "responsemodel.TabelogInfoResponseList": {
             "type": "object",
             "properties": {
                 "tabelog_infos": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/responsemodel.TabelogInfo"
+                        "$ref": "#/definitions/responsemodel.TabelogInfoResponse"
                     }
                 }
             }
         },
-        "responsemodel.TabelogPhoto": {
+        "responsemodel.TabelogPhotoResponse": {
             "type": "object",
             "properties": {
                 "link": {

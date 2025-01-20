@@ -55,7 +55,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.TabelogInfoResponse"
+                            "$ref": "#/definitions/responsemodel.TabelogInfoResponseList"
                         }
                     }
                 }
@@ -87,7 +87,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/responsemodel.TabelogPhoto"
+                            "$ref": "#/definitions/responsemodel.TabelogPhotoResponse"
                         }
                     }
                 }
@@ -104,7 +104,7 @@
                 "TabelogBaseURL"
             ]
         },
-        "responsemodel.TabelogInfo": {
+        "responsemodel.TabelogInfoResponse": {
             "type": "object",
             "properties": {
                 "bookmarks": {
@@ -133,18 +133,18 @@
                 }
             }
         },
-        "responsemodel.TabelogInfoResponse": {
+        "responsemodel.TabelogInfoResponseList": {
             "type": "object",
             "properties": {
                 "tabelog_infos": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/responsemodel.TabelogInfo"
+                        "$ref": "#/definitions/responsemodel.TabelogInfoResponse"
                     }
                 }
             }
         },
-        "responsemodel.TabelogPhoto": {
+        "responsemodel.TabelogPhotoResponse": {
             "type": "object",
             "properties": {
                 "link": {

@@ -6,7 +6,7 @@ definitions:
     type: string
     x-enum-varnames:
     - TabelogBaseURL
-  responsemodel.TabelogInfo:
+  responsemodel.TabelogInfoResponse:
     properties:
       bookmarks:
         type: string
@@ -25,14 +25,14 @@ definitions:
           type: string
         type: array
     type: object
-  responsemodel.TabelogInfoResponse:
+  responsemodel.TabelogInfoResponseList:
     properties:
       tabelog_infos:
         items:
-          $ref: '#/definitions/responsemodel.TabelogInfo'
+          $ref: '#/definitions/responsemodel.TabelogInfoResponse'
         type: array
     type: object
-  responsemodel.TabelogPhoto:
+  responsemodel.TabelogPhotoResponse:
     properties:
       link:
         $ref: '#/definitions/enum.URL'
@@ -79,7 +79,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/responsemodel.TabelogInfoResponse'
+            $ref: '#/definitions/responsemodel.TabelogInfoResponseList'
       summary: タブログ情報取得
       tags:
       - tabelogo-spider
@@ -100,7 +100,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/responsemodel.TabelogPhoto'
+            $ref: '#/definitions/responsemodel.TabelogPhotoResponse'
       summary: タブログ写真取得
       tags:
       - tabelogo-spider

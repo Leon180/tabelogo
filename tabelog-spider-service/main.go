@@ -1,20 +1,16 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"log"
 	"net"
 	"net/http"
 	"os/signal"
-	"slices"
 	"syscall"
 	"tabelog-spider/config"
 	"tabelog-spider/grpc/proto"
 	"tabelog-spider/inject"
 	"tabelog-spider/middleware"
-	"tabelog-spider/model/enum"
 	"tabelog-spider/utility"
 	"time"
 
@@ -58,16 +54,6 @@ func main() {
 	defer utility.Logger.Sync()
 	defer utility.SugarLogger.Sync()
 	utility.SugarLogger.Debugf("Env========= %s", cfg.Environment)
-	engine = gin.Default()
-	engine.SetTrustedProxies(nil)
-	engine.Use(
-		ginzap.Ginzap(utility.Logger, time.RFC3339, true),
-		ginzap.RecoveryWithZap(utility.Logger, true),
-		gzip.Gzip(gzip.DefaultCompression),
-		location.Default(),
-		cors.New(cfg.GenCORSConfig()),
-		LogRequest(),
-	)
 	rateLimiter := rate.NewLimiter(rate.Every(100*time.Millisecond), 1)
 	// inject
 	controllerHandle := inject.InitControllerHandle(utility.Logger, rateLimiter)
@@ -128,26 +114,6 @@ func main() {
 	s.GracefulStop()
 	utility.SugarLogger.Info("[TABELOG-SERVICE] Shutting down gracefully")
 	utility.SugarLogger.Info("[TABELOG-SERVICE] Server shutdown")
-}
-
-func LogRequest() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		eventID := utility.GenDefaultUUID()
-		c.Set(enum.MiddleWareEventIDKey, eventID)
-		if contextType := c.Request.Header.Get("Content-type"); slices.Contains(enum.ContextTypeGroupDefault.GetSlice().ToStringSlice(), contextType) {
-			buf, err := io.ReadAll(c.Request.Body)
-			if err != nil {
-				utility.SugarLogger.Error(err)
-				c.Next()
-				return
-			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s, Body: %s", c.Request, eventID, string(buf))
-		} else {
-			utility.SugarLogger.Infof("Http Request: %+v, EventID: %s", c.Request, eventID)
-		}
-		c.Next()
-	}
 }
 
 func setRoute(engine *gin.Engine, controllerHandle *inject.ControllerHandle) {

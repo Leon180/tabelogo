@@ -3,6 +3,7 @@ package inject
 import (
 	"google-map/config"
 	"google-map/controller"
+	grpcservice "google-map/grpc/service"
 	"google-map/service"
 )
 
@@ -18,4 +19,11 @@ func provideSearchController(
 		searchService,
 		config,
 	)
+}
+
+func provideGoogleMapServiceServer(
+	googlePlaceSearchService service.GooglePlaceSearchHandler,
+	config *config.Config,
+) *grpcservice.GoogleMapServiceServer {
+	return grpcservice.NewGoogleMapServiceServer(googlePlaceSearchService, config)
 }
