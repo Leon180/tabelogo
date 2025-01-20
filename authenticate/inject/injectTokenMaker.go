@@ -13,6 +13,6 @@ var tokenMakerHandleSet = wire.NewSet(
 func provideTokenMaker(
 	symmetricKey string,
 ) token.Maker {
-	tokenMaker, _ := token.NewJWTMaker(symmetricKey)
+	tokenMaker, _ := token.NewPasetoMaker(symmetricKey)
 	return tokenMaker
 }
